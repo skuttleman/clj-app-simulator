@@ -8,14 +8,22 @@
               [clojure.tools.nrepl.server :as nrepl]
               [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
               [ring.util.response :as response]
+              [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
               [com.ben-allred.clj-app-simulator.services.env :as env]
               [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defroutes ^:private base
-    (GET "/health" [] {:status 200 :body {:a :ok}})
-    (route/resources "/")
-    (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
-    (ANY "/*" [] {:status 404}))
+    (context "/api/simulators" []
+        (GET "/" [] (simulators/route-configs))
+        (POST "/" request (simulators/add-simulator (get-in request [:body :simulator])))
+        (POST "/init" request (simulators/set-simulators (get-in request [:body :simulators])))
+        (DELETE "/reset" request (simulators/reset-all)))
+    (context "/" []
+        (simulators/routes)
+        (GET "/health" [] {:status 200 :body {:a :ok}})
+        (route/resources "/")
+        (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
+        (ANY "/*" [] {:status 404})))
 
 (def ^:private app
     (-> #'base

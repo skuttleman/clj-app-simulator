@@ -1,5 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.utils.maps)
 
+(defn ^:private merger [v1 v2]
+    (if (and (map? v1) (map? v2))
+        (merge-with merger v1 v2)
+        v2))
+
 (defn update-maybe [m k f & f-args]
     (if (get m k)
         (apply update m k f f-args)
@@ -25,3 +30,10 @@
             (empty? vs) m
             (symbol? v1) (recur (assoc m (keyword v1) v1) (next vs))
             :else (recur (assoc m v1 v2) (nnext vs)))))
+
+(def deep-merge (partial merge-with merger))
+
+(defn dissocp [m pred]
+    (->> m
+        (remove (comp pred second))
+        (into {})))

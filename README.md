@@ -1,7 +1,6 @@
 # App Simulator
 
-A configurable novelty utility for notifying your co-workers whether or not code pushed to your repo meets development
-standards. View the app [here.](https://codereviewbot.herokuapp.com)
+A programmable API simulator for use in integration testing.
 
 ## Development
 
@@ -11,4 +10,12 @@ standards. View the app [here.](https://codereviewbot.herokuapp.com)
 $ git clone git@github.com:skuttleman/clj-app-simulator.git
 $ cd clj-app-simulator
 $ lein install
+```
+
+### Run
+
+Run locally on port `3000` with server repl at port `7000` and figwheel repl at port `7888`.
+
+```bash
+$ lein cooper
 ```
