@@ -41,14 +41,15 @@
         (maps/update-maybe :body transit/parse)))
 
 (defn prepare [data accept]
-    (cond-> data
-        :always (maps/dissocp #{""})
-        (edn? accept) (->
-                          (maps/update-maybe :body when-not-string pr-str)
-                          (with-headers "application/edn"))
-        (json? accept) (->
-                           (maps/update-maybe :body when-not-string json/stringify)
-                           (with-headers "application/json"))
-        (transit? accept) (->
-                              (maps/update-maybe :body when-not-string transit/stringify)
-                              (with-headers "application/transit"))))
+    (if (string? (:body data))
+        data
+        (cond-> data
+            (edn? accept) (->
+                              (maps/update-maybe :body when-not-string pr-str)
+                              (with-headers "application/edn"))
+            (json? accept) (->
+                               (maps/update-maybe :body when-not-string json/stringify)
+                               (with-headers "application/json"))
+            (transit? accept) (->
+                                  (maps/update-maybe :body when-not-string transit/stringify)
+                                  (with-headers "application/transit")))))

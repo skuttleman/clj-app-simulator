@@ -12,3 +12,8 @@
 (def requests :requests)
 
 (def config (comp :current :config))
+
+(defn details [state]
+    (-> state
+        (select-keys #{:config :requests})
+        (update :config :current)))

@@ -5,7 +5,8 @@
               [clojure.spec.alpha :as s]
               [com.ben-allred.clj-app-simulator.utils.maps :as maps]
               [compojure.core :as c]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+              [com.ben-allred.clj-app-simulator.utils.logging :as log]
+              [com.ben-allred.clj-app-simulator.api.services.activity :as activity]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
@@ -41,12 +42,19 @@
     (let [{:keys [method path] :as config} (common/config simulator)
           method-str (name method)
           uri        (str "/api/simulators/" method-str path)
-          method     (keyword method-str)]
-        (->> [[method (str "/simulators" path) (partial common/receive simulator)]
+          method'     (keyword method-str)]
+        (->> [[method' (str "/simulators" path) (fn [request]
+                                                   (let [response (common/receive simulator request)]
+                                                       (activity/publish :simulators/recieve
+                                                                         {:config  (common/config simulator)
+                                                                          :request (pop (common/requests simulator))})
+                                                       response))]
               [:get uri (fn [_]
                             {:status 200
-                             :body   (common/config simulator)})]
+                             :body   (common/details simulator)})]
               [:delete uri (fn [_]
+                               (activity/publish :simulators/delete
+                                                 {:config (common/config simulator)})
                                (delete method path)
                                {:status 204})]
               [:patch uri (fn [{:keys [body]}]
@@ -75,6 +83,8 @@
                     (store/requests (get-state)))
                 (config [_]
                     (store/config (get-state)))
+                (details [_]
+                    (store/details (get-state)))
                 (reset [_]
                     (dispatch actions/reset))
                 (routes [this delete]

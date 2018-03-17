@@ -3,11 +3,12 @@
               [compojure.core :as c]
               [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
               [com.ben-allred.clj-app-simulator.utils.logging :as log]
-              [clojure.spec.alpha :as s]))
+              [clojure.spec.alpha :as s]
+              [com.ben-allred.clj-app-simulator.api.services.activity :as activity]))
 
 (def ^:private simulators (atom {}))
 
-(defn ^:private remove-simulator [method path]
+(defn ^:private remove-simulator! [method path]
     (swap! simulators dissoc [method path]))
 
 (defn ^:private config->?simulator [config]
@@ -25,8 +26,10 @@
         (assoc-in {:status 200} [:body :simulators])))
 
 (defn add-simulator [config]
-    (if (config->?simulator config)
-        {:status 204}
+    (if-let [simulator (config->?simulator config)]
+        (do
+            (activity/publish :simulators/add (common/config simulator))
+            {:status 204})
         {:status 400
          :body   (s/explain-data :http/http-simulator config)}))
 
@@ -36,18 +39,18 @@
                    (map config->?simulator)
                    (remove nil?)
                    (doall))]
-        (if (seq sims)
-            {:status 204}
-            {:status 400})))
+        (activity/publish :simulators/init (map common/config sims))
+        {:status 204}))
 
 (defn reset-all []
     (->> @simulators
         (map common/reset)
         (dorun))
+    (activity/publish :simulators/reset-all nil)
     {:status 204})
 
 (defn routes []
     (->> @simulators
         (vals)
-        (mapcat #(common/routes % remove-simulator))
+        (mapcat #(common/routes % remove-simulator!))
         (apply c/routes)))
