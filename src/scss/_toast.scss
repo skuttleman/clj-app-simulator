@@ -1,0 +1,44 @@
+$error-bg: #fae6e5;
+$error-border: #ed271c;
+$success-bg: #edf4e8;
+$success-border: #6ba442;
+
+.toast-container {
+    display: flex;
+    position: fixed;
+    justify-content: center;
+    align-items: flex-end;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+
+    .toast-message {
+        display: flex;
+        padding: 5px;
+        pointer-events: auto;
+        width: 400px;
+        justify-content: space-between;
+        border-radius: 2px;
+        box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, .2);
+        margin: 1px;
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        &.error {
+            background-color: $error-bg;
+            border-left: 12px solid $error-border;
+        }
+        &.success {
+            background-color: $success-bg;
+            border-left: 12px solid $success-border;
+        }
+
+        .toast-text {
+            padding: 5px;
+            color: $dark-gray;
+        }
+    }
+}

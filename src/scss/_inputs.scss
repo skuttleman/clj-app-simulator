@@ -1,0 +1,12 @@
+.input {
+    border-radius: 2px;
+    border-color: $light-gray;
+    border-width: 1px;
+
+    &:focus {
+        border-color: transparent;
+    }
+    &:disabled {
+        color: $gray;
+    }
+}

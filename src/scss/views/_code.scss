@@ -1,0 +1,36 @@
+.code {
+    font-family: Monaco;
+    code:not(.editable):not(:hover) {
+        color: $dark-blue;
+        background-color: #eee;
+    }
+    &.keyword {
+        color: $magenta;
+    }
+    &.brace {
+        color: $gray;
+    }
+    &.pr-str {
+        color: $green;
+    }
+}
+
+.markdown {
+    font-family: sans-serif;
+    span:not(.segment) {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .emoji {
+        padding-right: 10px;
+    }
+    :not(em):not(strong) > .segment {
+        padding-right: 5px;
+    }
+    blockquote {
+        padding: 0 10px;
+        border-left: 4px solid $gray;
+        border-right: 4px solid $gray;
+        border-radius: 10px;
+    }
+}

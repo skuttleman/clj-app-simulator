@@ -1,0 +1,21 @@
+.rules {
+    margin-top: 20px;
+    .rule {
+        .rule-text {
+            margin-left: 10px;
+            &:not(:last-child) {
+                margin-bottom: 20px;
+            }
+            .conditions {
+                padding-left: 30px;
+            }
+        }
+        .result  {
+            font-size: larger;
+        }
+        .editable:hover {
+            background-color: rgba($light-blue, 0.25);
+            box-shadow: 1px 1px 1px 1px rgba($light-blue, 0.25);
+        }
+    }
+}

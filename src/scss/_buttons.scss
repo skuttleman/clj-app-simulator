@@ -1,0 +1,30 @@
+.pure-button {
+    &.button-success {
+        background: $green;
+    }
+    &.button-error {
+        background: $red;
+        color: white;
+    }
+    &.button-warning {
+        background: $orange;
+        color: white;
+    }
+    &.button-secondary {
+        background: $light-blue;
+    }
+}
+
+.button {
+    cursor: pointer;
+    &.fa-minus-circle.red {
+        margin-right: 10px;
+    }
+}
+
+.button-row {
+    margin: 5px 0;
+    & > *:not(:last-child) {
+        margin-right: 10px;
+    }
+}
