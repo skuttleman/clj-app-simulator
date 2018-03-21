@@ -29,7 +29,8 @@
                    [ring/ring-devel "1.6.3"]
                    [ring/ring-json "0.3.1"]]
 
-    :plugins [[lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
+    :plugins [[com.jakemccrary/lein-test-refresh "0.22.0"]
+              [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
               [lein-cooper "1.2.2"]
               [lein-figwheel "0.5.14"]
               [lein-sassy "1.0.8"]]
@@ -37,7 +38,7 @@
     :jar-name "clj-app-simulator.jar"
     :uberjar-name "clj-app-simulator-standalone.jar"
     :source-paths ["src/clj" "src/cljs" "src/cljc"]
-    :test-paths ["test/clj" "test/cljs"]
+    :test-paths ["test/clj" "test/cljs" "test/cljc"]
 
     :cljsbuild {:builds [{:id           "dev"
                           :source-paths ["src/cljs" "src/cljc"]

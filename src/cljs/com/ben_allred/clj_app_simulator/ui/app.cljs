@@ -1,6 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.app
     (:require [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-              [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
               [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
               [com.ben-allred.clj-app-simulator.services.http :as http]
               [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
@@ -21,17 +20,15 @@
     {:home  home/root})
 
 (defn app []
-    (store/dispatch actions/request-user-details)
-    (fn []
-        (let [state (store/get-state)
-              component (components (get-in state [:page :handler]) error/not-found)]
-            [:div.app
-             [modal/modal state]
-             [toast/toast (:toasts state)]
-             [:div.scrollable
-              [main/header true]
-              [:main.main
-               [component state]]]])))
+    (let [state     (store/get-state)
+          component (components (get-in state [:page :handler]) error/not-found)]
+        [:div.app
+         [modal/modal (:modal state)]
+         [toast/toast (:toasts state)]
+         [:div.scrollable
+          [main/header]
+          [:main.main
+           [component state]]]]))
 
 (r/render
     [app]

@@ -5,10 +5,11 @@
               [reagent.core :as r]
               [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]))
 
-(defonce ^:private store (collaj/create-custom-store r/atom
-                         reducers/root
-                         collaj.enhancers/with-fn-dispatch
-                         (collaj.enhancers/with-log-middleware #(log/spy %) identity)))
+(defonce ^:private store
+    (collaj/create-custom-store r/atom
+                                reducers/root
+                                collaj.enhancers/with-fn-dispatch
+                                (collaj.enhancers/with-log-middleware #(log/spy %) identity)))
 
 (def get-state (:get-state store))
 

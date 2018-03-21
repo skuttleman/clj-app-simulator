@@ -10,22 +10,11 @@
     (if show?
         [:div
          {:style {:position :relative}}
-         [:div
+         [:div.spinner-container
           {:style {:position :absolute :height "50%" :min-height "200px" :min-width "100%"}}
           [spinner]]
-         [:div
+         [:div.component-container
           {:style {:position :absolute :height "100%" :min-height "400px" :min-width "100%" :background-color "rgba(0,0,0,0.25)"}}
           ""]
          component]
         component))
-
-(defn vector [coll]
-    (-> [:span.code.vector [:span.code.brace "["]]
-        (into (interpose " " coll))
-        (conj [:span.code.brace "]"])))
-
-(defn keyword [value]
-    [:span.code.keyword (str (clojure.core/keyword value))])
-
-(defn pr-str [value]
-    [:span.code.pr-str (clojure.core/pr-str value)])

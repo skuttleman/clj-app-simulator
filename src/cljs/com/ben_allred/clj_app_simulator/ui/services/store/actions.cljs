@@ -11,58 +11,12 @@
                           [error-type result]))
             response)))
 
-(def request-user-details
+(def request-simulators
     (fn [[dispatch]]
-        (dispatch [:user/request])
-        (-> "/auth/details"
+        (dispatch [:simulators/request])
+        (-> "/api/simulators"
             (http/get)
-            (request* dispatch :user/succeed :user/fail))))
-
-(def request-configs
-    (fn [[dispatch]]
-        (dispatch [:configs/request])
-        (-> "/api/configs"
-            (http/get)
-            (request* dispatch :configs/succeed :configs/fail))))
-
-(defn request-config [config-id]
-    (fn [[dispatch]]
-        (dispatch [:config/request])
-        (-> "/api/configs/"
-            (str config-id)
-            (http/get)
-            (request* dispatch :config/succeed :config/fail))))
-
-(defn update-rules [config-id rules]
-    (fn [[dispatch]]
-        (dispatch [:config.rules/update])
-        (-> "/api/configs/"
-            (str config-id)
-            (http/patch {:body {:data {:rules rules}}})
-            (request* dispatch :config.rules/succeed :config.rules/fail))))
-
-(defn update-messages [config-id messages]
-    (fn [[dispatch]]
-        (dispatch [:config.messages/update])
-        (-> "/api/configs/"
-            (str config-id)
-            (http/patch {:body {:data {:messages messages}}})
-            (request* dispatch :config.messages/succeed :config.messages/fail))))
-
-(defn update-description [config-id description]
-    (fn [[dispatch]]
-        (dispatch [:configs.config/update])
-        (-> "/api/configs/"
-            (str config-id)
-            (http/patch {:body {:data {:description description}}})
-            (request* dispatch :configs.config/succeed :configs.config/fail))))
-
-(defn save-repo [repo]
-    (fn [[dispatch]]
-        (dispatch [:configs.config.new/save])
-        (-> "/api/configs"
-            (http/post {:body {:data repo}})
-            (request* dispatch :configs.config.new/succeed :configs.config.new/fail))))
+            (request* dispatch :simulators/succeed :simulators/fail))))
 
 (defn show-modal [content & [title]]
     (fn [[dispatch]]
@@ -74,8 +28,11 @@
         (dispatch [:modal/hide])
         (macros/after 600 (dispatch [:modal/unmount]))))
 
+(defn remove-toast [key]
+    [:toast/remove key])
+
 (defn show-toast [level text]
     (fn [[dispatch]]
         (let [key (gensym)]
             (dispatch [:toast/display key level text])
-            (macros/after 6000 (dispatch [:toast/remove key])))))
+            (macros/after 6000 (dispatch (remove-toast key))))))

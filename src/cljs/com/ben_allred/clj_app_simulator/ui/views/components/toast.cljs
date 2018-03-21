@@ -8,10 +8,10 @@
 (defn toast [messages]
     [:div.toast-container
      [:ul.toast-messages
-      (for [[key {:keys [text level]}] (sort-by :key messages)]
+      (for [[key {:keys [text level]}] (sort-by key messages)]
           [:li.toast-message
            (-> {:key key}
-               (utils/classes {level true}))
+               (utils/classes {(name level) true}))
            [:div.toast-text text]
-           [:i.fa.fa-times.button
-            {:on-click #(store/dispatch [:toast/remove key])}]])]])
+           [:i.fa.fa-times.button.remove-button
+            {:on-click #(store/dispatch (actions/remove-toast key))}]])]])
