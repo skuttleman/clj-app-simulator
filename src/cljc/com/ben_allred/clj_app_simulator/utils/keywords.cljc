@@ -11,5 +11,5 @@
     ([separator kwds]
      (->> kwds
          (map (comp str safe-name))
-         (string/join separator)
+         (string/join (safe-name separator))
          (keyword))))

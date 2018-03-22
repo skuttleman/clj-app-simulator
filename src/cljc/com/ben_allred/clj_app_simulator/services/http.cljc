@@ -36,10 +36,10 @@
     #?(:clj  "application/json"
        :cljs "application/transit"))
 
-(defn content-type-header [{:keys [headers]}]
+(defn ^:private content-type-header [{:keys [headers]}]
     (clojure.core/get headers "content-type" (:content-type headers)))
 
-(defn ^:private request* [method url request]
+(defn request* [method url request]
     (async/go
         (let [ch-response (async/<! (-> request
                                         (assoc :method method :url url)
@@ -64,3 +64,9 @@
 
 (defn patch [url request]
     (request* :patch url request))
+
+(defn put [url request]
+    (request* :put url request))
+
+(defn delete [url request]
+    (request* :delete url request))

@@ -6,7 +6,7 @@
         v2))
 
 (defn update-maybe [m k f & f-args]
-    (if (get m k)
+    (if (some? (get m k))
         (apply update m k f f-args)
         m))
 

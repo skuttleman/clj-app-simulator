@@ -9,6 +9,3 @@
 (defn maybe-pr-str [s]
     (cond-> s
         (not (string? s)) (pr-str)))
-
-(defn upper-first [s]
-    (str (string/upper-case (subs s 0 1)) (subs s 1)))

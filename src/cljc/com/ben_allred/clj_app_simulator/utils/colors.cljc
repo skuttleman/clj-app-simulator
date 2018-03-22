@@ -145,7 +145,7 @@
 (defn ^:private colorfully [schema value]
     (loop [[[preds [f style-keys]] & more] (partition 2 pred-colorize-mappings)]
         (cond
-            ((apply preds/or? preds) value) (apply f schema value (map schema style-keys))
+            ((apply some-fn preds) value) (apply f schema value (map schema style-keys))
             (seq more) (recur more)
             :else (throw (ex-info (str "Cannot colorize: " (pr-str value)) value)))))
 
