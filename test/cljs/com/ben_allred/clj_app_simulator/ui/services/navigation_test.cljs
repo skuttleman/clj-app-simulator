@@ -8,15 +8,15 @@
 
 (deftest match-route*-test
     (testing "(match-route*)"
-        (let [match-route-spy (spies/spy-on (constantly {:route :info}))
-              qp-spy          (spies/spy-on (constantly {:query :params}))]
+        (let [match-route-spy (spies/create (constantly {:route :info}))
+              qp-spy          (spies/create (constantly {:query :params}))]
             (with-redefs [bidi/match-route match-route-spy]
                 (testing "calls bidi/match-route"
-                    (spies/reset-spy! match-route-spy)
+                    (spies/reset! match-route-spy)
                     (nav/match-route* ::routes "/some/path")
                     (is (spies/called-with? match-route-spy ::routes "/some/path")))
                 (testing "returns route info"
-                    (with-redefs [qp/parse (spies/create-spy)]
+                    (with-redefs [qp/parse (spies/create)]
                         (let [result (nav/match-route* ::routes "/some/path")]
                             (is (= {:route :info} result)))))
                 (testing "includes query-params when they exist"
@@ -27,15 +27,15 @@
 
 (deftest path-for*-test
     (testing "(path-for*)"
-        (let [path-for-spy (spies/spy-on (constantly "/some/route"))
-              qp-spy       (spies/spy-on (constantly "some=query&params=here"))]
+        (let [path-for-spy (spies/create (constantly "/some/route"))
+              qp-spy       (spies/create (constantly "some=query&params=here"))]
             (with-redefs [bidi/path-for path-for-spy]
                 (testing "calls bidi/path-for"
-                    (spies/reset-spy! path-for-spy)
+                    (spies/reset! path-for-spy)
                     (nav/path-for* ::routes ::page {:route-params :value})
                     (is (spies/called-with? path-for-spy ::routes ::page :route-params "value")))
                 (testing "returns path string"
-                    (with-redefs [qp/stringify (spies/create-spy)]
+                    (with-redefs [qp/stringify (spies/create)]
                         (let [result (nav/path-for* ::routes ::path {})]
                             (is (= "/some/route" result)))))
                 (testing "returns path with query params when they exist"
@@ -47,7 +47,7 @@
 (deftest match-route-test
     (testing "(match-route)"
         (testing "calls match-route* with routes"
-            (let [match-route-spy (spies/spy-on (constantly ::some-result))]
+            (let [match-route-spy (spies/create (constantly ::some-result))]
                 (with-redefs [nav/routes [::some ::routes]
                               nav/match-route* match-route-spy]
                     (let [result (nav/match-route ::path)]
@@ -56,26 +56,26 @@
 
 (deftest path-for-test
     (testing "(path-for)"
-        (let [path-for-spy (spies/spy-on (constantly ::some-result))]
+        (let [path-for-spy (spies/create (constantly ::some-result))]
             (testing "calls path-for* with routes"
                 (with-redefs [nav/routes [::some ::routes]
                               nav/path-for* path-for-spy]
-                    (spies/reset-spy! path-for-spy)
+                    (spies/reset! path-for-spy)
                     (let [result (nav/path-for ::path ::params)]
                         (is (= ::some-result result))
                         (is (spies/called-with? path-for-spy [::some ::routes] ::path ::params)))))
             (testing "defaults params to nil"
                 (with-redefs [nav/routes [::some ::routes]
                               nav/path-for* path-for-spy]
-                    (spies/reset-spy! path-for-spy)
+                    (spies/reset! path-for-spy)
                     (let [result (nav/path-for ::path)]
                         (is (= ::some-result result))
                         (is (spies/called-with? path-for-spy [::some ::routes] ::path nil))))))))
 
 (deftest navigate*-test
     (testing "(navigate*)"
-        (let [pushy-spy    (spies/create-spy)
-              path-for-spy (spies/spy-on (constantly ::path))]
+        (let [pushy-spy    (spies/create)
+              path-for-spy (spies/create (constantly ::path))]
             (testing "sets history token"
                 (with-redefs [pushy/set-token! pushy-spy
                               nav/path-for* path-for-spy]
@@ -85,8 +85,8 @@
 
 (deftest nav-and-replace*-test
     (testing "(nav-and-replace*)"
-        (let [pushy-spy    (spies/create-spy)
-              path-for-spy (spies/spy-on (constantly ::path))]
+        (let [pushy-spy    (spies/create)
+              path-for-spy (spies/create (constantly ::path))]
             (testing "sets history token"
                 (with-redefs [pushy/replace-token! pushy-spy
                               nav/path-for* path-for-spy]
@@ -96,12 +96,12 @@
 
 (deftest navigate!-test
     (testing "(navigate!)"
-        (let [navigate-spy (spies/spy-on (constantly ::some-result))]
+        (let [navigate-spy (spies/create (constantly ::some-result))]
             (testing "calls navigate* with routes"
                 (with-redefs [nav/history ::history
                               nav/routes [::some ::routes]
                               nav/navigate* navigate-spy]
-                    (spies/reset-spy! navigate-spy)
+                    (spies/reset! navigate-spy)
                     (let [result (nav/navigate! ::page ::params)]
                         (is (= ::some-result result))
                         (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params)))))
@@ -109,19 +109,19 @@
                 (with-redefs [nav/history ::history
                               nav/routes [::some ::routes]
                               nav/navigate* navigate-spy]
-                    (spies/reset-spy! navigate-spy)
+                    (spies/reset! navigate-spy)
                     (let [result (nav/navigate! ::page)]
                         (is (= ::some-result result))
                         (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))
 
 (deftest nav-and-replace!-test
     (testing "(nav-and-replace!)"
-        (let [navigate-spy (spies/spy-on (constantly ::some-result))]
+        (let [navigate-spy (spies/create (constantly ::some-result))]
             (testing "calls navigate* with routes"
                 (with-redefs [nav/history ::history
                               nav/routes [::some ::routes]
                               nav/nav-and-replace* navigate-spy]
-                    (spies/reset-spy! navigate-spy)
+                    (spies/reset! navigate-spy)
                     (let [result (nav/nav-and-replace! ::page ::params)]
                         (is (= ::some-result result))
                         (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params)))))
@@ -129,7 +129,7 @@
                 (with-redefs [nav/history ::history
                               nav/routes [::some ::routes]
                               nav/nav-and-replace* navigate-spy]
-                    (spies/reset-spy! navigate-spy)
+                    (spies/reset! navigate-spy)
                     (let [result (nav/nav-and-replace! ::page)]
                         (is (= ::some-result result))
                         (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))

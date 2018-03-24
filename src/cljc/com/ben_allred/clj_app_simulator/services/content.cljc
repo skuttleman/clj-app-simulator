@@ -1,8 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.services.content
     (:require [com.ben-allred.clj-app-simulator.utils.maps :as maps]
               [com.ben-allred.clj-app-simulator.utils.json :as json]
-              [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+              [com.ben-allred.clj-app-simulator.utils.transit :as transit]))
 
 (def ^:private header-keys
     #?(:clj  #{"content-type" "accept"}

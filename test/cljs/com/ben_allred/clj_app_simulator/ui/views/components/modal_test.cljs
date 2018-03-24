@@ -12,16 +12,16 @@
 
 (deftest modal-test
     (testing "(modal)"
-        (let [spy (spies/create-spy)]
+        (let [spy (spies/create)]
             (testing "adds class of state to modal-wrapper"
                 (is (test.dom/query-one (modal :some-state) :.modal-wrapper.some-state)))
             (testing "has click handler to hide modal"
-                (spies/reset-spy! spy)
+                (spies/reset! spy)
                 (with-redefs [store/dispatch spy]
                     (test.dom/simulate-event (modal :some-state) :click)
                     (is (spies/called-with? spy actions/hide-modal))))
             (testing "has close-button"
-                (spies/reset-spy! spy)
+                (spies/reset! spy)
                 (with-redefs [store/dispatch spy]
                     (test.dom/simulate-event (test.dom/query-one (modal :some-state) :.close-button) :click)
                     (is (spies/called-with? spy actions/hide-modal))))
@@ -30,7 +30,7 @@
             (testing "has no modal component when state is :unmounted"
                 (is (not (test.dom/query-one (modal :unmounted) :.modal))))
             (testing "stops propagation when clicking modal"
-                (spies/reset-spy! spy)
+                (spies/reset! spy)
                 (with-redefs [dom/stop-propagation spy]
                     (let [event-data {:event :data}
                           modal      (test.dom/query-one (modal :some-state) :.modal)]

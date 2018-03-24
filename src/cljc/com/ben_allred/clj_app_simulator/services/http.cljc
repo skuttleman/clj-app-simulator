@@ -1,16 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.services.http
     (:refer-clojure :exclude [get])
-    (:require [com.ben-allred.clj-app-simulator.utils.json :as json]
-              [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-              [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-              [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]
-              [kvlt.chan :as kvlt]
+    (:require [kvlt.chan :as kvlt]
               [com.ben-allred.clj-app-simulator.services.content :as content]
         #?(:clj  [clojure.core.async :as async]
            :cljs [cljs.core.async :as async])))
 
-(def ^:private status->kw
+(def ^:private content-type
+    #?(:clj  "application/json"
+       :cljs "application/transit"))
+
+(defn ^:private content-type-header [{:keys [headers]}]
+    (clojure.core/get headers "content-type" (:content-type headers)))
+
+(def status->kw
     {200 :ok
      201 :created
      202 :accepted
@@ -29,15 +31,14 @@
 (def kw->status
     (into {} (map (comp vec reverse)) status->kw))
 
-(def ^:private success?
-    (comp #{200 201 202 204} :status))
+(def success?
+    (comp #(<= 200 % 299) :status))
 
-(def ^:private content-type
-    #?(:clj  "application/json"
-       :cljs "application/transit"))
+(def client-error?
+    (comp #(<= 400 % 499) :status))
 
-(defn ^:private content-type-header [{:keys [headers]}]
-    (clojure.core/get headers "content-type" (:content-type headers)))
+(def server-error?
+    (comp #(<= 500 % 599) :status))
 
 (defn request* [method url request]
     (async/go

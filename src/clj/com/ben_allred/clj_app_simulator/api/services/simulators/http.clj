@@ -2,10 +2,8 @@
     (:require [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
               [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
               [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+              [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
               [clojure.spec.alpha :as s]
-              [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-              [compojure.core :as c]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]
               [com.ben-allred.clj-app-simulator.api.services.activity :as activity]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
@@ -30,43 +28,21 @@
 (s/def :http/http-simulator (s/merge :http.partial/http-simulator
                                 (s/keys :req-un [::path ::method :http/response])))
 
-(defn ^:private update-sim [simulator body]
-    (case (:action body)
-        :simulator/reset (common/reset simulator)
-        :http/reset-requests (common/reset-requests simulator)
-        :http/reset-response (common/reset-response simulator)
-        :http/change (common/change simulator (:config body))
-        nil))
+(defn ^:private sleep [ms]
+    (Thread/sleep ms))
 
-(defn ^:private config->routes [simulator delete]
-    (let [{:keys [method path] :as config} (common/config simulator)
-          method-str (name method)
-          uri        (str "/api/simulators/" method-str path)
-          method'     (keyword method-str)]
-        (->> [[method' (str "/simulators" path) (fn [request]
-                                                   (let [response (common/receive simulator request)]
-                                                       (activity/publish :simulators/recieve
-                                                                         {:config  (common/config simulator)
-                                                                          :request (pop (common/requests simulator))})
-                                                       response))]
-              [:get uri (fn [_]
-                            {:status 200
-                             :body   (common/details simulator)})]
-              [:delete uri (fn [_]
-                               (activity/publish :simulators/delete
-                                                 {:config (common/config simulator)})
-                               (delete method path)
-                               {:status 204})]
-              [:patch uri (fn [{:keys [body]}]
-                              (try (update-sim simulator body)
-                                   {:status 204}
-                                   (catch Throwable ex
-                                       {:status 400 :body (:problems (ex-data ex))})))]]
-            (map (partial apply c/make-route)))))
+(defn valid? [config]
+    (s/valid? :http/http-simulator config))
+
+(defn why-not? [config]
+    (s/explain-data :http/http-simulator config))
+
+(defn why-not-update? [config]
+    (s/explain-data :http.partial/http-simulator config))
 
 (defn ->HttpSimulator [config]
-    (let [{:keys [dispatch get-state]} (store/http-store)]
-        (when (s/valid? :http/http-simulator config)
+    (when (valid? config)
+        (let [{:keys [dispatch get-state]} (store/http-store)]
             (reify
                 common/ISimulator
                 (start [_]
@@ -77,7 +53,7 @@
                     (let [state (get-state)
                           delay (store/delay state)]
                         (when (pos-int? delay)
-                            (Thread/sleep delay))
+                            (sleep delay))
                         (store/response state)))
                 (requests [_]
                     (store/requests (get-state)))
@@ -88,7 +64,7 @@
                 (reset [_]
                     (dispatch actions/reset))
                 (routes [this delete]
-                    (config->routes this delete))
+                    (routes.sim/http-sim->routes this delete))
 
                 common/IHTTPSimulator
                 (reset-requests [_]
@@ -96,6 +72,6 @@
                 (reset-response [_]
                     (dispatch actions/reset-response))
                 (change [_ config]
-                    (when-let [problems (s/explain-data :http.partial/http-simulator config)]
+                    (when-let [problems (why-not-update? config)]
                         (throw (ex-info "config does not conform to spec" {:problems problems})))
-                    (dispatch (actions/change (select-keys config #{:response :delay}))))))))
+                    (dispatch (actions/change (select-keys config #{:delay :response}))))))))

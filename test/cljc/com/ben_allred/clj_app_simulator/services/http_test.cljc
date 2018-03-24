@@ -7,7 +7,7 @@
 
 (defn ^:private request* [method url request response]
     (let [response-ch (async/chan)
-          kvlt-spy    (spies/spy-on (constantly response-ch))]
+          kvlt-spy    (spies/create (constantly response-ch))]
         (with-redefs [kvlt/request! kvlt-spy
                       http/content-type "application/edn"]
             (async/put! response-ch response)
@@ -43,20 +43,20 @@
 
 (deftest get-test
     (testing "(get)"
-        (let [spy (spies/spy-on (constantly ::response-channel))]
+        (let [spy (spies/create (constantly ::response-channel))]
             (with-redefs [http/request* spy]
                 (testing "sends a :get request"
-                    (spies/reset-spy! spy)
+                    (spies/reset! spy)
                     (is (= ::response-channel (http/get ::some-url)))
                     (is (spies/called-with? spy :get ::some-url nil))
                     (testing "with an optional request value"
-                        (spies/reset-spy! spy)
+                        (spies/reset! spy)
                         (http/get ::some-url ::some-request)
                         (is (spies/called-with? spy :get ::some-url ::some-request))))))))
 
 (deftest post-test
     (testing "(post)"
-        (let [spy (spies/spy-on (constantly ::response-channel))]
+        (let [spy (spies/create (constantly ::response-channel))]
             (with-redefs [http/request* spy]
                 (testing "sends a :post request"
                     (http/post ::some-url ::some-request)
@@ -64,7 +64,7 @@
 
 (deftest patch-test
     (testing "(patch)"
-        (let [spy (spies/spy-on (constantly ::response-channel))]
+        (let [spy (spies/create (constantly ::response-channel))]
             (with-redefs [http/request* spy]
                 (testing "sends a :patch request"
                     (http/patch ::some-url ::some-request)
@@ -72,7 +72,7 @@
 
 (deftest put-test
     (testing "(put)"
-        (let [spy (spies/spy-on (constantly ::response-channel))]
+        (let [spy (spies/create (constantly ::response-channel))]
             (with-redefs [http/request* spy]
                 (testing "sends a :put request"
                     (http/put ::some-url ::some-request)
@@ -80,7 +80,7 @@
 
 (deftest delete-test
     (testing "(delete)"
-        (let [spy (spies/spy-on (constantly ::response-channel))]
+        (let [spy (spies/create (constantly ::response-channel))]
             (with-redefs [http/request* spy]
                 (testing "sends a :delete request"
                     (http/delete ::some-url ::some-request)

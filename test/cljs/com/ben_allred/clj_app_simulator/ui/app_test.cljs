@@ -22,11 +22,11 @@
     (testing "(app-test)"
         (let [state         (state)
               components    (components)
-              get-state-spy (spies/spy-on (constantly state))]
+              get-state-spy (spies/create (constantly state))]
             (with-redefs [app/components components
                           store/get-state get-state-spy]
                 (testing "gets state from store"
-                    (spies/reset-spy! get-state-spy)
+                    (spies/reset! get-state-spy)
                     (let [app (app/app)]
                         (is (spies/called-with? get-state-spy))))
                 (testing "mounts modal with state"

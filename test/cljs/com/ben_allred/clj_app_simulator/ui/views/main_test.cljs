@@ -7,7 +7,7 @@
 
 (deftest header-test
     (testing "(header)"
-        (let [path-for-spy (spies/spy-on (constantly ::href))]
+        (let [path-for-spy (spies/create (constantly ::href))]
             (with-redefs [nav/path-for path-for-spy]
                 (let [header (main/header)]
                     (testing "has link to home page"

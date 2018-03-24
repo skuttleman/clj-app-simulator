@@ -6,8 +6,8 @@
     ([rules] (classes nil rules))
     ([attrs rules]
      (let [classes (->> rules
-                       (filter val)
-                       (map key)
-                       (string/join " "))]
+                        (filter val)
+                        (map key)
+                        (string/join " "))]
          (cond-> attrs
              (seq classes) (update :class-name (comp strings/trim-to-nil str) " " classes)))))

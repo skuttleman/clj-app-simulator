@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.core
-    (:require [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http]
+    (:refer-clojure :exclude [set!])
+    (:require [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
               [compojure.core :as c]
               [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]
-              [clojure.spec.alpha :as s]
-              [com.ben-allred.clj-app-simulator.api.services.activity :as activity]))
+              [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+              [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]))
 
 (def ^:private simulators (atom {}))
 
@@ -14,43 +14,50 @@
 (defn ^:private config->?simulator [config]
     (let [{:keys [method path] :as config} (update config :method keyword)]
         (when-let [simulator (when-not (contains? @simulators [method path])
-                                 (http/->HttpSimulator config))]
+                                 (http.sim/->HttpSimulator config))]
             (common/start simulator)
             (swap! simulators assoc [method path] simulator)
             simulator)))
 
-(defn route-configs []
+(defn configs []
     (->> @simulators
-        (vals)
-        (map common/config)
-        (assoc-in {:status 200} [:body :simulators])))
+         (vals)
+         (map common/config)
+         (assoc {} :simulators)
+         (conj [:ok])
+         (respond/with)))
 
-(defn add-simulator [config]
+(defn add [config]
     (if-let [simulator (config->?simulator config)]
         (do
             (activity/publish :simulators/add (common/config simulator))
-            {:status 204})
-        {:status 400
-         :body   (s/explain-data :http/http-simulator config)}))
+            (respond/with [:no-content]))
 
-(defn set-simulators [configs]
-    (reset! simulators {})
-    (let [sims (->> configs
-                   (map config->?simulator)
-                   (remove nil?)
-                   (doall))]
-        (activity/publish :simulators/init (map common/config sims))
-        {:status 204}))
+        (respond/with [:bad-request {:message (or (http.sim/why-not? config) "simulator already exists")}])))
 
-(defn reset-all []
+(defn set! [configs]
+    (let [invalid-configs (remove http.sim/valid? configs)]
+        (if (empty? invalid-configs)
+            (do
+                (reset! simulators {})
+                (let [sims (->> configs
+                                (map config->?simulator)
+                                (map common/config))]
+                    (activity/publish :simulators/init (doall sims))
+                    (respond/with [:no-content])))
+            (respond/with [:bad-request {:message        "one more more invalid simulators"
+                                             :simulators (map #(assoc {:config %} :reason (http.sim/why-not? %)) invalid-configs)}]))))
+
+(defn reset-all! []
     (->> @simulators
-        (map common/reset)
-        (dorun))
+         (vals)
+         (map common/reset)
+         (dorun))
     (activity/publish :simulators/reset-all nil)
-    {:status 204})
+    (respond/with [:no-content]))
 
 (defn routes []
     (->> @simulators
-        (vals)
-        (mapcat #(common/routes % remove-simulator!))
-        (apply c/routes)))
+         (vals)
+         (mapcat #(common/routes % remove-simulator!))
+         (apply c/routes)))

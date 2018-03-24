@@ -6,4 +6,4 @@
     (f/cljs-repl))
 
 (defn update-env [key val]
-    (alter-var-root #'com.ben-allred.clj-app-simulator.services.env/get assoc key val))
+    (alter-var-root #'env/get assoc key val))
