@@ -2,7 +2,7 @@
     (:require [clojure.test :refer [deftest testing is]]
               [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]))
 
-(deftest http-config-test
+(deftest ^:unit http-config-test
     (testing "(http-config)"
         (testing "has default state"
             (is (nil? (reducers/http-config))))
@@ -26,7 +26,7 @@
         (testing "returns state for all other types"
             (is (= ::state (reducers/http-config ::state [(keyword (rand-int 1000))]))))))
 
-(deftest http-requests-test
+(deftest ^:unit http-requests-test
     (testing "(http-requests)"
         (testing "has default state"
             (is (= [] (reducers/http-requests))))

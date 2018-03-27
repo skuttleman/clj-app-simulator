@@ -2,7 +2,7 @@
     (:require [clojure.test :refer [deftest testing is are]]
               [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
 
-(deftest safe-name-test
+(deftest ^:unit safe-name-test
     (testing "(safe-name)"
         (testing "calls name on keyword"
             (is (= "keyword" (keywords/safe-name :keyword))))
@@ -17,7 +17,7 @@
                 'symbol
                 #'safe-name-test))))
 
-(deftest join-test
+(deftest ^:unit join-test
     (testing "(join)"
         (testing "joins keywords"
             (is (= :joinedkeyword (keywords/join [:joined :keyword]))))

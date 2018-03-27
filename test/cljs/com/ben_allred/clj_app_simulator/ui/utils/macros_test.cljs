@@ -3,7 +3,7 @@
               [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
               [test.utils.spies :as spies]))
 
-(deftest after-test
+(deftest ^:unit after-test
     (testing "(after)"
         (let [timeout-spy (spies/create)
               some-spy (spies/create)

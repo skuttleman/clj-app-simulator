@@ -18,7 +18,7 @@
      :something-random (rand-int 1000)
      :modal            ::modal-data})
 
-(deftest app-test
+(deftest ^:unit app-test
     (testing "(app-test)"
         (let [state         (state)
               components    (components)

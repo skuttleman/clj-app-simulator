@@ -2,7 +2,7 @@
     (:require [cljs.test :refer-macros [deftest testing is]]
               [com.ben-allred.clj-app-simulator.ui.services.events :as events]))
 
-(deftest code->key-test
+(deftest ^:unit code->key-test
     (testing "(code->key)"
         (testing "translates 13"
             (is (= :enter (events/code->key 13))))
@@ -11,7 +11,7 @@
         (testing "return nil for unknown"
             (is (nil? (events/code->key 111111))))))
 
-(deftest key->code-test
+(deftest ^:unit key->code-test
     (testing "(key->code)"
         (testing "translates :enter"
             (is (= 13 (events/key->code :enter))))
@@ -20,7 +20,7 @@
         (testing "return nil for unknown"
             (is (nil? (events/key->code :not-a-key))))))
 
-(deftest ->key-code-test
+(deftest ^:unit ->key-code-test
     (testing "(->key-code)"
         (testing "handles enter"
             (is (= :enter (events/->key-code (clj->js {:keyCode 13})))))

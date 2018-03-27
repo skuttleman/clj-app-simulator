@@ -2,7 +2,7 @@
     (:require [cljs.test :refer-macros [deftest testing is]]
               [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]))
 
-(deftest page-test
+(deftest ^:unit page-test
     (testing "(page)"
         (testing "has default state"
             (is (nil? (reducers/page))))
@@ -11,7 +11,7 @@
         (testing "returns unchanged state for any random action"
             (is (= ::same-state (reducers/page ::same-state [:any-random-action ::ignored]))))))
 
-(deftest modal-test
+(deftest ^:unit modal-test
     (testing "(modal)"
         (testing "has default state"
             (is (= {:state :unmounted} (reducers/modal))))
@@ -30,7 +30,7 @@
         (testing "returns unchanged state for any random action"
             (is (= ::same-state (reducers/modal ::same-state [:any-random-action ::ignored]))))))
 
-(deftest toasts-test
+(deftest ^:unit toasts-test
     (testing "(toasts)"
         (testing "has default state"
             (is (= {} (reducers/toasts))))

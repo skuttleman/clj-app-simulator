@@ -2,8 +2,7 @@
     (:refer-clojure :exclude [contains?])
     (:require [clojure.string :as string]
               [clojure.set :as set]
-              [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-              [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+              [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
 
 (defn ^:private tag->map [tag & [attrs :as args]]
     (if (fn? tag)

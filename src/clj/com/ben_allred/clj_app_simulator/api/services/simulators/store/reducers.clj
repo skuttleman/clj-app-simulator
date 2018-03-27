@@ -29,7 +29,7 @@
 
 (defn ^:private http-requests*
     ([] [])
-    ([state [type request]]
+    ([state [type]]
      (case type
          :http/reset-requests []
          state)))

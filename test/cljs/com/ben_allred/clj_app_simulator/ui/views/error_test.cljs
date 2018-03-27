@@ -6,7 +6,7 @@
               [com.ben-allred.clj-app-simulator.ui.views.main :as main]
               [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
 
-(deftest not-found-test
+(deftest ^:unit not-found-test
     (testing "(not-found)"
         (let [path-for-spy (spies/create (constantly ::href))]
             (with-redefs [nav/path-for path-for-spy]

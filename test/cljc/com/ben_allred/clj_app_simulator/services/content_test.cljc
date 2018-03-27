@@ -2,7 +2,9 @@
     (:require [clojure.test :refer [deftest testing is]]
               [com.ben-allred.clj-app-simulator.services.content :as content]))
 
-(deftest parse-test
+(def ^:private header-keys #{"content-type" "accept"})
+
+(deftest ^:unit parse-test
     (testing "(parse)"
         (testing "parses edn"
             (let [data {:body "#{:some :edn}"}]
@@ -21,38 +23,38 @@
         (testing "leaves unknown content-type unparsed"
             (is (= :data (:body (content/parse {:body :data} "unknown-content")))))))
 
-(deftest prepare-test
+(deftest ^:unit prepare-test
     (testing "(prepare)"
         (testing "when preparing edn"
             (let [data {:headers {:some :header} :body #{:some :edn}}]
                 (testing "stringifies the body"
-                    (is (= "#{:some :edn}" (:body (content/prepare data "application/edn")))))
+                    (is (= "#{:some :edn}" (:body (content/prepare data header-keys "application/edn")))))
                 (testing "adds headers"
                     (is (= {:some :header "content-type" "application/edn" "accept" "application/edn"}
-                           (:headers (content/prepare data "application/edn")))))))
+                           (:headers (content/prepare data header-keys "application/edn")))))))
         (testing "when preparing json"
             (let [data {:headers {:some :header} :body {:some "json"}}]
                 (testing "stringifies the body"
-                    (is (= "{\"some\":\"json\"}" (:body (content/prepare data "application/json")))))
+                    (is (= "{\"some\":\"json\"}" (:body (content/prepare data header-keys "application/json")))))
                 (testing "adds headers"
                     (is (= {:some :header "content-type" "application/json" "accept" "application/json"}
-                           (:headers (content/prepare data "application/json")))))))
+                           (:headers (content/prepare data header-keys "application/json")))))))
         (testing "when preparing transit"
             (let [data {:headers {:some :header} :body {:some [:transit]}}]
                 (testing "stringifies the body"
-                    (is (= "[\"^ \",\"~:some\",[\"~:transit\"]]" (:body (content/prepare data "application/transit")))))
+                    (is (= "[\"^ \",\"~:some\",[\"~:transit\"]]" (:body (content/prepare data header-keys "application/transit")))))
                 (testing "adds headers"
                     (is (= {:some :header "content-type" "application/transit" "accept" "application/transit"}
-                           (:headers (content/prepare data "application/transit")))))))
+                           (:headers (content/prepare data header-keys "application/transit")))))))
         (testing "does not update body when nil"
             (let [data {:nobody :here}]
-                (is (nil? (:body (content/prepare data "application/edn"))))
-                (is (nil? (:body (content/prepare data "application/json"))))
-                (is (nil? (:body (content/prepare data "application/transit"))))))
+                (is (nil? (:body (content/prepare data header-keys "application/edn"))))
+                (is (nil? (:body (content/prepare data header-keys "application/json"))))
+                (is (nil? (:body (content/prepare data header-keys "application/transit"))))))
         (testing "leaves string bodies untouched"
             (let [data {:some :data :body "a string"}]
-                (is (= data (content/prepare data "application/edn")))
-                (is (= data (content/prepare data "application/json")))
-                (is (= data (content/prepare data "application/transit")))))
+                (is (= data (content/prepare data header-keys "application/edn")))
+                (is (= data (content/prepare data header-keys "application/json")))
+                (is (= data (content/prepare data header-keys "application/transit")))))
         (testing "leaves unknown content-type untouched"
-            (is (= {:some :data} (:body (content/prepare {:body {:some :data}} "unknown-content")))))))
+            (is (= {:some :data} (:body (content/prepare {:body {:some :data}} header-keys "unknown-content")))))))

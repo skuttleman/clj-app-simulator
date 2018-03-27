@@ -2,7 +2,7 @@
     (:require [cljs.test :refer-macros [deftest testing is]]
               [com.ben-allred.clj-app-simulator.ui.utils.core :as utils]))
 
-(deftest classes-test
+(deftest ^:unit classes-test
     (testing "(classes)"
         (testing "generates classes based on rules"
             (let [result (utils/classes {"class-1" true "class-2" false})]

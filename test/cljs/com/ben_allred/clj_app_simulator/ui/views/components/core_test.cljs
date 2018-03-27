@@ -3,7 +3,7 @@
               [test.utils.dom :as test.dom]
               [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))
 
-(deftest spinner-overlay-test
+(deftest ^:unit spinner-overlay-test
     (testing "(spinner-overlay)"
         (testing "when shown"
             (let [spinner (components/spinner-overlay true ::component)]

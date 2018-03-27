@@ -6,7 +6,7 @@
               [test.utils.spies :as spies]
               [pushy.core :as pushy]))
 
-(deftest match-route*-test
+(deftest ^:unit match-route*-test
     (testing "(match-route*)"
         (let [match-route-spy (spies/create (constantly {:route :info}))
               qp-spy          (spies/create (constantly {:query :params}))]
@@ -25,7 +25,7 @@
                             (is (spies/called-with? qp-spy "some=query&params=here"))
                             (is (= {:route :info :query-params {:query :params}} result)))))))))
 
-(deftest path-for*-test
+(deftest ^:unit path-for*-test
     (testing "(path-for*)"
         (let [path-for-spy (spies/create (constantly "/some/route"))
               qp-spy       (spies/create (constantly "some=query&params=here"))]
@@ -44,7 +44,7 @@
                             (is (spies/called-with? qp-spy {:query :params}))
                             (is (= "/some/route?some=query&params=here" result)))))))))
 
-(deftest match-route-test
+(deftest ^:unit match-route-test
     (testing "(match-route)"
         (testing "calls match-route* with routes"
             (let [match-route-spy (spies/create (constantly ::some-result))]
@@ -54,7 +54,7 @@
                         (is (= ::some-result result))
                         (is (spies/called-with? match-route-spy [::some ::routes] ::path))))))))
 
-(deftest path-for-test
+(deftest ^:unit path-for-test
     (testing "(path-for)"
         (let [path-for-spy (spies/create (constantly ::some-result))]
             (testing "calls path-for* with routes"
@@ -72,7 +72,7 @@
                         (is (= ::some-result result))
                         (is (spies/called-with? path-for-spy [::some ::routes] ::path nil))))))))
 
-(deftest navigate*-test
+(deftest ^:unit navigate*-test
     (testing "(navigate*)"
         (let [pushy-spy    (spies/create)
               path-for-spy (spies/create (constantly ::path))]
@@ -83,7 +83,7 @@
                     (is (spies/called-with? path-for-spy ::routes ::page ::params))
                     (is (spies/called-with? pushy-spy ::history ::path)))))))
 
-(deftest nav-and-replace*-test
+(deftest ^:unit nav-and-replace*-test
     (testing "(nav-and-replace*)"
         (let [pushy-spy    (spies/create)
               path-for-spy (spies/create (constantly ::path))]
@@ -94,7 +94,7 @@
                     (is (spies/called-with? path-for-spy ::routes ::page ::params))
                     (is (spies/called-with? pushy-spy ::history ::path)))))))
 
-(deftest navigate!-test
+(deftest ^:unit navigate!-test
     (testing "(navigate!)"
         (let [navigate-spy (spies/create (constantly ::some-result))]
             (testing "calls navigate* with routes"
@@ -114,7 +114,7 @@
                         (is (= ::some-result result))
                         (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))
 
-(deftest nav-and-replace!-test
+(deftest ^:unit nav-and-replace!-test
     (testing "(nav-and-replace!)"
         (let [navigate-spy (spies/create (constantly ::some-result))]
             (testing "calls navigate* with routes"

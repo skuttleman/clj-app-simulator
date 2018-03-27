@@ -6,7 +6,7 @@
               [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros]
               [test.utils.spies :as spies]))
 
-(deftest request-simulators-test
+(deftest ^:unit request-simulators-test
     (testing "(request-simulators)"
         (let [dispatch (spies/create)]
             (testing "calls dispatch with request action"
@@ -14,7 +14,7 @@
                 (actions/request-simulators [dispatch])
                 (is (spies/called-with? dispatch [:simulators/request]))))))
 
-(deftest request-simulators-success-test
+(deftest ^:unit request-simulators-success-test
     (testing "(request-simulators)"
         (testing "calls dispatch when request succeeds"
             (async done
@@ -29,7 +29,7 @@
                             (is (spies/called-with? http/get "/api/simulators"))
                             (done))))))))
 
-(deftest request-simulators-failure-test
+(deftest ^:unit request-simulators-failure-test
     (testing "(request-simulators)"
         (testing "calls dispatch when request fails"
             (async done
@@ -44,7 +44,7 @@
                             (is (spies/called-with? http/get "/api/simulators"))
                             (done))))))))
 
-(deftest show-modal-test
+(deftest ^:unit show-modal-test
     (testing "(show-modal)"
         (let [dispatch    (spies/create identity)
               action      (actions/show-modal ::content "Some Title")
@@ -66,7 +66,7 @@
                         (is (spies/called-with? dispatch [:modal/show]))
                         (is (= 1 ms))))))))
 
-(deftest hide-modal-test
+(deftest ^:unit hide-modal-test
     (testing "(hide-modal)"
         (let [dispatch    (spies/create)
               timeout-spy (spies/create)]
@@ -85,7 +85,7 @@
                         (is (spies/called-with? dispatch [:modal/unmount]))
                         (is (= 600 ms))))))))
 
-(deftest show-toast-test
+(deftest ^:unit show-toast-test
     (testing "(show-toast)"
         (let [dispatch    (spies/create)
               timeout-spy (spies/create)

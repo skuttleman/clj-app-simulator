@@ -2,7 +2,7 @@
     (:require [clojure.test :refer [deftest testing is are]]
               [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
-(deftest trim-to-nil-test
+(deftest ^:unit trim-to-nil-test
     (testing "(trim-to-nil)"
         (testing "trims strings"
             (is (= "trimmed" (strings/trim-to-nil "   trimmed "))))
@@ -11,7 +11,7 @@
         (testing "returns nil when value is nil"
             (is (nil? (strings/trim-to-nil nil))))))
 
-(deftest maybe-pr-str-test
+(deftest ^:unit maybe-pr-str-test
     (testing "(maybe-pr-str)"
         (testing "returns strings unchanged"
             (is (= "a string" (strings/maybe-pr-str "a string"))))

@@ -14,10 +14,8 @@
 
 (enable-console-print!)
 
-(defn on-js-reload [])
-
 (def components
-    {:home  home/root})
+    {:home home/root})
 
 (defn app []
     (let [state     (store/get-state)
@@ -30,6 +28,10 @@
           [:main.main
            [component state]]]]))
 
-(r/render
-    [app]
-    (.getElementById js/document "app"))
+(defn mount! []
+    (r/render
+        [app]
+        (.getElementById js/document "app")))
+
+(defn on-js-reload []
+    (mount!))

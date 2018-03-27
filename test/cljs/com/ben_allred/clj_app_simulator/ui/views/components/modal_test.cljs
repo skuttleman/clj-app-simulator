@@ -10,7 +10,7 @@
 (defn ^:private modal [state & [content title]]
     (modal/modal {:state state :content content :title title}))
 
-(deftest modal-test
+(deftest ^:unit modal-test
     (testing "(modal)"
         (let [spy (spies/create)]
             (testing "adds class of state to modal-wrapper"

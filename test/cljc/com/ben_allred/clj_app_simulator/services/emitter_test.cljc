@@ -10,7 +10,7 @@
       (async/chan)
       (async/chan)]])
 
-(deftest new-test
+(deftest ^:unit new-test
     (testing "(new)"
         (testing "when subscribed"
             (let [[[emitter-1 emitter-2] [all-chan event-1-chan event-2-chan]]

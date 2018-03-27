@@ -1,19 +1,25 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.core
-    (:refer-clojure :exclude [delay])
-    (:require [com.ben-allred.collaj.core :as collaj]
-              [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]))
+  (:refer-clojure :exclude [delay])
+  (:require [com.ben-allred.collaj.core :as collaj]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
+            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
 (defn http-store [] (collaj/create-store reducers/http))
 
 (def delay (comp :delay :current :config))
 
-(def response (comp :response :current :config))
+(defn response [state]
+  (-> state
+      (:config)
+      (:current)
+      (:response)
+      (maps/update-maybe :headers (partial maps/map-keys name))))
 
 (def requests :requests)
 
 (def config (comp :current :config))
 
 (defn details [state]
-    (-> state
-        (select-keys #{:config :requests})
-        (update :config :current)))
+  (-> state
+      (select-keys #{:config :requests})
+      (update :config :current)))

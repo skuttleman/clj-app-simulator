@@ -1,13 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.services.http
     (:refer-clojure :exclude [get])
-    (:require [kvlt.chan :as kvlt]
-              [com.ben-allred.clj-app-simulator.services.content :as content]
-        #?(:clj  [clojure.core.async :as async]
-           :cljs [cljs.core.async :as async])))
+    (:require #?(:clj [clojure.core.async :as async]
+                 :cljs [cljs.core.async :as async])
+                      [kvlt.chan :as kvlt]
+                      [com.ben-allred.clj-app-simulator.services.content :as content]))
 
 (def ^:private content-type
     #?(:clj  "application/json"
        :cljs "application/transit"))
+
+(def ^:private header-keys #{:content-type :accept})
 
 (defn ^:private content-type-header [{:keys [headers]}]
     (clojure.core/get headers "content-type" (:content-type headers)))
@@ -31,31 +33,39 @@
 (def kw->status
     (into {} (map (comp vec reverse)) status->kw))
 
+(defn ^:private check-status [lower upper response]
+    (let [status (if (vector? response)
+                     (kw->status (clojure.core/get response 2))
+                     (:status response))]
+        (<= lower status upper)))
+
 (def success?
-    (comp #(<= 200 % 299) :status))
+    (partial check-status 200 299))
 
 (def client-error?
-    (comp #(<= 400 % 499) :status))
+    (partial check-status 400 499))
 
 (def server-error?
-    (comp #(<= 500 % 599) :status))
+    (partial check-status 500 599))
 
 (defn request* [method url request]
     (async/go
-        (let [ch-response (async/<! (-> request
-                                        (assoc :method method :url url)
-                                        (content/prepare content-type)
-                                        (kvlt/request!)))
+        (let [content-type (get-in request [:headers :content-type])
+              ch-response  (async/<! (-> request
+                                         (assoc :method method :url url)
+                                         (content/prepare header-keys content-type)
+                                         (update :headers merge (:headers request))
+                                         (kvlt/request!)))
               {:keys [status] :as response} (if-let [data (ex-data ch-response)]
                                                 data
                                                 ch-response)
-              body        (-> response
-                              (content/parse (content-type-header response))
-                              (:body))
-              status      (status->kw status status)]
+              body         (-> response
+                               (content/parse (content-type-header response))
+                               (:body))
+              status       (status->kw status status)]
             (if (success? response)
-                [:success body status ch-response]
-                [:error body status ch-response]))))
+                [:success body status response]
+                [:error body status response]))))
 
 (defn get [url & [request]]
     (request* :get url request))

@@ -27,10 +27,10 @@
                    [ring/ring-core "1.3.2"]
                    [ring/ring-defaults "0.2.1"]
                    [ring/ring-devel "1.6.3"]
-                   [ring/ring-json "0.3.1"]]
+                   [ring/ring-json "0.3.1"]
+                   [stylefruits/gniazdo "1.0.1"]]
 
-    :plugins [[com.jakemccrary/lein-test-refresh "0.22.0"]
-              [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
+    :plugins [[lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
               [lein-cooper "1.2.2"]
               [lein-figwheel "0.5.14"]
               [lein-sassy "1.0.8"]]
@@ -38,7 +38,10 @@
     :jar-name "clj-app-simulator.jar"
     :uberjar-name "clj-app-simulator-standalone.jar"
     :source-paths ["src/clj" "src/cljs" "src/cljc"]
-    :test-paths ["test/clj" "test/cljs" "test/cljc"]
+    :test-paths ["test/clj" "test/cljs" "test/cljc" "test/api"]
+    :test-selectors {:focused     :focused
+                     :integration :integration
+                     :unit        :unit}
 
     :cljsbuild {:builds [{:id           "dev"
                           :source-paths ["src/cljs" "src/cljc"]
@@ -72,11 +75,11 @@
                          :main          com.ben-allred.clj-app-simulator.api.server/-dev
                          :source-paths  ["src/clj" "src/cljs" "src/cljc" "dev"]
                          :plugins       [[cider/cider-nrepl "0.12.0"]]
-                         :clean-targets ^{:protect false} ["resources/public/js"
+                         :clean-targets ^{:protect false :replace true} ["resources/public/js"
                                                            "resources/public/css"
                                                            :target-path]
                          :repl-options  {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}}
-               :uberjar {:clean-targets ^{:protect false} ["resources/public/js"
+               :uberjar {:clean-targets ^{:protect false :replace true} ["resources/public/js"
                                                            "resources/public/css"
                                                            :target-path]
                          :sass          {:style :compressed}

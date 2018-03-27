@@ -6,7 +6,7 @@
               [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
               [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]))
 
-(deftest toast-test
+(deftest ^:unit toast-test
     (testing "(toast)"
         (let [toast (toast/toast {:key-3 {:text  "Toast 3"
                                           :level :error}

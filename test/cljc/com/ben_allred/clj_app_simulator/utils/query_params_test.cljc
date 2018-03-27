@@ -2,13 +2,13 @@
     (:require [clojure.test :refer [deftest testing is]]
               [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
 
-(deftest parse-test
+(deftest ^:unit parse-test
     (testing "(parse)"
         (testing "parses query-string"
             (is (= {:a "b" :c "d" :e true}
                    (qp/parse "a=b&c=d&e"))))))
 
-(deftest stringify-test
+(deftest ^:unit stringify-test
     (testing "(stringify)"
         (testing "stringifies query params"
             (is (= "a=b&c=d&e=true"

@@ -5,7 +5,7 @@
               [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
               [test.utils.dom :as test.dom]))
 
-(deftest header-test
+(deftest ^:unit header-test
     (testing "(header)"
         (let [path-for-spy (spies/create (constantly ::href))]
             (with-redefs [nav/path-for path-for-spy]
