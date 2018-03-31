@@ -1,6 +1,5 @@
-(ns com.ben-allred.clj-app-simulator.ui.views.home
-    (:require [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
+(ns com.ben-allred.clj-app-simulator.ui.views.home)
 
 (defn root [_]
-    [:div
-     [:h2 "home"]])
+  [:div
+   [:h2 "home"]])

@@ -30,7 +30,7 @@
              (let [response (common/receive simulator request)]
                (activity/publish :simulators/receive
                                  {:simulator (select-keys (common/config simulator) #{:method :path})
-                                  :request (peek (common/requests simulator))})
+                                  :request   (peek (common/requests simulator))})
                response))]
           [:get uri (fn [_]
                       (respond/with [:ok {:simulator (common/details simulator)}]))]

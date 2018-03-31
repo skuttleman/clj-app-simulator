@@ -1,22 +1,22 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.common
-    (:refer-clojure :exclude [send]))
+  (:refer-clojure :exclude [send]))
 
 (defprotocol ISimulator
-    (start [this])
-    (stop [this])
-    (receive [this request])
-    (requests [this])
-    (config [this])
-    (details [this])
-    (reset [this])
-    (routes [this delete]))
+  (start [this])
+  (stop [this])
+  (receive [this request])
+  (requests [this])
+  (config [this])
+  (details [this])
+  (reset [this])
+  (routes [this delete]))
 
 (defprotocol IHTTPSimulator
-    (reset-requests [this])
-    (reset-response [this])
-    (change [this config]))
+  (reset-requests [this])
+  (reset-response [this])
+  (change [this config]))
 
 (defprotocol IWSSimulator
-    (connect [this request])
-    (disconnect [this] [this socket-id])
-    (send [this message] [this socket-id message]))
+  (connect [this request])
+  (disconnect [this] [this socket-id])
+  (send [this message] [this socket-id message]))
