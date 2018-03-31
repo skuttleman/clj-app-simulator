@@ -1,5 +1,6 @@
-(ns com.ben-allred.clj-app-simulator.ui.tests
+(ns ^:figwheel-always com.ben-allred.clj-app-simulator.ui.tests
   (:require [cljs.test :refer-macros [run-all-tests]]
+            [com.ben-allred.clj-app-simulator.ui.app :as app]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions-test]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers-test]
             [com.ben-allred.clj-app-simulator.ui.services.events-test]
@@ -13,6 +14,9 @@
             [com.ben-allred.clj-app-simulator.ui.views.main-test]
             [com.ben-allred.clj-app-simulator.ui.app-test]))
 
-(defn ^:export runner []
+(enable-console-print!)
+
+(defn ^:export run []
   (run-all-tests
-    #"com\.ben-allred\.clj-app-simulator\.ui.*-test"))
+    #"com\.ben-allred\.clj-app-simulator\.ui.*-test")
+  (app/mount!))

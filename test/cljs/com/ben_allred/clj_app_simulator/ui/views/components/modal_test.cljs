@@ -1,4 +1,4 @@
-(ns com.ben-allred.clj-app-simulator.ui.views.components.modal-test
+(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.modal-test
   (:require [cljs.test :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
             [test.utils.dom :as test.dom]

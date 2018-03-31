@@ -1,4 +1,4 @@
-(ns com.ben-allred.clj-app-simulator.ui.services.store.actions-test
+(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.store.actions-test
   (:require [cljs.test :refer-macros [deftest testing is async]]
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.services.http :as http]

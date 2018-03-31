@@ -1,4 +1,4 @@
-(ns com.ben-allred.clj-app-simulator.ui.services.events-test
+(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.events-test
   (:require [cljs.test :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.events :as events]))
 

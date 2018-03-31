@@ -1,5 +1,4 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core
-  (:refer-clojure :exclude [keyword vector list pr-str set hash-map])
   (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn spinner []

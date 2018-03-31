@@ -13,7 +13,7 @@
                  [com.taoensso/timbre "4.10.0"]
                  [compojure "1.6.0"]
                  [environ "1.1.0"]
-                 [http-kit "2.1.18"]
+                 [http-kit "2.2.0"]
                  [io.nervous/kvlt "0.1.4"]
                  [kibu/pushy "0.3.8"]
                  [metosin/jsonista "0.1.1"]
@@ -45,8 +45,8 @@
 
   :cljsbuild {:builds [{:id           "dev"
                         :source-paths ["src/cljs" "src/cljc"]
-                        :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.app/on-js-reload"}
-                        :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.app
+                        :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/run"}
+                        :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.tests
                                        :asset-path           "/js/compiled/out"
                                        :output-to            "resources/public/js/compiled/app.js"
                                        :output-dir           "resources/public/js/compiled/out"
@@ -59,7 +59,6 @@
                                        :main          com.ben-allred.clj-app-simulator.ui.app
                                        :optimizations :advanced
                                        :pretty-print  false}}]}
-
   :figwheel {:css-dirs   ["resources/public/css"]
              :nrepl-port 7888}
   :sass {:src "src/scss"
