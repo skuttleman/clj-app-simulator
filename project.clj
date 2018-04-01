@@ -38,13 +38,13 @@
   :jar-name "clj-app-simulator.jar"
   :uberjar-name "clj-app-simulator-standalone.jar"
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
-  :test-paths ["test/clj" "test/cljs" "test/cljc" "test/api"]
+  :test-paths ["test/clj" "test/cljs" "test/cljc" "test/api" "test/common"]
   :test-selectors {:focused     :focused
                    :integration :integration
                    :unit        :unit}
 
   :cljsbuild {:builds [{:id           "dev"
-                        :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/cljc"]
+                        :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/common"]
                         :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/run"}
                         :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.tests
                                        :asset-path           "/js/compiled/out"

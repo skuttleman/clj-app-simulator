@@ -56,6 +56,8 @@
                                     (assoc :method method :url url)
                                     (content/prepare header-keys content-type)
                                     (update :headers merge (:headers request))
+                                    (update-in [:headers :content-type] #(or % "application/transit"))
+                                    (update-in [:headers :accept] #(or % "application/transit"))
                                     (kvlt/request!)))
           {:keys [status] :as response} (if-let [data (ex-data ch-response)]
                                           data
