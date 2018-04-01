@@ -4,24 +4,30 @@
                      [com.ben-allred.clj-app-simulator.utils.maps :as maps]
                      [com.ben-allred.clj-app-simulator.utils.json :as json]
                      [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-                     [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+                     [com.ben-allred.clj-app-simulator.utils.logging :as log])
+  #?(:clj (:import [java.io InputStream])))
 
 (defn ^:private with-headers [request header-keys type]
-  (update request :headers merge (zipmap header-keys (repeat type))))
+  (update request :headers (partial merge (zipmap header-keys (repeat type)))))
+
+(defn ^:private stream? [value]
+  #?(:clj (instance? InputStream value)
+     :cljs false))
 
 (defn ^:private maybe-slurp [value]
-  #?(:clj  (if (string? value)
-             value
-             (slurp value))
-     :cljs value))
-
-(def ^:private read-edn
-  (comp edn/read-string maybe-slurp))
+  (if (stream? value)
+    (slurp value)
+    value))
 
 (defn ^:private when-not-string [body f]
   (if (string? body)
     body
     (f body)))
+
+(defn ^:private try-to [value f]
+  (try (f value)
+       (catch #?(:clj Throwable :cljs js/Object) e
+         nil)))
 
 (def ^:private edn?
   (comp (partial re-find #"application/edn") str))
@@ -34,25 +40,20 @@
 
 (defn parse [data content-type]
   (cond-> data
-    (edn? content-type)
-    (maps/update-maybe :body read-edn)
-
-    (json? content-type)
-    (maps/update-maybe :body json/parse)
-
-    (transit? content-type)
-    (maps/update-maybe :body transit/parse)))
+    (= "" (:body data)) (dissoc data :body)
+    (edn? content-type) (maps/update-maybe :body try-to (comp edn/read-string maybe-slurp))
+    (json? content-type) (maps/update-maybe :body try-to json/parse)
+    (transit? content-type) (maps/update-maybe :body try-to transit/parse)))
 
 (defn prepare [data header-keys accept]
-  (cond
-    (string? (:body data)) data
-    (edn? accept) (-> data
-                      (maps/update-maybe :body when-not-string pr-str)
-                      (with-headers header-keys "application/edn"))
-    (json? accept) (-> data
-                       (maps/update-maybe :body when-not-string json/stringify)
-                       (with-headers header-keys "application/json"))
-    (transit? accept) (-> data
-                          (maps/update-maybe :body when-not-string transit/stringify)
-                          (with-headers header-keys "application/transit"))
-    :else data))
+  (cond-> data
+    (= "" (:body data)) (dissoc :body)
+    (edn? accept) (->
+                    (maps/update-maybe :body when-not-string pr-str)
+                    (with-headers header-keys "application/edn"))
+    (json? accept) (->
+                     (maps/update-maybe :body when-not-string json/stringify)
+                     (with-headers header-keys "application/json"))
+    (transit? accept) (->
+                        (maps/update-maybe :body when-not-string transit/stringify)
+                        (with-headers header-keys "application/transit"))))

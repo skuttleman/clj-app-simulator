@@ -6,12 +6,12 @@
             [clojure.core.async :as async]))
 
 (defn ^:private request* [method url request response]
-  (let [response-ch (async/chan)
-        kvlt-spy (spies/create (constantly response-ch))
-        request (update request :headers assoc :content-type "application/edn")]
-    (with-redefs [kvlt/request! kvlt-spy]
-      (async/put! response-ch response)
-      [(async/<!! (http/request* method url request)) kvlt-spy])))
+  #?(:clj (let [response-ch (async/chan)
+                kvlt-spy (spies/create (constantly response-ch))
+                request (update request :headers assoc :content-type "application/edn")]
+            (with-redefs [kvlt/request! kvlt-spy]
+              (async/put! response-ch response)
+              [(async/<!! (http/request* method url request)) kvlt-spy]))))
 
 (deftest ^:unit request*-test
   (testing "(request*)"

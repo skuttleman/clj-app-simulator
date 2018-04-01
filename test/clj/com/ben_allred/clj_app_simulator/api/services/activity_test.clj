@@ -2,46 +2,41 @@
   (:require [clojure.test :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [test.utils.spies :as spies]
-            [org.httpkit.server :as httpkit]
-            [com.ben-allred.clj-app-simulator.services.emitter :as emitter]))
+            [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
+            [immutant.web.async :as web.async]))
 
 (deftest ^:unit sub-test
   (testing "(sub)"
-    (let [on-close-spy (spies/create)
-          send-spy (spies/create)
+    (let [send-spy (spies/create)
           stringify-spy (spies/create identity)
           yo-dawg-spy (spies/create (constantly stringify-spy))
-          chan (reify httpkit/Channel
-                 (send! [ch data]
-                   (send-spy ch data))
-                 (on-close [ch cb]
-                   (on-close-spy ch cb)))
-          socket-spy (spies/create (constantly chan))
+          socket-spy (spies/create (constantly ::websocket))
           emitter (emitter/new)]
-      (with-redefs [activity/socket-channel socket-spy
-                    activity/accept->stringify yo-dawg-spy]
+      (with-redefs [web.async/as-channel socket-spy
+                    web.async/send! send-spy
+                    activity/accept->stringify yo-dawg-spy
+                    activity/emitter emitter]
         (testing "when given a websocket request"
-          (spies/reset! socket-spy on-close-spy)
+          (spies/reset! socket-spy)
           (let [request {:query-params {"accept" ::accept}
-                         :headers      {"upgrade" "websocket"}}
+                         :websocket?   true}
                 result (activity/sub request)
-                chan-fn (last (first (spies/calls socket-spy)))
-                _ (chan-fn emitter chan)
-                close-fn (last (first (spies/calls on-close-spy)))]
+                {:keys [on-open on-close]} (last (first (spies/calls socket-spy)))]
             (is (spies/called-with? yo-dawg-spy ::accept))
+            (on-open ::websocket)
             (testing "returns a socket channel"
-              (is (spies/called-with? socket-spy request (spies/matcher fn?)))
-              (is (= result chan)))
+              (is (spies/called-with? socket-spy request (spies/matcher map?)))
+              (is (= result ::websocket)))
             (testing "and when an event is published"
               (spies/reset! send-spy stringify-spy send-spy)
               (emitter/publish emitter ::event ::data)
-              (Thread/sleep 10)
+              (Thread/sleep 25)
               (testing "the event data is sent via websocket"
                 (is (spies/called-with? stringify-spy {:event ::event :data ::data}))
-                (is (spies/called-with? send-spy chan {:event ::event :data ::data}))))
+                (is (spies/called-with? send-spy ::websocket {:event ::event :data ::data}))))
             (testing "and when the websocket is closed"
-              (is (spies/called-with? on-close-spy chan (spies/matcher fn?)))
-              (close-fn nil)
+              (on-close nil nil)
+              (Thread/sleep 25)
               (testing "and when an event is published"
                 (spies/reset! send-spy stringify-spy send-spy)
                 (emitter/publish emitter ::event ::data)

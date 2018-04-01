@@ -1,10 +1,8 @@
 (ns integration.utils.fixtures
-  (:require [com.ben-allred.clj-app-simulator.api.server :as server]
+  (:require [com.ben-allred.clj-app-simulator.core :as sim-core]
             [integration.config :as cfg]))
 
 (defn run-server [test]
-  (let [[stop-server! stop-repl!] (server/-main :port cfg/port)]
+  (let [stop-server! (sim-core/start cfg/port)]
     (test)
-    (stop-server!)
-    (when stop-repl!
-      (stop-repl!))))
+    (stop-server!)))

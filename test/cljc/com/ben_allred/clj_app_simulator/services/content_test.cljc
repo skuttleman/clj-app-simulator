@@ -52,9 +52,9 @@
         (is (nil? (:body (content/prepare data header-keys "application/json"))))
         (is (nil? (:body (content/prepare data header-keys "application/transit"))))))
     (testing "leaves string bodies untouched"
-      (let [data {:some :data :body "a string"}]
-        (is (= data (content/prepare data header-keys "application/edn")))
-        (is (= data (content/prepare data header-keys "application/json")))
-        (is (= data (content/prepare data header-keys "application/transit")))))
+      (let [data {:body "a string"}]
+        (is (= "a string" (:body (content/prepare data header-keys "application/edn"))))
+        (is (= "a string" (:body (content/prepare data header-keys "application/json"))))
+        (is (= "a string" (:body (content/prepare data header-keys "application/transit"))))))
     (testing "leaves unknown content-type untouched"
       (is (= {:some :data} (:body (content/prepare {:body {:some :data}} header-keys "unknown-content")))))))

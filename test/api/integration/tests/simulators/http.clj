@@ -68,11 +68,12 @@
                                 :query-params {:accept content-type}
                                 :on-msg (partial async/put! chan)
                                 :to-clj (content-type->parser content-type))]
-        (testing (str "when saving initial simulators with content-type:" (pr-str content-type))
-          (let [response (test.http/post "/api/simulators/init"
-                                         content-type {:body {:simulators start-configs}})]
+        (testing (str "when saving initial simulators with content-type: " (pr-str content-type))
+          (let [response (test.http/post "/api/simulators/init" content-type {:body {:simulators start-configs}})]
             (testing "returns a success response"
-              (is (test.http/success? response))))
+              (is (test.http/success? response)))
+            (testing "returns ids"
+              ))
           (testing "publishes event on activity feed"
             (let [{:keys [event data]} (async/<!! chan)]
               (is (= :simulators/init (keyword event)))
@@ -137,7 +138,7 @@
                     (testing "returns a list of simulators"
                       (is (sims-match? (map simple second-sims) (get-in response [1 :simulators]))))))
                 (testing "and when initializing bad simulators"
-                  (let [response (test.http/post "/api/simulators/int"
+                  (let [response (test.http/post "/api/simulators/init"
                                                  content-type
                                                  {:body {:simulators (conj start-configs
                                                                            {:bad :sim})}})]

@@ -3,7 +3,8 @@
   (:require #?(:clj  [clojure.core.async :as async]
                :cljs [cljs.core.async :as async])
                      [kvlt.chan :as kvlt]
-                     [com.ben-allred.clj-app-simulator.services.content :as content]))
+                     [com.ben-allred.clj-app-simulator.services.content :as content]
+                     [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (def ^:private content-type
   #?(:clj  "application/json"
