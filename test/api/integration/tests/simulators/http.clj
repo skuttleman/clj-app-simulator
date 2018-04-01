@@ -24,15 +24,21 @@
    "application/transit" transit/stringify
    "application/json"    json/stringify})
 
+(def ^:private uuid-re #"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
+
 (defn ^:private simple [sim]
   (dissoc sim :response))
 
+(def ^:private sim-mapper
+  (comp #(if (map? %) (dissoc % :id) %) #(s/conform :http/http-simulator %)))
+
 (defn ^:privates sims-match? [sims-1 sims-2]
+
   (= (->> sims-1
-          (map #(s/conform :http/http-simulator %))
+          (map sim-mapper)
           (set))
      (->> sims-2
-          (map #(s/conform :http/http-simulator %))
+          (map sim-mapper)
           (set))))
 
 (def ^:private start-configs [{:method   :http/get
@@ -73,7 +79,10 @@
             (testing "returns a success response"
               (is (test.http/success? response)))
             (testing "returns ids"
-              ))
+              (let [ids (map :id (:simulators (second response)))]
+                (is (= 2 (count ids)))
+                (is (re-matches uuid-re (str (first ids))))
+                (is (re-matches uuid-re (str (second ids)))))))
           (testing "publishes event on activity feed"
             (let [{:keys [event data]} (async/<!! chan)]
               (is (= :simulators/init (keyword event)))
@@ -87,6 +96,9 @@
             (let [response (test.http/post "/api/simulators" content-type {:body {:simulator new-sim}})]
               (testing "returns a success response"
                 (is (test.http/success? response)))
+              (testing "returns the id"
+                (let [id (:id (:simulator (second response)))]
+                  (is (re-matches uuid-re (str id)))))
               (testing "publishes event on activity feed"
                 (let [{:keys [event data]} (async/<!! chan)]
                   (is (= :simulators/add (keyword event)))
@@ -190,7 +202,11 @@
                     (is (= {:with "some" :qps "included"} query-params))
                     (is (= {:url-param "param"} route-params))
                     (is (= "some header"
-                           (:x-custom-request-header headers)))))))
+                           (:x-custom-request-header headers)))))
+                (testing "and when the details are requested by id"
+                  (let [id (get-in response [1 :simulator :config :id])
+                        response-by-id (test.http/get (str "/api/simulators/" id) content-type)]
+                    (is (= (second response-by-id) (second response)))))))
             (testing "and when varying request data"
               (let [response (test.http/get "/simulators/some/other-param?filter=things" content-type)]
                 (testing "responds as configured"
@@ -219,7 +235,7 @@
                 (testing "publishes event on activity feed"
                   (let [{:keys [event data]} (async/<!! chan)]
                     (is (= :http/change (keyword event)))
-                    (is (= (maps/deep-merge (first start-configs) new-config) (update data :method keyword)))))
+                    (is (= (maps/deep-merge (first start-configs) new-config) (update (dissoc data :id) :method keyword)))))
                 (testing "and when sending request to the simulator"
                   (let [now (.getTime (Date.))
                         response (test.http/get "/simulators/some/param" content-type)
@@ -378,7 +394,7 @@
                   (let [{:keys [event data]} (async/<!! chan)]
                     (is (= :simulators/reset-all (keyword event)))
                     (is (= (set start-configs)
-                           (set (map #(update % :method keyword) data))))))
+                           (set (map (comp #(dissoc % :id) #(update % :method keyword)) data))))))
                 (testing "and when getting each simulator's details"
                   (let [[_ get-sim] (test.http/get "/api/simulators/get/some/:url-param" content-type)
                         [_ post-sim] (test.http/get "/api/simulators/post/some/path" content-type)]
@@ -400,7 +416,7 @@
                     (testing "does not include deleted simulator"
                       (is (= 1 (count (:simulators sims))))
                       (is (= {:method :http/post :path "/some/path"}
-                             (update (first (:simulators sims)) :method keyword))))
+                             (update (dissoc (first (:simulators sims)) :id) :method keyword))))
                     (testing "and when sending a request to deleted simulator"
                       (let [response (test.http/get "/simulators/some/missing" content-type)]
                         (testing "returns a server error"
