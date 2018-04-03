@@ -2,7 +2,8 @@
   (:refer-clojure :exclude [contains?])
   (:require [clojure.string :as string]
             [clojure.set :as set]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
+            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private tag->map [tag & [attrs :as args]]
   (if (fn? tag)
@@ -42,7 +43,7 @@
                                  (query-all node selector)
                                  (mapcat #(query-all % selector) node)))))]
     (cond->> matches
-      (node-matches? tree selector) (cons tree))))
+      (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
 
 (defn query-one [tree selector]
   (first (query-all tree selector)))

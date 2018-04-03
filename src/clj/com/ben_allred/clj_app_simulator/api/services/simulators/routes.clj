@@ -13,7 +13,7 @@
       :http/reset-requests (do (common/reset-requests simulator)
                                (activity/publish action (-> simulator
                                                             (common/config)
-                                                            (select-keys #{:path :method}))))
+                                                            (select-keys #{:path :method :id}))))
       :http/reset-response (do (common/reset-response simulator)
                                (activity/publish action (common/config simulator)))
       :http/change (do (common/change simulator config)
@@ -29,7 +29,7 @@
               (respond/with [:ok {:simulator (common/details simulator)}]))
         delete (fn [_]
                  (activity/publish :simulators/delete
-                                   (select-keys (common/config simulator) #{:method :path}))
+                                   (select-keys (common/config simulator) #{:method :path :id}))
                  (delete method path)
                  (respond/with [:no-content]))
         patch (fn [{:keys [body]}]
@@ -42,7 +42,7 @@
            (fn [request]
              (let [response (common/receive simulator request)]
                (activity/publish :simulators/receive
-                                 {:simulator (select-keys (common/config simulator) #{:method :path})
+                                 {:simulator (select-keys (common/config simulator) #{:method :path :id})
                                   :request   (peek (common/requests simulator))})
                response))]
           [:get uri get]

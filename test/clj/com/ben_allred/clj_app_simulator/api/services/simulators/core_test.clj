@@ -11,15 +11,16 @@
 (deftest ^:unit route-configs-test
   (testing "(configs)"
     (let [simulators (atom {:sim-1 (reify common/ISimulator
-                                     (config [_]
-                                       {::simulator 1}))
+                                     (details [_]
+                                       {:config {::simulator 1} :requests ::requests-1}))
                             :sim-2 (reify common/ISimulator
-                                     (config [_]
-                                       {::simulator 2}))})]
+                                     (details [_]
+                                       {:config {::simulator 2} :requests ::requests-2}))})]
       (with-redefs [simulators/simulators simulators]
         (testing "gets simulators' configs"
           (let [result (simulators/configs)]
-            (is (= [{::simulator 1} {::simulator 2}] (get-in result [:body :simulators])))))
+            (is (= [{::simulator 1 :requests ::requests-1} {::simulator 2 :requests ::requests-2}]
+                   (get-in result [:body :simulators])))))
         (testing "returns response map"
           (let [result (simulators/configs)]
             (is (http/success? result))))))))
@@ -45,8 +46,14 @@
           (let [result (simulators/add {:method "some/method"
                                         :path   ::path})]
             (testing "creates a simulator with keywordized method"
-              (is (spies/called-with? http-sim-spy {:method :some/method
-                                                    :path   ::path})))
+              (is (spies/called-with? http-sim-spy spies/any))
+              (let [config (ffirst (spies/calls http-sim-spy))]
+                {:method :some/method
+                 :path   ::path}
+                (is (= :some/method (:method config)))
+                (is (= ::path (:path config)))
+                (testing "and assigns an id"
+                  (is (uuid? (:id config))))))
             (testing "starts the simulator"
               (is (spies/called-with? start-sim simulator)))
             (testing "returns a success map"

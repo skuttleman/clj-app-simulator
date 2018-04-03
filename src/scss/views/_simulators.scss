@@ -1,0 +1,68 @@
+.sim-group {
+    .grouped-sims {
+        padding-left: 12px;
+    }
+
+    .group-name {
+        font-weight: bold;
+        color: $blue;
+    }
+
+    .sim-card {
+        border: 1px solid $gray;
+        padding: 4px;
+        width: 100%;
+
+        .details-container {
+            display: flex;
+            justify-content: space-between;
+
+            .details {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                .sim-card-identifier {
+                    display: flex;
+
+                    .sim-card-method {
+                        margin-right: 4px;
+                        font-weight: bold;
+                        color: purple;
+                        font-size: 18px;
+                    }
+                    .sim-card-path {
+                        color: $green;
+                        text-decoration: underline;
+                        font-size: 18px;
+                    }
+                }
+
+                .sim-card-name {
+                    font-weight: bold;
+                    font-style: italic;
+                }
+            }
+
+            .sim-card-request-count {
+                border-radius: 50%;
+                background-color: $orange;
+                color: yellow;
+                font-weight: bold;
+                width: 25px;
+                height: 25px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+
+        &:not(:last-child) {
+            margin-bottom: 8px;
+        }
+    }
+
+    &:not(:last-child) {
+        margin-bottom: 8px;
+    }
+}

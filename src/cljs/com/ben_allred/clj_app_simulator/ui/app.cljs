@@ -1,7 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.ui.app
   (:require [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.views.error :as error]
-            [com.ben-allred.clj-app-simulator.ui.views.home :as home]
             [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
             [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
@@ -11,7 +10,11 @@
 (enable-console-print!)
 
 (def components
-  {:home home/root})
+  {:home    main/root
+   :details (fn [state]
+              [:div
+               "Details"
+               (pr-str (get-in state [:simulators :data (uuid (get-in state [:page :route-params :id]))]))])})
 
 (defn app []
   (let [state (store/get-state)
@@ -29,5 +32,5 @@
     [app]
     (.getElementById js/document "app")))
 
-(defn on-js-reload []
-  (mount!))
+#_(defn on-js-reload []
+    (mount!))

@@ -12,7 +12,7 @@
       (testing "calls dispatch with request action"
         (spies/reset! dispatch)
         (actions/request-simulators [dispatch])
-        (is (spies/called-with? dispatch [:simulators/request]))))))
+        (is (spies/called-with? dispatch [:simulators.fetch-all/request]))))))
 
 (deftest ^:unit request-simulators-success-test
   (testing "(request-simulators)"
@@ -23,9 +23,9 @@
                                    (fn [_]
                                      (async/go
                                        [:success {:some :result}])))]
-                       (let [dispatch (spies/create)
-                             result (async/<! (actions/request-simulators [dispatch]))]
-                         (is (spies/called-with? dispatch [:simulators/succeed {:some :result}]))
+                       (let [dispatch (spies/create)]
+                         (async/<! (actions/request-simulators [dispatch]))
+                         (is (spies/called-with? dispatch [:simulators.fetch-all/succeed {:some :result}]))
                          (is (spies/called-with? http/get "/api/simulators"))
                          (done))))))))
 
@@ -38,11 +38,91 @@
                         (spies/create (fn [_]
                                         (async/go
                                           [:error {:some :reason}])))]
-                       (let [dispatch (spies/create)
-                             result (async/<! (actions/request-simulators [dispatch]))]
-                         (is (spies/called-with? dispatch [:simulators/fail {:some :reason}]))
+                       (let [dispatch (spies/create)]
+                         (async/<! (actions/request-simulators [dispatch]))
+                         (is (spies/called-with? dispatch [:simulators.fetch-all/fail {:some :reason}]))
                          (is (spies/called-with? http/get "/api/simulators"))
                          (done))))))))
+
+(deftest ^:unit delete-simulator-test
+  (testing "(delete-simulator)"
+    (let [dispatch (spies/create)]
+      (testing "calls dispatch with request action"
+        (spies/reset! dispatch)
+        ((actions/delete-simulator ::id) [dispatch])
+        (is (spies/called-with? dispatch [:simulators.delete/request]))))))
+
+(deftest ^:unit delete-simulator-success-test
+  (testing "(delete-simulator)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/delete (spies/create
+                                    (fn [_]
+                                      (async/go
+                                        [:success {:some :result}])))]
+            (let [dispatch (spies/create)
+                  f (actions/delete-simulator 123)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.delete/succeed {:some :result}]))
+              (is (spies/called-with? http/delete "/api/simulators/123"))
+              (done))))))))
+
+(deftest ^:unit delete-simulator-failure-test
+  (testing "(delete-simulator)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/delete
+                        (spies/create (fn [_]
+                                        (async/go
+                                          [:error {:some :reason}])))]
+            (let [dispatch (spies/create)
+                  f (actions/delete-simulator 999)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.delete/fail {:some :reason}]))
+              (is (spies/called-with? http/delete "/api/simulators/999"))
+              (done))))))))
+
+(deftest ^:unit create-simulator-test
+  (testing "(create-simulator)"
+    (let [dispatch (spies/create)]
+      (testing "calls dispatch with request action"
+        (spies/reset! dispatch)
+        ((actions/create-simulator ::simulator) [dispatch])
+        (is (spies/called-with? dispatch [:simulators.create/request]))))))
+
+(deftest ^:unit create-simulator-success-test
+  (testing "(create-simulator)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/post (spies/create
+                                    (fn [_]
+                                      (async/go
+                                        [:success {:some :result}])))]
+            (let [dispatch (spies/create)
+                  f (actions/create-simulator ::simulator)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.create/succeed {:some :result}]))
+              (is (spies/called-with? http/post "/api/simulators" {:body {:simulator ::simulator}}))
+              (done))))))))
+
+(deftest ^:unit create-simulator-failure-test
+  (testing "(create-simulator)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/post
+                        (spies/create (fn [_]
+                                        (async/go
+                                          [:error {:some :reason}])))]
+            (let [dispatch (spies/create)
+                  f (actions/create-simulator ::simulator)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.create/fail {:some :reason}]))
+              (is (spies/called-with? http/post "/api/simulators" {:body {:simulator ::simulator}}))
+              (done))))))))
 
 (deftest ^:unit show-modal-test
   (testing "(show-modal)"

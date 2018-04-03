@@ -91,7 +91,8 @@
             (let [response (test.http/get "/api/simulators" content-type)]
               (is (test.http/success? response))
               (testing "returns a list of simulators"
-                (is (sims-match? (map simple start-configs) (get-in response [1 :simulators]))))))
+                (is (sims-match? (map simple start-configs)
+                                 (map simple (get-in response [1 :simulators])))))))
           (testing "and when adding a simulator"
             (let [response (test.http/post "/api/simulators" content-type {:body {:simulator new-sim}})]
               (testing "returns a success response"
@@ -107,7 +108,7 @@
                 (let [response (test.http/get "/api/simulators" content-type)]
                   (testing "returns a list of simulators"
                     (is (sims-match? (map simple (conj start-configs new-sim))
-                                     (get-in response [1 :simulators])))))))
+                                     (map simple (get-in response [1 :simulators]))))))))
             (testing "and when adding a bad simulator"
               (let [error-response (test.http/post "/api/simulators"
                                                    content-type
@@ -118,7 +119,7 @@
                   (let [response (test.http/get "/api/simulators" content-type)]
                     (testing "does not contain newest simulator"
                       (is (sims-match? (map simple (conj start-configs new-sim))
-                                       (get-in response [1 :simulators]))))))))
+                                       (map simple (get-in response [1 :simulators])))))))))
             (testing "and when adding an existing simulator"
               (let [error (test.http/post "/api/simulators"
                                           content-type
@@ -132,7 +133,7 @@
                   (let [response (test.http/get "/api/simulators" content-type)]
                     (testing "does not contain new simulator"
                       (is (sims-match? (map simple (conj start-configs new-sim))
-                                       (get-in response [1 :simulators]))))))))
+                                       (map simple (get-in response [1 :simulators])))))))))
             (testing "and when initializing simulators again"
               (let [response (test.http/post "/api/simulators/init"
                                              content-type
@@ -148,7 +149,8 @@
                     (testing "returns a success response"
                       (is (test.http/success? response)))
                     (testing "returns a list of simulators"
-                      (is (sims-match? (map simple second-sims) (get-in response [1 :simulators]))))))
+                      (is (sims-match? (map simple second-sims)
+                                       (map simple (get-in response [1 :simulators])))))))
                 (testing "and when initializing bad simulators"
                   (let [response (test.http/post "/api/simulators/init"
                                                  content-type
@@ -161,7 +163,8 @@
                         (testing "returns a success response"
                           (is (test.http/success? response)))
                         (testing "returns previous simulators"
-                          (is (sims-match? (map simple second-sims) (get-in response [1 :simulators]))))))))))))
+                          (is (sims-match? (map simple second-sims)
+                                           (map simple (get-in response [1 :simulators])))))))))))))
         (test.ws/close! ws)
         (async/close! chan)))))
 
@@ -235,7 +238,8 @@
                 (testing "publishes event on activity feed"
                   (let [{:keys [event data]} (async/<!! chan)]
                     (is (= :http/change (keyword event)))
-                    (is (= (maps/deep-merge (first start-configs) new-config) (update (dissoc data :id) :method keyword)))))
+                    (is (= (maps/deep-merge (first start-configs) new-config)
+                           (update (dissoc data :id) :method keyword)))))
                 (testing "and when sending request to the simulator"
                   (let [now (.getTime (Date.))
                         response (test.http/get "/simulators/some/param" content-type)
@@ -263,7 +267,8 @@
                     (let [{:keys [event data]} (async/<!! chan)]
                       (is (= :http/reset-requests (keyword event)))
                       (is (= {:method :http/get :path "/some/:url-param"}
-                             (update data :method keyword)))))
+                             (-> data (update :method keyword)
+                                 (select-keys #{:method :path}))))))
                   (testing "and when getting the simulator's details"
                     (let [[_ {{:keys [config requests]} :simulator}]
                           (test.http/get "/api/simulators/get/some/:url-param" content-type)]
@@ -410,13 +415,17 @@
               (let [{:keys [event data]} (async/<!! chan)]
                 (is (= :simulators/delete (keyword event)))
                 (is (= {:method :http/get :path "/some/:url-param"}
-                       (update data :method keyword)))
+                       (-> data
+                           (update :method keyword)
+                           (select-keys #{:method :path}))))
                 (testing "and when getting a list of simulators"
                   (let [[_ sims] (test.http/get "/api/simulators" content-type)]
                     (testing "does not include deleted simulator"
                       (is (= 1 (count (:simulators sims))))
                       (is (= {:method :http/post :path "/some/path"}
-                             (update (dissoc (first (:simulators sims)) :id) :method keyword))))
+                             (-> (first (:simulators sims))
+                                 (update :method keyword)
+                                 (select-keys #{:method :path})))))
                     (testing "and when sending a request to deleted simulator"
                       (let [response (test.http/get "/simulators/some/missing" content-type)]
                         (testing "returns a server error"

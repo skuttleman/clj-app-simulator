@@ -4,8 +4,11 @@
 
 (def get
   #?(:clj  environ/env
-     :cljs {}))
+     :cljs {:host (.-host (.-location js/window))
+            :protocol (if (re-find #"https" (.-protocol (.-location js/window)))
+                        :https
+                        :http)}))
 
 (def dev?
   #?(:clj  (not= "production" (get :ring-env))
-     :cljs (boolean (re-find #"localhost" (.-hostname (.-location js/window))))))
+     :cljs (boolean (re-find #"localhost" (get :host)))))

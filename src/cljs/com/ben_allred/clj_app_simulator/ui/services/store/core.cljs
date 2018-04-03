@@ -3,13 +3,16 @@
             [com.ben-allred.collaj.enhancers :as collaj.enhancers]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]
             [reagent.core :as r]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+            [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]
+            [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]))
 
 (defonce ^:private store
-  (collaj/create-custom-store r/atom
-                              reducers/root
-                              collaj.enhancers/with-fn-dispatch
-                              (collaj.enhancers/with-log-middleware #(log/spy %) identity)))
+  (activity/sub (collaj/create-custom-store r/atom
+                                            reducers/root
+                                            collaj.enhancers/with-fn-dispatch
+                                            (collaj/apply-middleware mw/sims->sim)
+                                            (collaj.enhancers/with-log-middleware #(log/spy %) identity))))
 
 (def get-state (:get-state store))
 

@@ -30,6 +30,45 @@
     (testing "returns unchanged state for any random action"
       (is (= ::same-state (reducers/modal ::same-state [:any-random-action ::ignored]))))))
 
+(deftest ^:unit simulators-test
+  (testing "(simulators)"
+    (testing "has default state"
+      (is (= {:status :init :data {}} (reducers/simulators))))
+    (testing "handles :simulators.fetch-one/request"
+      (is (= {:status :pending :data ::data}
+             (reducers/simulators {:data ::data} [:simulators.fetch-one/request]))))
+    (testing "handles :simulators.fetch-all/request"
+      (is (= {:status :pending :data ::data}
+             (reducers/simulators {:data ::data} [:simulators.fetch-all/request]))))
+    (testing "handles :simulators.fetch-one/succeed"
+      (is (= {:status :available :data {123 {:id 123 :config ::config}}}
+             (reducers/simulators {:data {123 ::data}}
+                                  [:simulators.fetch-one/succeed {:simulator {:id 123 :config ::config}}]))))
+    (testing "handles :simulators/clear"
+      (is (= {:status :available :data {}}
+             (reducers/simulators {:data ::data :status ::status} [:simulators/clear]))))
+    (testing "handles :simulators.fetch-one/fail"
+      (is (= {:status :failed :data ::data}
+             (reducers/simulators {:data ::data} [:simulators.fetch-one/fail ::reason]))))
+    (testing "handles :simulators.fetch-all/fail"
+      (is (= {:status :failed :data ::data}
+             (reducers/simulators {:data ::data} [:simulators.fetch-all/fail ::reason]))))
+    (testing "handles :simulators.activity/receive"
+      (is (= {:status :available :data {999 {:id 999 :requests [123 456] :other ::stuff}}}
+             (reducers/simulators {:data {999 {:id 999 :other ::stuff :requests [123]}}}
+                                  [:simulators.activity/receive {:simulator {:id 999} :request 456}]))))
+    (testing "handles :simulators.activity/add"
+      (is (= {:status :available :data {123 ::simulator 456 {:id 456 ::other ::stuff}}}
+             (reducers/simulators {:data {123 ::simulator}}
+                                  [:simulators.activity/add {:simulator {:id 456 ::other ::stuff}}]))))
+    (testing "handles :simulators.activity/delete"
+      (is (= {:status :available :data {123 ::simulator-1}}
+             (reducers/simulators {:data {123 ::simulator-1 456 ::simulator-2}}
+                                  [:simulators.activity/delete {:id 456}]))))
+    (testing "returns unchanged state for any random action"
+      (is (= {:data ::data}
+             (reducers/simulators {:data ::data} [:any-random-action ::ignored]))))))
+
 (deftest ^:unit toasts-test
   (testing "(toasts)"
     (testing "has default state"

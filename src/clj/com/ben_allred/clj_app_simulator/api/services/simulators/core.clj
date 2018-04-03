@@ -21,14 +21,14 @@
       (swap! simulators assoc [method path] simulator)
       simulator)))
 
-(defn ^:private simulator-configs []
+(defn ^:private simulator-configs [f]
   (->> @simulators
        (vals)
-       (map (comp #(dissoc % :response) common/config))
+       (map f)
        (assoc {} :simulators)))
 
 (defn configs []
-  (->> (simulator-configs)
+  (->> (simulator-configs (comp :config #(update % :config assoc :requests (:requests %)) common/details))
        (conj [:ok])
        (respond/with)))
 
@@ -49,7 +49,7 @@
                         (map common/config)
                         (doall))]
           (activity/publish :simulators/init sims)
-          (respond/with [:created (simulator-configs)])))
+          (respond/with [:created (simulator-configs common/config)])))
       (respond/with [:bad-request {:message    "one more more invalid simulators"
                                    :simulators (map #(assoc {:config %} :reason (http.sim/why-not? %)) invalid-configs)}]))))
 

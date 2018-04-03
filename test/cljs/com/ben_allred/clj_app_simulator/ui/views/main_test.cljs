@@ -3,7 +3,9 @@
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [test.utils.dom :as test.dom]))
+            [test.utils.dom :as test.dom]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]))
 
 (deftest ^:unit header-test
   (testing "(header)"
@@ -19,3 +21,12 @@
             (testing "has page title"
               (let [h1 (test.dom/query-one header :h1)]
                 (is (test.dom/contains? h1 "App Simulator"))))))))))
+
+(deftest ^:unit root-test
+  (testing "(root)"
+    (let [root (main/root {:simulators ::simulators})]
+      (testing "has a header"
+        (is (= "Simulators" (second (test.dom/query-one root :h2)))))
+      (testing "displays simulators"
+        (is (= [sims/simulators ::simulators]
+               (test.dom/query-one root sims/simulators)))))))

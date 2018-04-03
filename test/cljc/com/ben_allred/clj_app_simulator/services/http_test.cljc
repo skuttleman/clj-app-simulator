@@ -8,7 +8,8 @@
 (defn ^:private request* [method url request response]
   #?(:clj (let [response-ch (async/chan)
                 kvlt-spy (spies/create (constantly response-ch))
-                request (update request :headers assoc :content-type "application/edn")]
+                request (update request :headers merge {:content-type "application/edn"
+                                                        :accept       "application/edn"})]
             (with-redefs [kvlt/request! kvlt-spy]
               (async/put! response-ch response)
               [(async/<!! (http/request* method url request)) kvlt-spy]))))

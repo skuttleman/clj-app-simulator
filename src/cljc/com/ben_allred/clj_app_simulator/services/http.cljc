@@ -51,13 +51,13 @@
 
 (defn request* [method url request]
   (async/go
-    (let [content-type (get-in request [:headers :content-type])
+    (let [headers (merge {:content-type "application/transit" :accept "application/transit"}
+                         (:headers request))
+          content-type (:content-type headers)
           ch-response (async/<! (-> request
                                     (assoc :method method :url url)
                                     (content/prepare header-keys content-type)
-                                    (update :headers merge (:headers request))
-                                    (update-in [:headers :content-type] #(or % "application/transit"))
-                                    (update-in [:headers :accept] #(or % "application/transit"))
+                                    (update :headers merge headers)
                                     (kvlt/request!)))
           {:keys [status] :as response} (if-let [data (ex-data ch-response)]
                                           data
@@ -82,5 +82,5 @@
 (defn put [url request]
   (request* :put url request))
 
-(defn delete [url request]
+(defn delete [url & [request]]
   (request* :delete url request))
