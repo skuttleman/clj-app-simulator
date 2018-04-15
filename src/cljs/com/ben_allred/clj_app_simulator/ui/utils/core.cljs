@@ -7,7 +7,7 @@
   ([attrs rules]
    (let [classes (->> rules
                       (filter val)
-                      (map key)
+                      (map (comp name key))
                       (string/join " "))]
      (cond-> attrs
        (seq classes) (update :class-name (comp strings/trim-to-nil str) " " classes)))))

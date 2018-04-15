@@ -6,7 +6,6 @@
   (stop [this])
   (receive [this request])
   (requests [this])
-  (config [this])
   (details [this])
   (reset [this])
   (routes [this delete]))

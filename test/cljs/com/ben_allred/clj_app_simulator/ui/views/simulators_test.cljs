@@ -6,8 +6,7 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))
+            [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]))
 
 (deftest ^:unit sim-card-test
   (testing "(sim-card)"
@@ -15,27 +14,23 @@
       (with-redefs [nav/navigate! nav-spy]
         (let [request-count (inc (rand-int 100))
               id (rand-int 100000)
-              sim-card (sims/sim-card {:path        "/some/path"
-                                       :method      :some/method
-                                       :name        "A Name"
-                                       :description "describing the things."
-                                       :requests    (take request-count (range))
-                                       :id          id})]
+              sim {:config   {:path        "/some/path"
+                              :method      :some/method
+                              :name        "A Name"
+                              :description "describing the things."}
+                   :requests (take request-count (range))
+                   :id       id}
+              sim-card (sims/sim-card sim)]
           (testing "when the element is clicked"
             (-> sim-card
                 (test.dom/query-one :.sim-card.button)
                 (test.dom/simulate-event :click))
             (testing "navigates to details page"
               (is (spies/called-with? nav-spy :details {:id id}))))
-          (testing "shows the method"
+          (testing "shows the details"
             (-> sim-card
-                (test.dom/query-one :.sim-card-method)
-                (test.dom/contains? "METHOD")
-                (is)))
-          (testing "shows the path"
-            (-> sim-card
-                (test.dom/query-one :.sim-card-path)
-                (test.dom/contains? "/some/path")
+                (test.dom/query-one sim/sim-details)
+                (= [sim/sim-details sim])
                 (is)))
           (testing "when name is not nil"
             (testing "shows the name"
@@ -110,37 +105,22 @@
   (testing "(simulators)"
     (let [dispatch-spy (spies/create)]
       (with-redefs [store/dispatch dispatch-spy]
-        (let [simulators (sims/simulators nil)]
-          (testing "requests simulators on mount"
-            (is (spies/called-with? dispatch-spy actions/request-simulators)))
-          (testing "when status is :init"
-            (testing "renders a spinner")
-            (-> {:status :init}
-                (simulators)
-                (test.dom/query-one components/spinner)
-                (is)))
-          (testing "when status is :available"
-            (let [sims {111 {:group ::group-1 :path "path" :method :method-b ::data ::1}
-                        222 {:group ::group-2 :path "path-2" :method :method ::data ::2}
-                        333 {:group ::group-1 :path "path" :method :method-a ::data ::3}
-                        444 {:group ::group-2 :path "path-1" :method :method ::data ::4}
-                        555 {:path "path" :method :method ::data ::5}}
-                  [sim-group-1 sim-group-2 sim-group-3] (-> {:status :available :data sims}
-                                                                (simulators)
-                                                                (test.dom/query-all sims/sim-group))]
-              (testing "organizes the simulator data"
-                  (is (= [sims/sim-group ::group-1 [(get sims 333) (get sims 111)]]
-                         sim-group-1))
-                  (is (= (str ::group-1) (:key (meta sim-group-1))))
-                  (is (= [sims/sim-group ::group-2 [(get sims 444) (get sims 222)]]
-                         sim-group-2))
-                  (is (= (str ::group-2) (:key (meta sim-group-2))))
-                  (is (= [sims/sim-group nil [(get sims 555)]]
-                         sim-group-3))
-                  (is (= "" (:key (meta sim-group-3)))))
-              (testing "renders a list of sim-groups")))
-          (testing "when status is any other value"
-            (testing "renders an error message"
-              (-> {:status ::some-status}
-                  (simulators)
-                  (test.dom/contains? "Something's wrong")))))))))
+        (testing "when status is :available"
+          (let [sims {111 {:group ::group-1 :path "path" :method :method-b ::data ::1}
+                      222 {:group ::group-2 :path "path-2" :method :method ::data ::2}
+                      333 {:group ::group-1 :path "path" :method :method-a ::data ::3}
+                      444 {:group ::group-2 :path "path-1" :method :method ::data ::4}
+                      555 {:path "path" :method :method ::data ::5}}
+                [sim-group-1 sim-group-2 sim-group-3] (-> sims
+                                                          (sims/simulators)
+                                                          (test.dom/query-all sims/sim-group))]
+            (testing "organizes the simulator data"
+              (is (= [sims/sim-group ::group-1 [(get sims 333) (get sims 111)]]
+                     sim-group-1))
+              (is (= (str ::group-1) (:key (meta sim-group-1))))
+              (is (= [sims/sim-group ::group-2 [(get sims 444) (get sims 222)]]
+                     sim-group-2))
+              (is (= (str ::group-2) (:key (meta sim-group-2))))
+              (is (= [sims/sim-group nil [(get sims 555)]]
+                     sim-group-3))
+              (is (= "" (:key (meta sim-group-3)))))))))))

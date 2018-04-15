@@ -29,12 +29,6 @@
     (testing "retrieves requests from store"
       (is (= ::requests (store/requests {:requests ::requests}))))))
 
-(deftest ^:unit config-test
-  (testing "(config)"
-    (testing "retrieves current config from store"
-      (is (= {:method ::method :path ::path :other ::stuff}
-             (store/config {:config {:current {:method ::method :path ::path :other ::stuff}}}))))))
-
 (deftest ^:unit details-test
   (testing "(details)"
     (testing "retrieves current config and requests from store"

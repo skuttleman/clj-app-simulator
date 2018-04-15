@@ -16,7 +16,7 @@
 
 (defroutes ^:private base
   (context "/api/simulators" []
-    (GET "/" [] (simulators/configs))
+    (GET "/" [] (simulators/details))
     (POST "/" request (simulators/add (get-in request [:body :simulator])))
     (POST "/init" request (simulators/set! (get-in request [:body :simulators])))
     (DELETE "/reset" [] (simulators/reset-all!))

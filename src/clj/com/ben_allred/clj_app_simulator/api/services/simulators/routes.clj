@@ -9,19 +9,19 @@
   (let [action (keyword action)]
     (case action
       :simulator/reset (do (common/reset simulator)
-                           (activity/publish action (common/config simulator)))
+                           (activity/publish action (common/details simulator)))
       :http/reset-requests (do (common/reset-requests simulator)
                                (activity/publish action (-> simulator
-                                                            (common/config)
-                                                            (select-keys #{:path :method :id}))))
+                                                            (common/details)
+                                                            (select-keys #{:id :config}))))
       :http/reset-response (do (common/reset-response simulator)
-                               (activity/publish action (common/config simulator)))
+                               (activity/publish action (common/details simulator)))
       :http/change (do (common/change simulator config)
-                       (activity/publish action (common/config simulator)))
+                       (activity/publish action (common/details simulator)))
       nil)))
 
 (defn http-sim->routes [simulator delete]
-  (let [{:keys [method path id]} (common/config simulator)
+  (let [{{:keys [method path]} :config id :id} (common/details simulator)
         method-str (name method)
         uri (str "/api/simulators/" method-str path)
         uuid-uri (str "/api/simulators/" id)
@@ -29,7 +29,7 @@
               (respond/with [:ok {:simulator (common/details simulator)}]))
         delete (fn [_]
                  (activity/publish :simulators/delete
-                                   (select-keys (common/config simulator) #{:method :path :id}))
+                                   (select-keys (common/details simulator) #{:id :config}))
                  (delete method path)
                  (respond/with [:no-content]))
         patch (fn [{:keys [body]}]
@@ -42,7 +42,7 @@
            (fn [request]
              (let [response (common/receive simulator request)]
                (activity/publish :simulators/receive
-                                 {:simulator (select-keys (common/config simulator) #{:method :path :id})
+                                 {:simulator (select-keys (common/details simulator) #{:id :config})
                                   :request   (peek (common/requests simulator))})
                response))]
           [:get uri get]

@@ -5,7 +5,10 @@
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]))
+            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
+            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]))
 
 (deftest ^:unit header-test
   (testing "(header)"
@@ -24,9 +27,13 @@
 
 (deftest ^:unit root-test
   (testing "(root)"
-    (let [root (main/root {:simulators ::simulators})]
-      (testing "has a header"
-        (is (= "Simulators" (second (test.dom/query-one root :h2)))))
-      (testing "displays simulators"
-        (is (= [sims/simulators ::simulators]
-               (test.dom/query-one root sims/simulators)))))))
+    (let [dispatch-spy (spies/create)]
+      (with-redefs [store/dispatch dispatch-spy]
+        (let [root (main/root {:simulators {:status ::status :data ::data}})]
+          (testing "has a header"
+            (is (= "Simulators" (second (test.dom/query-one root :h2)))))
+          (testing "displays simulators"
+            (is (= [components/with-status ::status sims/simulators ::data]
+                   (butlast (test.dom/query-one root components/with-status))))
+            ((last (test.dom/query-one root components/with-status)))
+            (is (spies/called-with? dispatch-spy actions/request-simulators))))))))

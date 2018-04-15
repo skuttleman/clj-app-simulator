@@ -65,6 +65,11 @@
       (is (= {:status :available :data {123 ::simulator-1}}
              (reducers/simulators {:data {123 ::simulator-1 456 ::simulator-2}}
                                   [:simulators.activity/delete {:id 456}]))))
+    (testing "handles :simulators.activity/reset-requests"
+      (is (= {:status :available :data {123 {:id 123 ::some ::data :requests []}}}
+             (reducers/simulators {:data {123 {:id 123 ::some ::data}}}
+                                  [:simulators.activity/reset-requests
+                                   {:simulator {:id 123 ::some ::data :requests ::requests}}]))))
     (testing "returns unchanged state for any random action"
       (is (= {:data ::data}
              (reducers/simulators {:data ::data} [:any-random-action ::ignored]))))))

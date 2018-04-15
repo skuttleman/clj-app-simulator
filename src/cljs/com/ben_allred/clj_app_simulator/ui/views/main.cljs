@@ -2,22 +2,10 @@
   (:require [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
-            [reagent.core :as r]
+            [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]))
-
-#_(defn sim-form []
-  (let [edn (r/atom "")]
-    (fn []
-      [:form {:on-submit #(do (.preventDefault %)
-                              (-> @edn
-                                  (cljs.tools.reader/read-string)
-                                  (actions/create-simulator)
-                                  (store/dispatch)))}
-       [:div [:textarea {:on-change #(reset! edn (.-value (.-target %)))
-                         :value     @edn}]]
-       [:button.button.button-primary.pure-button
-        "Submit"]])))
+            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))
 
 (defn header []
   [:header.header
@@ -25,8 +13,15 @@
     [:img.logo {:src "/images/logo.png"}]
     [:h1 "App Simulator"]]])
 
-(defn root [{:keys [simulators]}]
+(defn root [{{:keys [data status]} :simulators}]
   [:div
    [:h2 "Simulators"]
-   [sims/simulators simulators]
-   #_[sim-form]])
+   [components/with-status status sims/simulators data #(store/dispatch actions/request-simulators)]])
+
+(defn details [state]
+  (let [id (uuid (get-in state [:page :route-params :id]))
+        {:keys [status data]} (:simulators state)
+        simulator (get data id)]
+    [:div
+     [:h2 "Simulator Details"]
+     [components/with-status status sim/sim simulator #(store/dispatch actions/request-simulators)]]))

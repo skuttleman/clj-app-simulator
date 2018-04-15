@@ -40,5 +40,9 @@
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/delete :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.activity/delete ::data])))
+          (testing "dispatches on :http/reset-requests"
+            (spies/reset! dispatch-spy)
+            (on-msg {:event :http/reset-requests :data ::simulator})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/reset-requests {:simulator ::simulator}])))
           (testing "returns the store"
             (is (= result store))))))))

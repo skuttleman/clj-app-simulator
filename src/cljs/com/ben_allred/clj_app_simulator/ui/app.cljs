@@ -1,20 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.ui.app
-  (:require [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.views.error :as error]
-            [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+  (:require [cljsjs.moment]
+            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
-            [reagent.core :as r]
-            [com.ben-allred.clj-app-simulator.ui.views.main :as main]))
+            [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
+            [com.ben-allred.clj-app-simulator.ui.views.error :as error]
+            [com.ben-allred.clj-app-simulator.ui.views.main :as main]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+            [reagent.core :as r]))
 
 (enable-console-print!)
 
 (def components
   {:home    main/root
-   :details (fn [state]
-              [:div
-               "Details"
-               (pr-str (get-in state [:simulators :data (uuid (get-in state [:page :route-params :id]))]))])})
+   :details main/details})
 
 (defn app []
   (let [state (store/get-state)
@@ -31,6 +29,3 @@
   (r/render
     [app]
     (.getElementById js/document "app")))
-
-#_(defn on-js-reload []
-    (mount!))

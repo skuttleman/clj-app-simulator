@@ -6,8 +6,6 @@
             [clojure.spec.alpha :as s]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
-;; TODO: conform to spec
-
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
 (s/def ::method (s/conformer (comp #{:http/delete :http/get :http/head :http/options :http/patch :http/post :http/put} keyword)))
@@ -52,7 +50,7 @@
 (defn why-not-update? [config]
   (s/explain-data :http.partial/http-simulator config))
 
-(defn ->HttpSimulator [config]
+(defn ->HttpSimulator [id config]
   (when-let [config (conform-to :http/http-simulator config)]
     (let [{:keys [dispatch get-state]} (store/http-store)]
       (reify
@@ -69,10 +67,10 @@
             (store/response state)))
         (requests [_]
           (store/requests (get-state)))
-        (config [_]
-          (store/config (get-state)))
         (details [_]
-          (store/details (get-state)))
+          (-> (get-state)
+              (store/details)
+              (assoc :id id)))
         (reset [_]
           (dispatch actions/reset))
         (routes [this delete]

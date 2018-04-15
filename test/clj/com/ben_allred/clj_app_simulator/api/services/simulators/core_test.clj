@@ -18,11 +18,11 @@
                                        {:config {::simulator 2} :requests ::requests-2}))})]
       (with-redefs [simulators/simulators simulators]
         (testing "gets simulators' configs"
-          (let [result (simulators/configs)]
-            (is (= [{::simulator 1 :requests ::requests-1} {::simulator 2 :requests ::requests-2}]
+          (let [result (simulators/details)]
+            (is (= [{:config {::simulator 1} :requests ::requests-1} {:config {::simulator 2} :requests ::requests-2}]
                    (get-in result [:body :simulators])))))
         (testing "returns response map"
-          (let [result (simulators/configs)]
+          (let [result (simulators/details)]
             (is (http/success? result))))))))
 
 (deftest ^:unit add-simulator-test
@@ -32,7 +32,7 @@
           simulator (reify common/ISimulator
                       (start [this]
                         (start-sim this))
-                      (config [_]
+                      (details [_]
                         {::some ::config}))
           http-sim-spy (spies/create (constantly simulator))
           http-why-spy (spies/create (constantly ::reason))
@@ -46,14 +46,12 @@
           (let [result (simulators/add {:method "some/method"
                                         :path   ::path})]
             (testing "creates a simulator with keywordized method"
-              (is (spies/called-with? http-sim-spy spies/any))
-              (let [config (ffirst (spies/calls http-sim-spy))]
+              (is (spies/called-with? http-sim-spy (spies/matcher uuid?) spies/any))
+              (let [config (second (first (spies/calls http-sim-spy)))]
                 {:method :some/method
                  :path   ::path}
                 (is (= :some/method (:method config)))
-                (is (= ::path (:path config)))
-                (testing "and assigns an id"
-                  (is (uuid? (:id config))))))
+                (is (= ::path (:path config)))))
             (testing "starts the simulator"
               (is (spies/called-with? start-sim simulator)))
             (testing "returns a success map"
@@ -88,12 +86,12 @@
           simulator-1 (reify common/ISimulator
                         (start [this]
                           (start-sim this))
-                        (config [_]
+                        (details [_]
                           {::config 1}))
           simulator-2 (reify common/ISimulator
                         (start [this]
                           (start-sim this))
-                        (config [_]
+                        (details [_]
                           {::config 2}))
           http-sim-spy (spies/and-then simulator-1 simulator-2)
           publisher-spy (spies/create)]
@@ -123,13 +121,12 @@
           (reset! simulator-atom {[::old-method ::old-path] ::old-simulator})
           (let [result (simulators/set! [{:method ::method :path ::path-1 ::config ::1}
                                          {:method ::method :path ::path-2 ::config ::2}])
-                {:keys [reason config]} (first (get-in result [:body :simulators]))]
+                config (first (get-in result [:body :simulators]))]
             (testing "does not change current configs"
               (is (= @simulator-atom {[::old-method ::old-path] ::old-simulator})))
             (testing "returns an error map"
               (is (http/client-error? result))
-              (is (= {:method ::method :path ::path-2 ::config ::2} config))
-              (is (= ::reason reason)))))))))
+              (is (= {:method ::method, :path ::path-2, ::config ::2, :reason ::reason} config)))))))))
 
 (deftest ^:unit reset-all-test
   (testing "(reset-all!)"
@@ -137,12 +134,12 @@
           simulator-1 (reify common/ISimulator
                         (reset [this]
                           (reset-sim this))
-                        (config [_]
+                        (details [_]
                           ::config-1))
           simulator-2 (reify common/ISimulator
                         (reset [this]
                           (reset-sim this))
-                        (config [_]
+                        (details [_]
                           ::config-2))
           simulator-atom (atom {::key-1 simulator-1
                                 ::key-2 simulator-2})

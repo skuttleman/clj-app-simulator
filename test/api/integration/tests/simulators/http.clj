@@ -30,10 +30,9 @@
   (dissoc sim :response))
 
 (def ^:private sim-mapper
-  (comp #(if (map? %) (dissoc % :id) %) #(s/conform :http/http-simulator %)))
+  (comp #(:config %) #(s/conform :http/http-simulator %)))
 
 (defn ^:privates sims-match? [sims-1 sims-2]
-
   (= (->> sims-1
           (map sim-mapper)
           (set))
@@ -207,7 +206,7 @@
                     (is (= "some header"
                            (:x-custom-request-header headers)))))
                 (testing "and when the details are requested by id"
-                  (let [id (get-in response [1 :simulator :config :id])
+                  (let [id (get-in response [1 :simulator :id])
                         response-by-id (test.http/get (str "/api/simulators/" id) content-type)]
                     (is (= (second response-by-id) (second response)))))))
             (testing "and when varying request data"
@@ -238,8 +237,10 @@
                 (testing "publishes event on activity feed"
                   (let [{:keys [event data]} (async/<!! chan)]
                     (is (= :http/change (keyword event)))
-                    (is (= (maps/deep-merge (first start-configs) new-config)
-                           (update (dissoc data :id) :method keyword)))))
+                    (is (= (-> data
+                               (:config)
+                               (update :method keyword))
+                           (maps/deep-merge (first start-configs) new-config)))))
                 (testing "and when sending request to the simulator"
                   (let [now (.getTime (Date.))
                         response (test.http/get "/simulators/some/param" content-type)
@@ -267,7 +268,9 @@
                     (let [{:keys [event data]} (async/<!! chan)]
                       (is (= :http/reset-requests (keyword event)))
                       (is (= {:method :http/get :path "/some/:url-param"}
-                             (-> data (update :method keyword)
+                             (-> data
+                                 (:config)
+                                 (update :method keyword)
                                  (select-keys #{:method :path}))))))
                   (testing "and when getting the simulator's details"
                     (let [[_ {{:keys [config requests]} :simulator}]
@@ -321,8 +324,8 @@
               (testing "publishes event on activity feed"
                 (let [{:keys [event data]} (async/<!! chan)]
                   (is (= :http/change (keyword event)))
-                  (is (= :http/post (keyword (:method data))))
-                  (is (= "/some/path" (:path data)))
+                  (is (= :http/post (keyword (get-in data [:config :method]))))
+                  (is (= "/some/path" (get-in data [:config :path])))
                   data)
                 (testing "and when sending a request to that simulator"
                   (test.http/post "/simulators/some/path"
@@ -331,8 +334,8 @@
                   (testing "publishes event on activity feed"
                     (let [{:keys [event data]} (async/<!! chan)]
                       (is (= :simulators/receive (keyword event)))
-                      (is (= :http/post (keyword (get-in data [:simulator :method]))))
-                      (is (= "/some/path" (get-in data [:simulator :path])))))
+                      (is (= :http/post (keyword (get-in data [:simulator :config :method]))))
+                      (is (= "/some/path" (get-in data [:simulator :config :path])))))
                   (testing "and when sending a request to original simulator"
                     (test.http/get "/simulators/some/things" content-type)
                     (testing "publishes event on activity feed"
@@ -387,9 +390,9 @@
                       get-request (async/<!! chan)
                       post-request (async/<!! chan)]
                   (is (= (json/stringify [:GET "some" "things"])
-                         (get-in update-get [:data :response :body])))
+                         (get-in update-get [:data :config :response :body])))
                   (is (= (pr-str [:POST "some" "things"])
-                         (get-in update-post [:data :response :body])))
+                         (get-in update-post [:data :config :response :body])))
                   (is (= "id-for-things" (get-in get-request [:data :request :route-params :url-param])))
                   (is (pr-str [:new "thing"])
                       (get-in post-request [:data :request :body]))))
@@ -399,7 +402,7 @@
                   (let [{:keys [event data]} (async/<!! chan)]
                     (is (= :simulators/reset-all (keyword event)))
                     (is (= (set start-configs)
-                           (set (map (comp #(dissoc % :id) #(update % :method keyword)) data))))))
+                           (set (map (comp #(update % :method keyword) :config) data))))))
                 (testing "and when getting each simulator's details"
                   (let [[_ get-sim] (test.http/get "/api/simulators/get/some/:url-param" content-type)
                         [_ post-sim] (test.http/get "/api/simulators/post/some/path" content-type)]
@@ -414,16 +417,18 @@
             (testing "publishes event on activity feed"
               (let [{:keys [event data]} (async/<!! chan)]
                 (is (= :simulators/delete (keyword event)))
-                (is (= {:method :http/get :path "/some/:url-param"}
-                       (-> data
+                (is (= (-> data
+                           (:config)
                            (update :method keyword)
-                           (select-keys #{:method :path}))))
+                           (select-keys #{:method :path}))
+                       {:method :http/get :path "/some/:url-param"}))
                 (testing "and when getting a list of simulators"
                   (let [[_ sims] (test.http/get "/api/simulators" content-type)]
                     (testing "does not include deleted simulator"
                       (is (= 1 (count (:simulators sims))))
                       (is (= {:method :http/post :path "/some/path"}
                              (-> (first (:simulators sims))
+                                 (:config)
                                  (update :method keyword)
                                  (select-keys #{:method :path})))))
                     (testing "and when sending a request to deleted simulator"

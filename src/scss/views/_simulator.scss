@@ -1,0 +1,25 @@
+.simulator {
+    .requests {
+        .request {
+            padding-left: 8px;
+            cursor: pointer;
+            color: $blue;
+        }
+    }
+}
+
+.modal {
+    .request-details {
+        padding: 0 16px;
+
+        .key-vals {
+            padding-left: 16px;
+            .key {
+                font-family: Courier;
+            }
+            .val {
+                font-style: italic;
+            }
+        }
+    }
+}

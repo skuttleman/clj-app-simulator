@@ -10,6 +10,7 @@
     :simulators/receive (dispatch [:simulators.activity/receive data])
     :simulators/add (dispatch [:simulators.activity/add data])
     :simulators/delete (dispatch [:simulators.activity/delete data])
+    :http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
     (log/spy [:UNKNOWN-- event data])))
 
 (defn sub [{:keys [dispatch] :as store}]

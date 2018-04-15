@@ -7,7 +7,9 @@
   :min-lein-version "2.6.1"
 
   :dependencies [[bidi "2.1.3"]
+                 [cljsjs/moment "2.10.6-0"]
                  [com.ben-allred/collaj "0.8.0"]
+                 [com.ben-allred/formation "0.3.2"]
                  [com.cognitect/transit-clj "0.8.300"]
                  [com.cognitect/transit-cljs "0.8.243"]
                  [com.taoensso/timbre "4.10.0"]
@@ -33,7 +35,7 @@
   :plugins [[lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
             [lein-cooper "1.2.2"]
             [lein-figwheel "0.5.14"]
-            [lein-sassy "1.0.8"]]
+            [lein-sass "0.5.0"]]
 
   :jar-name "clj-app-simulator.jar"
   :uberjar-name "clj-app-simulator-standalone.jar"
@@ -45,7 +47,7 @@
 
   :cljsbuild {:builds [{:id           "dev"
                         :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/common"]
-                        :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/run"}
+                        :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/on-reload"}
                         :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.tests
                                        :asset-path           "/js/compiled/out"
                                        :output-to            "resources/public/js/compiled/app.js"
@@ -62,10 +64,10 @@
   :figwheel {:css-dirs   ["resources/public/css"]
              :nrepl-port 7888}
   :sass {:src "src/scss"
-         :dst "resources/public/css/"}
+         :output-directory "resources/public/css/"}
 
   :cooper {"cljs"   ["lein" "figwheel"]
-           "sass"   ["lein" "sass" "watch"]
+           "sass"   ["lein" "sass" "auto"]
            "server" ["lein" "run"]}
 
   :profiles {:dev     {:dependencies  [[binaryage/devtools "0.9.4"]
@@ -73,7 +75,7 @@
                                        [com.cemerick/piggieback "0.2.2"]]
                        :main          com.ben-allred.clj-app-simulator.api.server/-dev
                        :source-paths  ["src/clj" "src/cljs" "src/cljc" "dev"]
-                       :plugins       [[cider/cider-nrepl "0.12.0"]]
+                       :plugins       [[cider/cider-nrepl "0.16.0"]]
                        :clean-targets ^{:protect false :replace true} ["resources/public/js"
                                                                        "resources/public/css"
                                                                        :target-path]
@@ -82,4 +84,5 @@
                                                                        "resources/public/css"
                                                                        :target-path]
                        :sass          {:style :compressed}
-                       :prep-tasks    ["compile" ["cljsbuild" "once" "min"] ["sass" "once"]]}})
+                       :prep-tasks    ["compile" ["cljsbuild" "once" "min"] ["sass" "once"]]}}
+  :repl-options {:init-ns integration.tests.simulators.http})

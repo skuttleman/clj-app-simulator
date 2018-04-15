@@ -9,10 +9,10 @@
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"
     (let [dispatch (spies/create)]
-      (testing "calls dispatch with request action"
-        (spies/reset! dispatch)
-        (actions/request-simulators [dispatch])
-        (is (spies/called-with? dispatch [:simulators.fetch-all/request]))))))
+      (with-redefs [http/get (spies/create (constantly (async/chan)))]
+        (testing "calls dispatch with request action"
+          (actions/request-simulators [dispatch])
+          (is (spies/called-with? dispatch [:simulators.fetch-all/request])))))))
 
 (deftest ^:unit request-simulators-success-test
   (testing "(request-simulators)"
@@ -47,10 +47,10 @@
 (deftest ^:unit delete-simulator-test
   (testing "(delete-simulator)"
     (let [dispatch (spies/create)]
-      (testing "calls dispatch with request action"
-        (spies/reset! dispatch)
-        ((actions/delete-simulator ::id) [dispatch])
-        (is (spies/called-with? dispatch [:simulators.delete/request]))))))
+      (with-redefs [http/delete (spies/create (constantly (async/chan)))]
+        (testing "calls dispatch with request action"
+          ((actions/delete-simulator ::id) [dispatch])
+          (is (spies/called-with? dispatch [:simulators.delete/request])))))))
 
 (deftest ^:unit delete-simulator-success-test
   (testing "(delete-simulator)"
@@ -87,10 +87,10 @@
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
     (let [dispatch (spies/create)]
-      (testing "calls dispatch with request action"
-        (spies/reset! dispatch)
-        ((actions/create-simulator ::simulator) [dispatch])
-        (is (spies/called-with? dispatch [:simulators.create/request]))))))
+      (with-redefs [http/post (spies/create (constantly (async/chan)))]
+        (testing "calls dispatch with request action"
+          ((actions/create-simulator ::simulator) [dispatch])
+          (is (spies/called-with? dispatch [:simulators.create/request])))))))
 
 (deftest ^:unit create-simulator-success-test
   (testing "(create-simulator)"

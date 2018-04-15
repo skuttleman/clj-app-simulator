@@ -43,7 +43,7 @@
 (def simulators
   (with-status {:pending   #{:simulators.fetch-one/request :simulators.fetch-all/request}
                 :available #{:simulators.fetch-one/succeed :simulators/clear :simulators.activity/receive
-                             :simulators.activity/add :simulators.activity/delete}
+                             :simulators.activity/add :simulators.activity/delete :simulators.activity/reset-requests}
                 :failed    #{:simulators.fetch-all/fail :simulators.fetch-one/fail}}
                (let [reducer (collaj.reducers/map-of
                                (comp :id :simulator second)
@@ -53,6 +53,7 @@
                                   (case type
                                     :simulators.fetch-one/succeed simulator
                                     :simulators.activity/receive (update state :requests (fnil conj []) request)
+                                    :simulators.activity/reset-requests (assoc state :requests [])
                                     :simulators.activity/add simulator
                                     state))))]
                  (fn

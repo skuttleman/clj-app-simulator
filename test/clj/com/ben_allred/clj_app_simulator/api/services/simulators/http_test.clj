@@ -5,10 +5,8 @@
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [compojure.core :as c]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
             [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private simulator
@@ -22,7 +20,7 @@
          spy (spies/create (constantly {:dispatch  dispatch
                                         :get-state get-state}))]
      (with-redefs [store/http-store spy]
-       [(http.sim/->HttpSimulator config) spy config dispatch get-state]))))
+       [(http.sim/->HttpSimulator ::id config) spy config dispatch get-state]))))
 
 (deftest ^:unit ->HttpSimulator-test
   (testing "(->HttpSimulator)"
@@ -91,27 +89,17 @@
             (is (spies/called-with? requests-spy ::state))
             (is (= ::requests result))))))))
 
-(deftest ^:unit ->HttpSimulator.config-test
-  (testing "(->HttpSimulator.config)"
-    (testing "returns request"
-      (let [[sim _ _ _ get-state] (simulator)
-            config-spy (spies/create (constantly ::config))]
-        (with-redefs [store/config config-spy]
-          (let [result (common/config sim)]
-            (is (spies/called? get-state))
-            (is (spies/called-with? config-spy ::state))
-            (is (= ::config result))))))))
-
 (deftest ^:unit ->HttpSimulator.details-test
   (testing "(->HttpSimulator.details)"
     (testing "returns request"
       (let [[sim _ _ _ get-state] (simulator)
-            details-spy (spies/create (constantly ::details))]
+            details-spy (spies/create (constantly {:config ::details}))]
         (with-redefs [store/details details-spy]
           (let [result (common/details sim)]
             (is (spies/called? get-state))
             (is (spies/called-with? details-spy ::state))
-            (is (= ::details result))))))))
+            (is (= ::details (:config result)))
+            (is (= ::id (:id result)))))))))
 
 (deftest ^:unit ->HttpSimulator.reset-test
   (testing "(->HttpSimulator.reset)"

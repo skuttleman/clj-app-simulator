@@ -15,4 +15,4 @@
 
 (defn stringify [o]
   #?(:clj  (jsonista/write-value-as-string o)
-     :cljs (.stringify js/JSON o)))
+     :cljs (.stringify js/JSON (clj->js o))))

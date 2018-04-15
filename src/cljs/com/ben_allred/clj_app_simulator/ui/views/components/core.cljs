@@ -16,3 +16,17 @@
       ""]
      component]
     component))
+
+(defn with-status [_status _component item request]
+  (when (empty? item)
+    (request))
+  (fn [status component item _request]
+    (cond
+      (and (= :available status) (seq item))
+      [component item]
+
+      (= :available status)
+      [:div "Not found"]
+
+      :else
+      [spinner])))
