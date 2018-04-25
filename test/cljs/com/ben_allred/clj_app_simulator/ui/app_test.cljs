@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.app-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.app :as app]
             [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
             [test.utils.spies :as spies]
@@ -43,3 +43,5 @@
           (let [app (app/app)
                 comp (test.dom/query-one app (:component components))]
             (is (= (second comp) state))))))))
+
+(defn run-tests [] (t/run-tests))

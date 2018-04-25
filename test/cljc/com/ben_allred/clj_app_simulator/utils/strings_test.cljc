@@ -19,3 +19,11 @@
       (are [v s] (is (= s (strings/maybe-pr-str v)))
         {:a #{1}} "{:a #{1}}"
         ["a" \b 'c] "[\"a\" \\b c]"))))
+
+(deftest ^:unit titlize-test
+  (testing "(titlize)"
+    (testing "titlizes strings"
+      (are [in out] (= (strings/titlize in) out)
+        "something-is-rotten" "Something-Is-Rotten"
+        "WEIRD-NEVER-BOTHERS ME" "Weird-Never-Bothers me"
+        "--This--Is--Fine--" "--This--Is--Fine--"))))

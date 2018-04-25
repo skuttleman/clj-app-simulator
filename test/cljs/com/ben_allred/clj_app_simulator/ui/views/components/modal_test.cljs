@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.modal-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]
@@ -44,3 +44,5 @@
         (let [modal (test.dom/query-one (modal :some-state ::content) :.modal)
               modal-content (test.dom/query-one modal :.modal-content)]
           (is (test.dom/contains? modal-content ::content)))))))
+
+(defn run-tests [] (t/run-tests))

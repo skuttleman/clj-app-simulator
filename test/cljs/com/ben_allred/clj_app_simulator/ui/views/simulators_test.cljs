@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.simulators-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
@@ -124,3 +124,5 @@
               (is (= [sims/sim-group nil [(get sims 555)]]
                      sim-group-3))
               (is (= "" (:key (meta sim-group-3)))))))))))
+
+(defn run-tests [] (t/run-tests))

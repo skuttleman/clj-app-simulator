@@ -91,7 +91,7 @@
                   (spies/reset! reset-requests-spy pub-spy)
                   (let [result (handler {:body {:action :http/reset-requests}})]
                     (is (spies/called-with? reset-requests-spy simulator))
-                    (is (spies/called-with? pub-spy :http/reset-requests (dissoc details :requests)))
+                    (is (spies/called-with? pub-spy :http/reset-requests details))
                     (is (http/success? result))))
                 (testing "resets the simulator's response"
                   (spies/reset! reset-response-spy pub-spy)

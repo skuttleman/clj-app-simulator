@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.events-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.events :as events]))
 
 (deftest ^:unit code->key-test
@@ -51,3 +51,5 @@
                                           :metaKey  true
                                           :ctrlKey  true
                                           :shiftKey true})))))))
+
+(defn run-tests [] (t/run-tests))

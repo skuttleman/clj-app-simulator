@@ -7,18 +7,17 @@
 
 (defn ^:private update-sim [simulator {:keys [action config]}]
   (let [action (keyword action)]
-    (case action
-      :simulator/reset (do (common/reset simulator)
-                           (activity/publish action (common/details simulator)))
-      :http/reset-requests (do (common/reset-requests simulator)
-                               (activity/publish action (-> simulator
-                                                            (common/details)
-                                                            (select-keys #{:id :config}))))
-      :http/reset-response (do (common/reset-response simulator)
-                               (activity/publish action (common/details simulator)))
-      :http/change (do (common/change simulator config)
-                       (activity/publish action (common/details simulator)))
-      nil)))
+    (when (#{:simulator/reset :http/reset-requests :http/reset-response :http/change}
+            action)
+      (case action
+        :simulator/reset (common/reset simulator)
+        :http/reset-requests (common/reset-requests simulator)
+        :http/reset-response (common/reset-response simulator)
+        :http/change (common/change simulator config)
+        nil)
+      (let [details (common/details simulator)]
+        (activity/publish action details)
+        details))))
 
 (defn http-sim->routes [simulator delete]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)
@@ -33,8 +32,7 @@
                  (delete method path)
                  (respond/with [:no-content]))
         patch (fn [{:keys [body]}]
-                (try (update-sim simulator body)
-                     (respond/with [:no-content])
+                (try (respond/with [:ok (update-sim simulator body)])
                      (catch Throwable ex
                        (respond/with [:bad-request (:problems (ex-data ex))]))))]
     (->> [[(keyword method-str)

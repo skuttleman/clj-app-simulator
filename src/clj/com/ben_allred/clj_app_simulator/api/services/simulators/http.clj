@@ -83,5 +83,5 @@
           (dispatch actions/reset-response))
         (change [_ config]
           (if-let [config (conform-to :http.partial/http-simulator config)]
-            (dispatch (actions/change (select-keys config #{:delay :response})))
+            (dispatch (actions/change (dissoc config :method :path)))
             (throw (ex-info "config does not conform to spec" {:problems (why-not-update? config)}))))))))

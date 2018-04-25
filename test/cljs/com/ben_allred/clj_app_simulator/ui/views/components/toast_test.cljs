@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.toast-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]
@@ -35,3 +35,5 @@
               (test.dom/simulate-event button :click)
               (is (spies/called-with? action-spy key))
               (is (spies/called-with? dispatch-spy ::action)))))))))
+
+(defn run-tests [] (t/run-tests))

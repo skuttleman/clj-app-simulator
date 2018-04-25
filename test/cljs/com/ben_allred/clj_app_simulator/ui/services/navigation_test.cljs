@@ -1,6 +1,6 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.navigation-test
-  (:require [bidi.bidi :as bidi]
-            [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t  :refer-macros [deftest testing is]]
+            [bidi.bidi :as bidi]
             [com.ben-allred.clj-app-simulator.utils.query-params :as qp]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [test.utils.spies :as spies]
@@ -133,3 +133,5 @@
           (let [result (nav/nav-and-replace! ::page)]
             (is (= ::some-result result))
             (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))
+
+(defn run-tests [] (t/run-tests))

@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.utils.core-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.utils.core :as utils]))
 
 (deftest ^:unit classes-test
@@ -21,3 +21,5 @@
                                   {"class-1" false "class-2" false})]
         (is (= {::other ::attrs}
                result))))))
+
+(defn run-tests [] (t/run-tests))

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.middleware-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
             [test.utils.spies :as spies]))
 
@@ -20,3 +20,5 @@
         (mw [:any-random-type ::value])
         (testing "passes action through to next"
           (is (spies/called-with? dispatch-spy [:any-random-type ::value])))))))
+
+(defn run-tests [] (t/run-tests))

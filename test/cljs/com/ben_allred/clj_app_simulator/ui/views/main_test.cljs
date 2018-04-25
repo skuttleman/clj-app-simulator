@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.main-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
@@ -37,3 +37,5 @@
                    (butlast (test.dom/query-one root components/with-status))))
             ((last (test.dom/query-one root components/with-status)))
             (is (spies/called-with? dispatch-spy actions/request-simulators))))))))
+
+(defn run-tests [] (t/run-tests))

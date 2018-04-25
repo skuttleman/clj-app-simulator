@@ -33,6 +33,27 @@
         (http/post {:body {:simulator simulator}})
         (request* dispatch :simulators.create/succeed :simulators.create/fail))))
 
+(defn clear-requests [id]
+  (fn [[dispatch]]
+    (dispatch [:simulators.clear-requests/request])
+    (-> (str "/api/simulators/" id)
+        (http/patch {:body {:action :http/reset-requests}})
+        (request* dispatch :simulators.clear-requests/succeed :simulators.clear-requests/fail))))
+
+(defn reset-simulator [id]
+  (fn [[dispatch]]
+    (dispatch [:simulators.reset/request])
+    (-> (str "/api/simulators/" id)
+        (http/patch {:body {:action :simulator/reset}})
+        (request* dispatch :simulators.reset/succeed :simulators.reset/fail))))
+
+(defn update-simulator [id config]
+  (fn [[dispatch]]
+    (dispatch [:simulators.change/request])
+    (-> (str "/api/simulators/" id)
+        (http/patch {:body {:action :http/change :config config}})
+        (request* dispatch :simulators.change/succeed :simulators.change/fail))))
+
 (defn show-modal [content & [title]]
   (fn [[dispatch]]
     (dispatch [:modal/mount content title])

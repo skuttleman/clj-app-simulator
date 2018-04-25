@@ -48,9 +48,19 @@
 (defn query-one [tree selector]
   (first (query-all tree selector)))
 
-(defn simulate-event [tree event & [event-data]]
-  (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
-    (f (or event-data (js/Event. (name event))))))
+(defn simulate-event
+  ([tree event]
+   (simulate-event tree event (js/Event. (name event))))
+  ([tree event event-data]
+   (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
+     (f event-data))))
 
 (defn contains? [tree item]
-  (clojure.core/contains? (set (flatten tree)) item))
+  (if (vector? item)
+    (->> item
+         (first)
+         (query-all tree)
+         (filter (comp (partial = (rest item)) rest))
+         (seq)
+         (boolean))
+    (clojure.core/contains? (set (flatten tree)) item)))

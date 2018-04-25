@@ -9,7 +9,7 @@
   :dependencies [[bidi "2.1.3"]
                  [cljsjs/moment "2.10.6-0"]
                  [com.ben-allred/collaj "0.8.0"]
-                 [com.ben-allred/formation "0.3.2"]
+                 [com.ben-allred/formation "0.4.1"]
                  [com.cognitect/transit-clj "0.8.300"]
                  [com.cognitect/transit-cljs "0.8.243"]
                  [com.taoensso/timbre "4.10.0"]

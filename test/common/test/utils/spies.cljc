@@ -3,8 +3,8 @@
 
 (defn ^:private find-override [overrides args]
   (->> overrides
-       (filter (comp #(% args) key))
-       (map val)
+       (filter (comp #(% args) first))
+       (map second)
        (first)))
 
 (defn matcher? [obj]
@@ -44,7 +44,7 @@
    (create (constantly nil)))
   ([f]
    (let [calls (atom [])
-         overrides (atom {})]
+         overrides (atom ())]
      (with-meta
        (fn [& args]
          (swap! calls conj args)
@@ -89,10 +89,19 @@
           :let [{:keys [::calls ::overrides]} (meta spy)]
           :when (spy? spy)]
     (clojure.core/reset! calls [])
-    (clojure.core/reset! overrides {})))
+    (clojure.core/reset! overrides ())))
 
 (defn do-when-called-with! [spy matcher f]
-  (swap! (::overrides (meta spy)) assoc matcher f))
+  (swap! (::overrides (meta spy)) conj [matcher f]))
 
 (defn respond-with! [spy f]
   (do-when-called-with! spy (constantly true) f))
+
+(defn returning! [spy & values]
+  (let [values (atom values)]
+    (do-when-called-with! spy
+                          (constantly true)
+                          (fn [& _]
+                            (let [response (first @values)]
+                              (swap! values rest)
+                              response)))))

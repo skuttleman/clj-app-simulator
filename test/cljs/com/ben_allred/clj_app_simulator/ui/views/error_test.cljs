@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.error-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.error :as error]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]
@@ -16,3 +16,5 @@
           (testing "has a link to the home page"
             (let [link (test.dom/query-one not-found :a.home)]
               (is (= (:href (test.dom/attrs link)) ::href)))))))))
+
+(defn run-tests [] (t/run-tests))

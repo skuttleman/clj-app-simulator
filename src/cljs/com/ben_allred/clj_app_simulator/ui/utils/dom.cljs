@@ -2,3 +2,10 @@
 
 (defn stop-propagation [event]
   (.stopPropagation event))
+
+(defn prevent-default [event]
+  (.preventDefault event))
+
+(defn target-value [event]
+  (when-let [target (.-target event)]
+    (.-value target)))

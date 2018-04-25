@@ -1,147 +1,213 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.simulator
-  (:require [cljsjs.moment]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.string :as string]
-            [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+  (:require [clojure.string :as string]
+            [com.ben-allred.clj-app-simulator.services.http :as http]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
             [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
-            [reagent.core :as r]
-            [com.ben-allred.clj-app-simulator.services.http :as http]))
+            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [com.ben-allred.formation.core :as f]
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
-(defn ^:private parse-int-to-nil [value]
-  (let [delay (js/parseInt value)]
-    (if (js/isNaN delay)
-      value
-      delay)))
+(defn ^:private maybe-parse-int [value]
+  (let [delay (js/parseInt value)
+        delay-str (str delay)
+        trim-zeros (string/replace value #"^0+" "")]
+    (if (or (= trim-zeros delay-str)
+            (= (str 0 trim-zeros) delay-str))
+      delay
+      value)))
 
-(def ^:private source->model (f/make-transformer
-                               {:response
-                                {:headers [seq
-                                           #(mapcat (fn [[k v]]
-                                                      (if (coll? v)
-                                                        (map (fn [v'] [k v']) v)
-                                                        [[k v]]))
-                                                    %)
-                                           #(sort-by first %)
-                                           vec]}}))
+(def ^:private statuses
+  (->> http/kw->status
+       (map (juxt second #(str (strings/titlize (name (first %)) " ") " [" (second %) "]")))
+       (sort-by first)))
 
-(def ^:private model->view (f/make-transformer
-                             {:delay    str
-                              :response {:status  str
-                                         :headers (f/transformer-coll
-                                                    (f/transformer-tuple
-                                                      name
-                                                      identity))}}))
+(def ^:private source->model
+  (f/make-transformer
+    [#(update % :delay (fn [delay] (or delay 0)))
+     {:response {:headers (fns/=>> (mapcat (fn [[k v]]
+                                             (if (coll? v)
+                                               (->> v
+                                                    (sort)
+                                                    (map (fn [v'] [k v'])))
+                                               [[k v]])))
+                                   (sort-by first)
+                                   (vec))}}]))
 
-(def ^:private view->model (f/make-transformer
-                             {:delay    parse-int-to-nil
-                              :response {:status  js/parseInt
-                                         :headers (f/transformer-coll
-                                                    (f/transformer-tuple
-                                                      [string/lower-case keyword]
-                                                      identity))}}))
+(def ^:private model->source
+  (f/make-transformer
+    {:response    {:headers #(reduce (fn [m [k v]]
+                                       (let [existing (get m k)
+                                             trimmed (strings/trim-to-nil v)]
+                                         (cond
+                                           (not trimmed) m
+                                           (string? existing) (assoc m k [(get m k) trimmed])
+                                           (coll? existing) (update m k conj trimmed)
+                                           :else (assoc m k trimmed))))
+                                     {}
+                                     %)
+                   :body    strings/trim-to-nil}
+     :name        strings/trim-to-nil
+     :group       strings/trim-to-nil
+     :description strings/trim-to-nil}))
 
-(def ^:private model->source (f/make-transformer
-                               {:response
-                                {:headers #(reduce (fn [m [k v]]
-                                                     (let [existing (get m k)]
-                                                       (cond
-                                                         (string? existing) (assoc m k [(get m k) v])
-                                                         (coll? existing) (update m k conj v)
-                                                         :else (assoc m k v))))
-                                                   {}
-                                                   %)}}))
+(def ^:private model->view
+  {:delay    str
+   :response {:status  str
+              :headers (f/transformer-tuple
+                         [name strings/titlize]
+                         identity)}})
+(def ^:private view->model
+  {:delay    maybe-parse-int
+   :response {:status  js/parseInt
+              :headers (f/transformer-tuple
+                         [string/lower-case keyword]
+                         identity)}})
 
-(def ^:private validate (f/make-validator
-                          {:delay    [(f/pred integer? "Delay must be a number")
-                                      (f/pred #(>= % 0) "Delay cannot be negative")]
-                           :response {:status  (f/required "Must have a status")
-                                      :headers (f/validator-coll
-                                                 #(when-not (and (keyword? (first %))
-                                                                 (seq (second %)))
-                                                    [(str "Invalid header" (pr-str %))]))}}))
+(defn ^:private with-attrs [attrs form path]
+  (assoc attrs
+    :on-change (partial forms/assoc-in form path)
+    :value (get-in (forms/current-model form) path)
+    :to-view (get-in model->view path)
+    :to-model (get-in view->model path)
+    :errors (get-in (forms/errors form) path)))
 
-(defn ^:private update-form [form path v]
-  (swap! form assoc-in path (get-in (view->model (assoc-in nil path v)) path)))
+(defn validate* []
+  (f/make-validator
+    {:delay    [(f/pred #(and (not (js/isNaN %)) (number? %)) "Delay must be a number")
+                (f/pred #(= (js/parseInt %) %) "Delay must be a whole number")
+                (f/pred #(>= % 0) "Delay cannot be negative")]
+     :response {:status  (f/required "Must have a status")
+                :headers (f/validator-coll
+                           (f/validator-tuple
+                             (f/pred (comp (partial re-matches #"[A-Za-z-]+") name) "Invalid header key")
+                             (f/pred #(seq %) "Header must have a value")))}}))
 
-(defn ^:private titlize
-  ([s] (titlize s "-"))
-  ([s sep]
-   (->> (string/split s #"-")
-        (map string/capitalize)
-        (string/join sep))))
+(def ^:private validate (validate*))
 
-(defn sim-iterate [label m class xform-key]
-  [:div
-   {:class-name class}
-   [:h5 label]
-   [:ul.key-vals
-    (for [[k v] (sort-by key m)]
-      [:li
-       {:key (str k)}
-       [:span.key (xform-key (name k))]
-       ": "
-       [:span.val (if (coll? v)
-                    (string/join "," v)
-                    v)]])]])
+(defn sim-iterate
+  ([label m class]
+   (sim-iterate label m class identity))
+  ([label m class xform-key]
+   [:div
+    {:class-name class}
+    [:h5 label]
+    [:ul.key-vals
+     (for [[k v] (sort-by key m)]
+       [:li
+        {:key (str k)}
+        [:span.key (xform-key (name k))]
+        ": "
+        [:span.val (if (coll? v)
+                     (string/join "," v)
+                     v)]])]]))
 
 (defn sim-details [{{:keys [method path]} :config}]
   [:div.sim-card-identifier
    [:div.sim-card-method (string/upper-case (name method))]
    [:div.sim-card-path path]])
 
+(defn name-field [form]
+  [fields/input
+   (-> {:label "Name"}
+       (with-attrs form [:name]))])
+
+(defn group-field [form]
+  [fields/input
+   (-> {:label "Group"}
+       (with-attrs form [:group]))])
+
+(defn description-field [form]
+  [fields/textarea
+   (-> {:label "Description"}
+       (with-attrs form [:description]))])
+
+(defn status-field [form]
+  [fields/select
+   (-> {:label "Status"}
+       (with-attrs form [:response :status]))
+   statuses])
+
+(defn delay-field [form]
+  [fields/input
+   (-> {:label "Delay (ms)"}
+       (with-attrs form [:delay]))])
+
+(defn headers-field [form]
+  [fields/multi
+   (-> {:label     "Headers"
+        :key-fn    #(str "header-" (first %))
+        :new-fn    (constantly ["" ""])
+        :change-fn #(apply forms/update-in form [:response :headers] %&)}
+       (with-attrs form [:response :headers])
+       (dissoc :on-change))
+   fields/header])
+
+(defn body-field [form]
+  [fields/textarea
+   (-> {:label "Body"}
+       (with-attrs form [:response :body]))])
+
+(defn sim-edit-form* [id form]
+  [:form.simulator-edit
+   {:on-submit #(do
+                  (dom/prevent-default %)
+                  (->> form
+                       (forms/current-model)
+                       (model->source)
+                       (actions/update-simulator id)
+                       (store/dispatch)))}
+   [name-field form]
+   [group-field form]
+   [description-field form]
+   [status-field form]
+   [delay-field form]
+   [headers-field form]
+   [body-field form]
+   [:button.button.button-warning.pure-button.reset-button
+    {:type     :button
+     :on-click #(store/dispatch (actions/reset-simulator id))}
+    "Reset"]
+   [:button.button.button-secondary.pure-button.save-button
+    {:disabled (or (forms/errors form) (not (forms/changed? form)))}
+    "Save"]])
+
 (defn sim-edit-form [{:keys [config id]}]
-  (let [initial-model (source->model (select-keys config #{:response :delay}))
-        form (r/atom initial-model)]
+  (let [form (-> config
+                 (select-keys #{:group :response :delay :name :description})
+                 (source->model)
+                 (forms/create validate))]
     (fn [_simulator]
-      (let [model @form
-            errors (validate model)
-            view-data (model->view model)]
-        [:form
-         {:on-submit #(do (.preventDefault %)
-                          (log/spy (model->source @form)))}
-         [fields/select
-          {:on-change (partial update-form form [:response :status])
-           :label     "Status"
-           :value     (get-in view-data [:response :status])}
-          (->> http/kw->status
-               (map (juxt second #(str (titlize (name (first %)) " ") " [" (second %) "]")))
-               (sort-by first))]
-         [fields/input
-          {:on-change (partial update-form form [:delay])
-           :value     (:delay view-data)
-           :label     "Delay (ms)"}]
-         [fields/textarea
-          {:on-change (partial update-form form [:response :body])
-           :label     "Body"
-           :value     (get-in view-data [:response :body])}]
-         [:button.button.button-warning.pure-button
-          {:type :button}
-          "Reset"]
-         [:button.button.button-secondary.pure-button
-          {:disabled (or (log/spy errors) (= initial-model model))}
-          "Save"]]))))
+      [sim-edit-form* id form])))
 
-(defn sim-request [{:keys [method path]} {:keys [timestamp query-params headers body]}]
-  (let [dt (js/moment timestamp)]
+(defn request-modal [{:keys [method path]} {:keys [dt query-params headers body]}]
+  [:div.request-details
+   [:p (string/upper-case (name method)) ": " path]
+   [:p (mo/format dt)]
+   (when (seq query-params)
+     [sim-iterate "Query:" query-params "query-params"])
+   (when (seq headers)
+     [sim-iterate "Headers:" headers "headers" strings/titlize])
+   (when (seq body)
+     [:div.request-body
+      [:span "Body:"]
+      [:p body]])])
+
+(defn sim-request [sim {:keys [timestamp] :as request}]
+  (let [dt (mo/->moment timestamp)]
     [:li.request
-     {:on-click #(store/dispatch (actions/show-modal [:div.request-details
-                                                      [:p (string/upper-case (name method)) ": " path]
-                                                      [:p (.format dt)]
-                                                      (when (seq query-params)
-                                                        [sim-iterate "Query:" query-params "query-params" identity])
-                                                      (when (seq headers)
-                                                        [sim-iterate "Headers:" headers "headers" titlize])
-                                                      (when (seq body)
-                                                        [:div
-                                                         [:span "Body:"]
-                                                         [:p body]])]
-                                                     "Request Details"))}
+     {:on-click #(store/dispatch
+                   (actions/show-modal
+                     [request-modal sim (assoc request :dt dt)]
+                     "Request Details"))}
      [:div
-      (.fromNow dt)]]))
+      (mo/from-now dt)]]))
 
-(defn sim [{:keys [config requests] :as simulator}]
+(defn sim [{:keys [config requests id] :as simulator}]
   [:div.simulator
    [:h3 "Simulator"]
    [sim-details simulator]
@@ -151,8 +217,7 @@
     (for [request (sort-by :timestamp > requests)]
       ^{:key (str (:timestamp request))}
       [sim-request config request])]
-   [:button.button.button-error.pure-button
-    {:disabled (empty? requests)}
-    "Clear Requests"]
-   [:button.button.button-error.pure-button
-    "Delete Simulator"]])
+   [:button.button.button-error.pure-button.clear-button
+    {:disabled (empty? requests)
+     :on-click #(store/dispatch (actions/clear-requests id))}
+    "Clear Requests"]])

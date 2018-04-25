@@ -9,3 +9,12 @@
 (defn maybe-pr-str [s]
   (cond-> s
     (not (string? s)) (pr-str)))
+
+(defn titlize
+  ([s] (titlize s "-"))
+  ([s sep]
+   (let [[_ trail-dash] (re-find #"[^-]*(-+)$" s)]
+     (str (->> (string/split s #"-")
+               (map string/capitalize)
+               (string/join sep))
+          trail-dash))))

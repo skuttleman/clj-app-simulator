@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.store.reducers-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]))
 
 (deftest ^:unit page-test
@@ -86,3 +86,5 @@
              (reducers/toasts {::some ::toast ::some-other ::toast} [:toast/remove ::some]))))
     (testing "returns unchanged state for any random action"
       (is (= ::same-state (reducers/toasts ::same-state [:any-random-action ::ignored]))))))
+
+(defn run-tests [] (t/run-tests))

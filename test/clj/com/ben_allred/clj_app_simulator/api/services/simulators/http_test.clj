@@ -136,10 +136,10 @@
   (testing "(->HttpSimulator.change)"
     (let [[sim _ _ dispatch] (simulator)
           change-spy (spies/create (constantly ::action))
-          config {:delay 100 :response {:body "{\"some\":\"json\"}"}}]
+          config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
       (with-redefs [actions/change change-spy]
         (testing "changes changeable config properties"
-          (common/change sim (assoc config :extra ::junk))
+          (common/change sim (assoc config :method ::method :path ::path))
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))
         (testing "when config is bad"

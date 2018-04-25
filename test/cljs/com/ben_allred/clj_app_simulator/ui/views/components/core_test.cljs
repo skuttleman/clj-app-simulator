@@ -1,5 +1,5 @@
 (ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.core-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [test.utils.spies :as spies]))
@@ -49,3 +49,5 @@
             root (apply (apply components/with-status args) args)]
         (testing "renders a spinner"
           (is (test.dom/query-one root components/spinner)))))))
+
+(defn run-tests [] (t/run-tests))
