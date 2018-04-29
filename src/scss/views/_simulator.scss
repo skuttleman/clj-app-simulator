@@ -6,6 +6,54 @@
             color: $blue;
         }
     }
+
+    .simulator-edit {
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+
+            .multi-item {
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        .multi {
+            .multi-item {
+                margin-bottom: 5px;
+                display: flex;
+
+                    & > :not(:last-child) {
+                        margin-right: 10px;
+                    }
+
+                    .form-field {
+                        margin-bottom: 0;
+                        flex-grow: 1;
+                    }
+
+                    .header-field {
+                        display: flex;
+                        flex-direction: row;
+                        margin-bottom: 0px;
+                        flex-grow: 1;
+
+                        & > * {
+                            flex-grow: 1;
+
+                            &:not(:last-child) {
+                                margin-right: 10px;
+                            }
+                        }
+                    }
+            }
+        }
+
+        textarea {
+            height: 100px;
+        }
+    }
 }
 
 .modal {
@@ -17,6 +65,7 @@
             .key {
                 font-family: Courier;
             }
+
             .val {
                 font-style: italic;
             }

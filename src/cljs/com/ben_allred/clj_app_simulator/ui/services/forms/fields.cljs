@@ -1,24 +1,32 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.forms.fields
   (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns]
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
-(defn ^:private update-by-idx [update idx v]
-  (update (fns/=>> (map-indexed #(if (= idx %1) v %2))
-                   (vec))))
+(defn ^:private update-by-idx [idx v]
+  (fns/=>> (map-indexed #(if (= idx %1) v %2))))
 
-(defn ^:private remove-by-idx [update idx]
-  (update (fns/=>> (map-indexed vector)
-                   (remove (comp (partial = idx) first))
-                   (mapv second))))
+(defn ^:private remove-by-idx [idx]
+  (fns/=>> (map-indexed vector)
+           (remove (comp (partial = idx) first))
+           (map second)))
 
-(defn ^:private form-field [{:keys [label errors]} & body]
-  (into [:div.form-field
-         (when (seq errors)
-           {:class-name :errors})
-         (when label
-           [:label label])]
-        body))
+(defn ^:private form-field [{:keys [label] :as attrs} & body]
+  (let [errors (seq (remove nil? (:errors attrs)))]
+    (into [:div.form-field
+           (when errors
+             {:class-name :errors})
+           (when (or label errors)
+             [:div.field-info
+              (when label
+                [:label label])
+              (when errors
+                [:ul.error-list
+                 (for [error errors]
+                   [:li.error
+                    {:key error}
+                    error])])])]
+          body)))
 
 (defn select [{:keys [on-change value class-name to-view to-model] :as attrs} options]
   (let [to-view (or to-view identity)
@@ -60,32 +68,28 @@
         [k v] (to-view value)]
     [form-field
      attrs
-     [:div
-      [:input.header
+     [:div.header-field
+      [:input.header-key
        {:value     k
         :on-change #(on-change (to-model [(dom/target-value %) v]))}]
-      [:input.value
+      [:input.header-value
        {:value     v
         :on-change #(on-change (to-model [k (dom/target-value %)]))}]]]))
 
-(defn multi [{:keys [key-fn value new-fn change-fn errors] :as attrs} component]
-  (let [length (count value)
-        last-idx (dec length)]
-    [form-field
-     (dissoc attrs :errors)
-     [:ul.multi
-      (for [[idx val :as key] (map-indexed vector value)
-            :let [last? (= idx last-idx)]]
-        [:li
-         {:key (key-fn key)}
-         [:div
-          [component (-> attrs
-                         (dissoc :label)
-                         (assoc :value val
-                                :on-change (partial update-by-idx change-fn idx)
-                                :errors (nth errors idx nil)))]
-          [:i.fa.fa-minus
-           {:on-click #(remove-by-idx change-fn idx)}]]
-         (when last?
-           [:i.fa.fa-plus
-            {:on-click #(change-fn conj (new-fn length))}])])]]))
+(defn multi [{:keys [key-fn value new-fn change-fn errors class-name] :as attrs} component]
+  [form-field
+   (dissoc attrs :errors)
+   [:ul.multi
+    {:class-name class-name}
+    (for [[idx val :as key] (map-indexed vector value)]
+      [:li.multi-item
+       {:key (key-fn key)}
+       [:i.fa.fa-minus.remove-item
+        {:on-click #(change-fn (comp vec (remove-by-idx idx)))}]
+       [component (-> attrs
+                      (dissoc :label)
+                      (assoc :value val
+                             :errors (nth errors idx nil)
+                             :on-change #(change-fn (comp vec (update-by-idx idx %)))))]])]
+   [:i.fa.fa-plus.add-item
+    {:on-click #(change-fn conj (new-fn (count value)))}]])

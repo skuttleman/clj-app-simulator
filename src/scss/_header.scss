@@ -16,6 +16,7 @@ $header-bg: #fafffa;
         align-items: flex-start;
         margin-top: 0;
     }
+
     .logo {
         height: 50px;
         width: auto;
@@ -23,7 +24,10 @@ $header-bg: #fafffa;
 }
 
 .main {
-    padding: 10px 10vw;
+    padding: 10px 20vw;
+    @media (min-width: 1200px) {
+        padding: 10px 400px;
+    }
 }
 
 .scrollable {

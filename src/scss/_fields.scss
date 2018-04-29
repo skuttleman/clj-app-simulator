@@ -1,3 +1,7 @@
 .errors {
     border: 2px solid red;
 }
+
+.add-item, .remove-item {
+    cursor: pointer;
+}

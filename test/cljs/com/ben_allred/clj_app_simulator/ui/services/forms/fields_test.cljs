@@ -269,8 +269,8 @@
                       (test.dom/query-one :label)
                       (test.dom/contains? ::label))))
 
-            (let [header (test.dom/query-one form-field :input.header)
-                  value (test.dom/query-one form-field :input.value)
+            (let [header (test.dom/query-one form-field :input.header-key)
+                  value (test.dom/query-one form-field :input.header-value)
                   header-attrs (test.dom/attrs header)
                   value-attrs (test.dom/attrs value)]
               (testing "renders a :header element"
@@ -278,14 +278,14 @@
                 (is (= ::view-key (:value header-attrs)))
                 (is (= ::view-value (:value value-attrs))))
 
-              (testing "handles :on-change event for .header"
+              (testing "handles :on-change event for .header-key"
                 (spies/reset! on-change to-model target-value)
                 (test.dom/simulate-event header :change [::new-header])
                 (is (spies/called-with? target-value [::new-header]))
                 (is (spies/called-with? to-model [::new-header ::view-value]))
                 (is (spies/called-with? on-change ::model)))
 
-              (testing "handles :on-change event for .value"
+              (testing "handles :on-change event for .header-value"
                 (spies/reset! on-change to-model target-value)
                 (test.dom/simulate-event value :change [::new-header])
                 (is (spies/called-with? target-value [::new-header]))
@@ -307,8 +307,8 @@
             (testing "and when :to-view is nil"
               (let [root (render fields/header (dissoc attrs :to-view))
                     form-field (test.dom/query-one root :.form-field)
-                    header (test.dom/query-one form-field :.header)
-                    value (test.dom/query-one form-field :.value)]
+                    header (test.dom/query-one form-field :.header-key)
+                    value (test.dom/query-one form-field :.header-value)]
                 (testing "has the unchanged :value"
                   (is (= ::model-key (:value (test.dom/attrs header))))
                   (is (= ::model-value (:value (test.dom/attrs value)))))))
@@ -316,16 +316,98 @@
             (testing "and when :to-model is nil"
               (let [root (render fields/header (dissoc attrs :to-model))
                     form-field (test.dom/query-one root :.form-field)
-                    header (test.dom/query-one form-field :.header)
-                    value (test.dom/query-one form-field :.value)]
-                (testing "passes the target value to :on-change for .header"
+                    header (test.dom/query-one form-field :.header-key)
+                    value (test.dom/query-one form-field :.header-value)]
+                (testing "passes the target value to :on-change for .header-key"
                   (spies/reset! on-change)
                   (test.dom/simulate-event header :change [::new-header])
                   (is (spies/called-with? on-change [::new-header ::view-value])))
 
-                (testing "passes the target value to :on-change for .value"
+                (testing "passes the target value to :on-change for .header-value"
                   (spies/reset! on-change)
                   (test.dom/simulate-event value :change [::new-header])
                   (is (spies/called-with? on-change [::view-key ::new-header])))))))))))
+
+(deftest ^:unit multi-test
+  (testing "(multi)"
+    (let [key-spy (spies/create identity)
+          new-spy (spies/create (constantly ::new-value))
+          change-spy (spies/create)
+          errors [::error-1 ::error-2 ::error-3]
+          values [::value-1 ::value-2 ::value-3]
+          attrs {:label ::label
+                 :errors errors
+                 :key-fn key-spy
+                 :new-fn new-spy
+                 :change-fn change-spy
+                 :class-name ::class-name
+                 :value values}
+          root (render fields/multi attrs :component)
+          form-field (test.dom/query-one root :.form-field)]
+      (testing "renders form-field without errors"
+        (is (nil? (:errors (test.dom/attrs form-field)))))
+
+      (testing "when rendering a .multi element"
+        (let [multi (test.dom/query-one form-field :.multi)
+              items (test.dom/query-all multi :.multi-item)]
+          (testing "has a :class-name"
+            (is (= ::class-name (:class-name (test.dom/attrs multi))))
+            (is (= 3 (count items))))
+
+          (doseq [[idx item] (map-indexed vector items)
+                  :let [error (nth errors idx)
+                        value (nth values idx)]]
+            (testing (str "and when rending multi item " idx)
+              (testing "has a key"
+                (is (spies/called-with? key-spy [idx value]))
+                (is (= [idx value] (:key (test.dom/attrs item)))))
+
+              (testing "and when rending a remove-button"
+                (let [button (test.dom/query-one item :.remove-item)]
+                  (testing "handles :on-click"
+                    (spies/reset! change-spy)
+                    (test.dom/simulate-event button :click)
+
+                    (let [[f & args] (first (spies/calls change-spy))
+                          result (apply f values args)]
+                      (is (vector? result))
+                      (is (->> values
+                               (map-indexed vector)
+                               (remove (comp #{idx} first))
+                               (map second)
+                               (= result)))))))
+
+              (testing "and when rendering the component"
+                (let [component (test.dom/query-one item :component)
+                      attrs (test.dom/attrs component)]
+                  (testing "does not have a label"
+                    (is (nil? (:label attrs))))
+
+                  (testing "has a value"
+                    (is (= value (:value attrs))))
+
+                  (testing "has errors"
+                    (is (= error (:errors attrs))))
+
+                  (testing "handles :on-change"
+                    (spies/reset! change-spy)
+                    (test.dom/simulate-event component :change ::new-value)
+
+                    (let [[f & args] (first (spies/calls change-spy))
+                          result (apply f values args)]
+                      (is (vector? result))
+                      (is (= result (assoc values idx ::new-value)))))))))
+
+          (testing "and when rendering an add-button"
+            (let [button (test.dom/query-one form-field :.add-item)]
+              (testing "handles :on-click"
+                (spies/reset! change-spy)
+                (test.dom/simulate-event button :click)
+
+                (let [[f & args] (first (spies/calls change-spy))
+                      result (apply f values args)]
+                  (is (spies/called-with? new-spy 3))
+                  (is (vector? result))
+                  (is (= result (conj values ::new-value))))))))))))
 
 (defn run-tests [] (t/run-tests))

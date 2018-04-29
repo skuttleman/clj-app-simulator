@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.simulator-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is are]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is are async]]
             [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
@@ -10,7 +10,8 @@
             [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
             [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [cljs.core.async :as async]))
 
 (defn ^:private pred [_ msg]
   (condp re-find msg
@@ -51,6 +52,23 @@
             (is (spies/called-with? tuple-spy ::header-key ::header-value))
             (is (spies/called-with? coll-spy ::tuple))
             (is (= ::coll (get-in validator-map [:response :headers])))))))))
+
+(deftest ^:unit reset-sim-test
+  (testing "(reset-sim)"
+    (async done
+      (async/go
+        (let [chan (async/chan)
+              request-spy (spies/create (constantly chan))
+              reset-spy (spies/create)
+              response-ch (sim/reset-sim request-spy reset-spy)]
+          (testing "resets the simulator"
+            (async/put! chan [:success {:config {:new :config :delay 13}}])
+            (async/<! response-ch)
+
+            (is (spies/called-with? request-spy))
+            (is (spies/called-with? reset-spy {:delay 13}))
+
+            (done)))))))
 
 (deftest ^:unit sim-iterate-test
   (testing "(sim-iterate)"
@@ -337,9 +355,8 @@
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
     (let [model {:response {:status ::status
-                            :body ""}
-                 :name nil}
-          expected-data {}
+                            :body   ""}
+                 :name     nil}
           errors-spy (spies/create)
           changed-spy (spies/create)
           model-spy (spies/create (constantly model))
@@ -383,28 +400,119 @@
               (let [node (test.dom/query-one edit-form sim/body-field)]
                 (is (= [sim/body-field ::form] node))))
 
-            (testing "and when submitting the form"
+            (testing "when resetting the simulator"
               (spies/reset! dispatch-spy action-spy)
+              (testing "dispatches an action"))))))))
+
+(deftest ^:unit sim-edit-form*-test--submit
+  (testing "(sim-edit-form*)/submit"
+    (let [model {:response {:headers [[:header "value-1"] [:header "value-2"]]}}
+          expected-data {:response {:headers {:header ["value-1" "value-2"]}}}
+          dispatch-spy (spies/create)
+          action-spy (spies/create (constantly ::action))
+          reset-spy (spies/create)
+          errors-spy (spies/create)
+          changed-spy (spies/create)
+          current-spy (spies/create (constantly model))
+          default-spy (spies/create)]
+      (with-redefs [store/dispatch dispatch-spy
+                    actions/update-simulator action-spy
+                    forms/reset! reset-spy
+                    forms/errors errors-spy
+                    forms/changed? changed-spy
+                    forms/current-model current-spy
+                    dom/prevent-default default-spy]
+        (testing "when submitting the form"
+          (testing "and when there are errors"
+            (spies/reset! dispatch-spy action-spy default-spy reset-spy)
+            (spies/respond-with! errors-spy (constantly ::errors))
+            (spies/respond-with! changed-spy (constantly true))
+
+            (let [root (sim/sim-edit-form* ::id ::form)
+                  edit-form (test.dom/query-one root :.simulator-edit)]
+              (testing "has a disabled submit button"
+                (is (-> edit-form
+                        (test.dom/query-one :.save-button)
+                        (test.dom/attrs)
+                        (:disabled))))
+
+              (testing "does not submit the form"
+                (is (spies/never-called? action-spy))
+                (is (spies/never-called? dispatch-spy))
+                (is (spies/never-called? reset-spy)))))
+
+          (testing "and when there are no changes"
+            (spies/reset! dispatch-spy action-spy default-spy reset-spy)
+            (spies/respond-with! errors-spy (constantly nil))
+            (spies/respond-with! changed-spy (constantly false))
+
+            (let [root (sim/sim-edit-form* ::id ::form)
+                  edit-form (test.dom/query-one root :.simulator-edit)]
+              (testing "has a disabled submit button"
+                (is (-> edit-form
+                        (test.dom/query-one :.save-button)
+                        (test.dom/attrs)
+                        (:disabled))))
+
+              (testing "does not submit the form"
+                (is (spies/never-called? action-spy))
+                (is (spies/never-called? dispatch-spy))
+                (is (spies/never-called? reset-spy)))))
+
+          (testing "and when there are changes and no errors"
+            (spies/reset! dispatch-spy action-spy default-spy reset-spy)
+            (spies/respond-with! errors-spy (constantly nil))
+            (spies/respond-with! changed-spy (constantly true))
+
+            (let [root (sim/sim-edit-form* ::id ::form)
+                  edit-form (test.dom/query-one root :.simulator-edit)]
               (test.dom/simulate-event edit-form :submit ::event)
 
-              (testing "has a save button"
-                (is (test.dom/query-one edit-form :.save-button)))
+              (testing "has an enabled submit button"
+                (is (-> edit-form
+                        (test.dom/query-one :.save-button)
+                        (test.dom/attrs)
+                        (:disabled)
+                        (not))))
+
+              (testing "prevents the default form behavior"
+                (is (spies/called-with? default-spy ::event)))
 
               (testing "dispatches an action"
                 (is (spies/called-with? action-spy ::id expected-data))
                 (is (spies/called-with? dispatch-spy ::action)))
 
-              (testing "and when there are errors"
-                (testing "the button is disabled"))
+              (testing "resets the form"
+                (is (spies/called-with? reset-spy ::form model))))))))))
 
-              (testing "and when there are no changes"
-                (testing "the button is disabled"))
+(deftest ^:unit sim-edit-form*-test--reset
+  (testing "(sim-edit-form*)/reset"
+    (let [reset-spy (spies/create)
+          errors-spy (spies/create)
+          changed-spy (spies/create)
+          form-reset-spy (spies/create)
+          dispatch-spy (spies/create)
+          action-spy (spies/create (constantly ::action))]
+      (testing "resets the simulator"
+        (with-redefs [sim/reset-sim reset-spy
+                      forms/errors errors-spy
+                      forms/changed? changed-spy
+                      forms/reset! form-reset-spy
+                      store/dispatch dispatch-spy
+                      actions/reset-simulator action-spy]
+          (-> (sim/sim-edit-form* ::id ::form)
+              (test.dom/query-one :.simulator-edit)
+              (test.dom/query-one :.reset-button)
+              (test.dom/simulate-event :click))
+          (spies/reset! errors-spy changed-spy form-reset-spy dispatch-spy action-spy)
 
-              (testing "and when there are no changes and no errors"
-                (testing "the button is enabled")))
+          (let [[request reset] (first (spies/calls reset-spy))]
+            (request)
+            (is (spies/called-with? action-spy ::id))
+            (is (spies/called-with? dispatch-spy ::action))
 
-            (testing "when resetting the simulator"
-              (testing "dispatches an action"))))))))
+            (reset)
+            (is (spies/called-with? form-reset-spy ::form))))))))
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"

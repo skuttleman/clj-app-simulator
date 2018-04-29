@@ -11,8 +11,6 @@
     (let [path-for-spy (spies/create (constantly ::href))]
       (with-redefs [nav/path-for path-for-spy]
         (let [not-found (error/not-found nil)]
-          (testing "has a header"
-            (is (test.dom/query-one not-found main/header)))
           (testing "has a link to the home page"
             (let [link (test.dom/query-one not-found :a.home)]
               (is (= (:href (test.dom/attrs link)) ::href)))))))))

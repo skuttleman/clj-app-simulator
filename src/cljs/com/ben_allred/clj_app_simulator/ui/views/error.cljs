@@ -4,7 +4,6 @@
 
 (defn not-found [_]
   [:div
-   [main/header]
    [:h2 "Page not found"]
    [:div
     "Try going "

@@ -10,7 +10,8 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]
             [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+            [cljs.core.async :as async]))
 
 (defn ^:private maybe-parse-int [value]
   (let [delay (js/parseInt value)
@@ -68,6 +69,11 @@
                          [string/lower-case keyword]
                          identity)}})
 
+(defn ^:private config->model [config]
+  (-> config
+      (select-keys #{:group :response :delay :name :description})
+      (source->model)))
+
 (defn ^:private with-attrs [attrs form path]
   (assoc attrs
     :on-change (partial forms/assoc-in form path)
@@ -84,10 +90,16 @@
      :response {:status  (f/required "Must have a status")
                 :headers (f/validator-coll
                            (f/validator-tuple
-                             (f/pred (comp (partial re-matches #"[A-Za-z-]+") name) "Invalid header key")
+                             (f/pred (comp (partial re-matches #"[A-Za-z0-9_-]+") name) "Invalid header key")
                              (f/pred #(seq %) "Header must have a value")))}}))
 
 (def ^:private validate (validate*))
+
+(defn reset-sim [request! reset!]
+  (async/go
+    (let [[status body] (async/<! (request!))]
+      (when (= :success status)
+        (reset! (config->model (:config body)))))))
 
 (defn sim-iterate
   ([label m class]
@@ -153,33 +165,36 @@
        (with-attrs form [:response :body]))])
 
 (defn sim-edit-form* [id form]
-  [:form.simulator-edit
-   {:on-submit #(do
-                  (dom/prevent-default %)
-                  (->> form
-                       (forms/current-model)
-                       (model->source)
-                       (actions/update-simulator id)
-                       (store/dispatch)))}
-   [name-field form]
-   [group-field form]
-   [description-field form]
-   [status-field form]
-   [delay-field form]
-   [headers-field form]
-   [body-field form]
-   [:button.button.button-warning.pure-button.reset-button
-    {:type     :button
-     :on-click #(store/dispatch (actions/reset-simulator id))}
-    "Reset"]
-   [:button.button.button-secondary.pure-button.save-button
-    {:disabled (or (forms/errors form) (not (forms/changed? form)))}
-    "Save"]])
+  (let [disabled? (or (forms/errors form) (not (forms/changed? form)))]
+    [:form.simulator-edit
+     {:on-submit #(let [current-model (forms/current-model form)]
+                    (dom/prevent-default %)
+                    (when-not disabled?
+                      (->> current-model
+                           (model->source)
+                           (actions/update-simulator id)
+                           (store/dispatch))
+                      (forms/reset! form current-model)))}
+     [name-field form]
+     [group-field form]
+     [description-field form]
+     [status-field form]
+     [delay-field form]
+     [headers-field form]
+     [body-field form]
+     [:div.button-row
+      [:button.button.button-warning.pure-button.reset-button
+       {:type     :button
+        :on-click #(reset-sim (comp store/dispatch (partial actions/reset-simulator id))
+                              (partial forms/reset! form))}
+       "Reset"]
+      [:button.button.button-secondary.pure-button.save-button
+       {:disabled disabled?}
+       "Save"]]]))
 
 (defn sim-edit-form [{:keys [config id]}]
   (let [form (-> config
-                 (select-keys #{:group :response :delay :name :description})
-                 (source->model)
+                 (config->model)
                  (forms/create validate))]
     (fn [_simulator]
       [sim-edit-form* id form])))
