@@ -18,12 +18,12 @@
   (let [state (store/get-state)
         component (components (get-in state [:page :handler]) error/not-found)]
     [:div.app
-     [modal/modal (:modal state)]
      [toast/toast (:toasts state)]
      [:div.scrollable
       [main/header]
       [:main.main
-       [component state]]]]))
+       [component state]]]
+     [modal/modal (:modal state)]]))
 
 (defn mount! []
   (r/render

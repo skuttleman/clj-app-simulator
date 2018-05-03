@@ -24,9 +24,9 @@
 
 (defn modal
   ([] {:state :unmounted})
-  ([state [type content title]]
+  ([state [type content title actions]]
    (case type
-     :modal/mount {:state :mounted :content content :title title}
+     :modal/mount {:state :mounted :content content :title title :actions actions}
      :modal/show (assoc state :state :shown)
      :modal/hide (assoc state :state :modal-hidden)
      :modal/unmount {:state :unmounted}

@@ -54,9 +54,9 @@
         (http/patch {:body {:action :http/change :config config}})
         (request* dispatch :simulators.change/succeed :simulators.change/fail))))
 
-(defn show-modal [content & [title]]
+(defn show-modal [content & [title & actions]]
   (fn [[dispatch]]
-    (dispatch [:modal/mount content title])
+    (dispatch [:modal/mount content title actions])
     (macros/after 1 (dispatch [:modal/show]))))
 
 (def hide-modal

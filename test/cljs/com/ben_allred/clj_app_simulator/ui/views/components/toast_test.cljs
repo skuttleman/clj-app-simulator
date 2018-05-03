@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.toast-test
+(ns com.ben-allred.clj-app-simulator.ui.views.components.toast-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
             [test.utils.dom :as test.dom]

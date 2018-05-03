@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.store.reducers-test
+(ns com.ben-allred.clj-app-simulator.ui.services.store.reducers-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]))
 
@@ -16,8 +16,8 @@
     (testing "has default state"
       (is (= {:state :unmounted} (reducers/modal))))
     (testing "handles :modal/mount"
-      (is (= {:state :mounted :content ::content :title ::title}
-             (reducers/modal ::any-state [:modal/mount ::content ::title]))))
+      (is (= {:state :mounted :content ::content :title ::title :actions ::actions}
+             (reducers/modal ::any-state [:modal/mount ::content ::title ::actions]))))
     (testing "handles :modal/show"
       (is (= {:current :state :state :shown}
              (reducers/modal {:current :state} [:modal/show]))))

@@ -2,7 +2,7 @@
   (:require [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as sim]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))

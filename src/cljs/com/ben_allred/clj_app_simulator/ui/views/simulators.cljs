@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.simulators
   (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]))
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as sim]))
 
 (defn ^:private organize [simulators]
   (->> simulators

@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.app-test
+(ns com.ben-allred.clj-app-simulator.ui.app-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.app :as app]
             [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]

@@ -6,7 +6,7 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.views.simulator :as sim]))
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as sim]))
 
 (deftest ^:unit sim-card-test
   (testing "(sim-card)"

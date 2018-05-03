@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.services.store.actions-test
+(ns com.ben-allred.clj-app-simulator.ui.services.store.actions-test
   (:require [cljs.test :as t :refer-macros [deftest testing is async]]
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.services.http :as http]
@@ -245,14 +245,14 @@
 (deftest ^:unit show-modal-test
   (testing "(show-modal)"
     (let [dispatch (spies/create identity)
-          action (actions/show-modal ::content "Some Title")
+          action (actions/show-modal ::content "Some Title" ::action-1 ::action-2)
           timeout-spy (spies/create)]
       (testing "returns an action function"
         (is (fn? action)))
       (testing "mounts modal"
         (spies/reset! dispatch)
         (action [dispatch])
-        (is (spies/called-with? dispatch [:modal/mount ::content "Some Title"]))
+        (is (spies/called-with? dispatch [:modal/mount ::content "Some Title" [::action-1 ::action-2]]))
         (is (spies/called-times? dispatch 1)))
       (testing "shows modal after 1 ms"
         (spies/reset! dispatch)

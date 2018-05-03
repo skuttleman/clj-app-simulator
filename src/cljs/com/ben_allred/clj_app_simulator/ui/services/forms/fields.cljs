@@ -67,7 +67,7 @@
         to-model (or to-model identity)
         [k v] (to-view value)]
     [form-field
-     attrs
+     (update attrs :errors flatten)
      [:div.header-field
       [:input.header-key
        {:value     k

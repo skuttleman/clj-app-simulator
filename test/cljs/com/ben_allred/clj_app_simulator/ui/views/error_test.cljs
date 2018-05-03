@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.error-test
+(ns com.ben-allred.clj-app-simulator.ui.views.error-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.error :as error]
             [test.utils.dom :as test.dom]

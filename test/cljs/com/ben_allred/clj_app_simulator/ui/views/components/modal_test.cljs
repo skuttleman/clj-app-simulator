@@ -1,4 +1,4 @@
-(ns ^:figwheel-load com.ben-allred.clj-app-simulator.ui.views.components.modal-test
+(ns com.ben-allred.clj-app-simulator.ui.views.components.modal-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
             [test.utils.dom :as test.dom]
@@ -7,28 +7,33 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
-(defn ^:private modal [state & [content title]]
-  (modal/modal {:state state :content content :title title}))
+(defn ^:private modal [state & [content title & actions]]
+  (modal/modal {:state state :content content :title title :actions actions}))
 
 (deftest ^:unit modal-test
   (testing "(modal)"
     (let [spy (spies/create)]
       (testing "adds class of state to modal-wrapper"
         (is (test.dom/query-one (modal :some-state) :.modal-wrapper.some-state)))
+
       (testing "has click handler to hide modal"
         (spies/reset! spy)
         (with-redefs [store/dispatch spy]
           (test.dom/simulate-event (modal :some-state) :click)
           (is (spies/called-with? spy actions/hide-modal))))
+
       (testing "has close-button"
         (spies/reset! spy)
         (with-redefs [store/dispatch spy]
           (test.dom/simulate-event (test.dom/query-one (modal :some-state) :.close-button) :click)
           (is (spies/called-with? spy actions/hide-modal))))
+
       (testing "has a modal component"
         (is (test.dom/query-one (modal :some-state) :.modal)))
+
       (testing "has no modal component when state is :unmounted"
         (is (not (test.dom/query-one (modal :unmounted) :.modal))))
+
       (testing "stops propagation when clicking modal"
         (spies/reset! spy)
         (with-redefs [dom/stop-propagation spy]
@@ -36,13 +41,35 @@
                 modal (test.dom/query-one (modal :some-state) :.modal)]
             (test.dom/simulate-event modal :click event-data)
             (is (spies/called-with? spy event-data)))))
+
       (testing "has modal-title"
         (let [modal (test.dom/query-one (modal :some-state nil ::title) :.modal)
               modal-title (test.dom/query-one modal :.modal-title)]
           (is (test.dom/contains? modal-title ::title))))
+
       (testing "has modal-content"
         (let [modal (test.dom/query-one (modal :some-state ::content) :.modal)
               modal-content (test.dom/query-one modal :.modal-content)]
-          (is (test.dom/contains? modal-content ::content)))))))
+          (is (test.dom/contains? modal-content ::content))))
+
+      (testing "when rendering action components"
+        (spies/reset! spy)
+        (with-redefs [store/dispatch spy]
+          (let [click-spy (spies/create (constantly ::click))
+                modal (modal :some-state ::content ::title [:button {:on-click click-spy} "Contents"] [:button "Contents"])
+                [button-1 button-2] (-> modal
+                                        (test.dom/query-one :.modal-actions)
+                                        (test.dom/query-all :button))
+                hide-modal (ffirst (spies/calls click-spy))]
+
+            (testing "has contents"
+              (is (test.dom/contains? button-1 "Contents"))
+              (is (test.dom/contains? button-2 "Contents")))
+
+            (testing "wraps hide-modal"
+              (is (= ::click (:on-click (test.dom/attrs button-1)))))
+
+            (testing "has hide-modal"
+              (is (= hide-modal (:on-click (test.dom/attrs button-2)))))))))))
 
 (defn run-tests [] (t/run-tests))

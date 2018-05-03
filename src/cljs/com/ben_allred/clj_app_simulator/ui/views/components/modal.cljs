@@ -7,7 +7,15 @@
 (defn ^:private hide-modal []
   (store/dispatch actions/hide-modal))
 
-(defn modal [{:keys [state content title]}]
+(defn ^:private wrap-attrs [[tag & args]]
+  (let [attrs? (first args)
+        [attrs args] (if (map? attrs?)
+                       [attrs? (rest args)]
+                       [{} args])]
+    (into [tag (update attrs :on-click #(if % (% hide-modal) hide-modal))]
+          args)))
+
+(defn modal [{:keys [state content title actions]}]
   [:div.modal-wrapper
    {:class-name (name state)
     :on-click   hide-modal}
@@ -20,4 +28,8 @@
          [:div.modal-title title])
        [:i.fa.fa-times.button.close-button {:on-click hide-modal}]]
       [:div.modal-content
-       content]])])
+       content]
+      (when (seq actions)
+        (->> actions
+             (map wrap-attrs)
+             (into [:div.modal-actions.button-row])))])])
