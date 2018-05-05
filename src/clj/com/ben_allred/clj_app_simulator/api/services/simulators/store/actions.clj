@@ -12,8 +12,8 @@
       (select-keys [:body :query-params :route-params :headers])
       (update :headers (partial maps/map-keys keyword))
       (update :query-params (partial maps/map-keys keyword))
-      (assoc :timestamp (Date.))
-      (prepare)))
+      (prepare)
+      (assoc :timestamp (Date.))))
 
 (def init
   (partial conj [:simulators/init]))

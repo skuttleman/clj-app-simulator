@@ -67,3 +67,14 @@
       (actions/show-modal
         [modals/request-modal sim (assoc request :dt dt)]
         "Request Details"))))
+
+(defn create-simulator [form submittable?]
+  (fn [e]
+    (let [current-model (forms/current-model form)]
+      (dom/prevent-default e)
+      (when submittable?
+        (do-request #(-> current-model
+                         (tr/model->source)
+                         (actions/create-simulator)
+                         (store/dispatch))
+                    #(nav/nav-and-replace! :details {:id (get-in % [:simulator :id])}))))))

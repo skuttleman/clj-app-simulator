@@ -12,6 +12,7 @@
 
 (def components
   {:home    main/root
+   :new     main/new
    :details main/details})
 
 (defn app []

@@ -26,14 +26,18 @@
                                    (vec))}}]))
 
 (def model->view
-  {:delay    str
+  {:path     str
+   :method   (comp #(subs % 1) str)
+   :delay    str
    :response {:status  str
               :headers (f/transformer-tuple
                          [name strings/titlize]
                          identity)}})
 
 (def view->model
-  {:delay    maybe-parse-int
+  {:path     strings/trim-to-nil
+   :method   keyword
+   :delay    maybe-parse-int
    :response {:status  js/parseInt
               :headers (f/transformer-tuple
                          [string/lower-case keyword]

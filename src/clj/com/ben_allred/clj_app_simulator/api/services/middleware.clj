@@ -4,7 +4,10 @@
             [com.ben-allred.clj-app-simulator.services.content :as content]))
 
 (defn ^:private resource? [uri]
-  (or (= "/" uri) (re-find #"(^/js|^/css|^/images)" uri)))
+  (or (= "/" uri) (re-find #"(^/js|^/css|^/images|^/favicon)" uri)))
+
+(defn ^:private api? [uri]
+  (re-find #"(^/api|^/simulators)" uri))
 
 (defn log-response [handler]
   (fn [request]
@@ -19,8 +22,8 @@
 
 (defn content-type [handler]
   (fn [request]
-    (let [headers (:headers request)]
-      (-> request
-          (content/parse (get headers "content-type"))
-          (handler)
-          (content/prepare #{"content-type" "accept"} (get headers "accept"))))))
+    (let [{:keys [uri headers]} request]
+      (cond-> request
+        :always (content/parse (get headers "content-type"))
+        :always (handler)
+        (api? uri) (content/prepare #{"content-type" "accept"} (get headers "accept"))))))

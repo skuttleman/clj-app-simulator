@@ -1,17 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.services.content
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj [clojure.edn :as edn]
                :cljs [cljs.reader :as edn])
-                     [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-                     [com.ben-allred.clj-app-simulator.utils.json :as json]
-                     [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-                     [com.ben-allred.clj-app-simulator.utils.logging :as log])
-  #?(:clj (:import [java.io InputStream])))
+                    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+                    [com.ben-allred.clj-app-simulator.utils.json :as json]
+                    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+                    [com.ben-allred.clj-app-simulator.utils.logging :as log])
+  #?(:clj
+     (:import [java.io InputStream])))
 
 (defn ^:private with-headers [request header-keys type]
   (update request :headers (partial merge (zipmap header-keys (repeat type)))))
 
 (defn ^:private stream? [value]
-  #?(:clj (instance? InputStream value)
+  #?(:clj  (instance? InputStream value)
      :cljs false))
 
 (defn ^:private maybe-slurp [value]
@@ -26,7 +27,7 @@
 
 (defn ^:private try-to [value f]
   (try (f value)
-       (catch #?(:clj Throwable :cljs js/Object) e
+       (catch #?(:clj Throwable :cljs js/Object) _
          nil)))
 
 (def ^:private edn?

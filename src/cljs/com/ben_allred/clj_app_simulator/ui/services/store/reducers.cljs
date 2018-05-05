@@ -40,29 +40,34 @@
      :toast/remove (dissoc state key)
      state)))
 
+(def ^:private simulators-reducer
+  (collaj.reducers/map-of
+    (comp :id :simulator second)
+    (fn
+      ([] nil)
+      ([state [type {:keys [simulator request]}]]
+       (case type
+         :simulators.activity/receive (update state :requests (fnil conj []) request)
+         :simulators.activity/reset-requests (assoc state :requests [])
+         :simulators.activity/change (assoc state :config (:config simulator))
+         :simulators.activity/reset (assoc state :config (:config simulator))
+         :simulators.fetch-one/succeed simulator
+         :simulators.activity/add simulator
+         state)))))
+
 (def simulators
-  (with-status {:pending   #{:simulators.fetch-one/request :simulators.fetch-all/request}
-                :available #{:simulators.fetch-one/succeed :simulators/clear :simulators.activity/receive
-                             :simulators.activity/add :simulators.activity/delete :simulators.activity/reset-requests}
-                :failed    #{:simulators.fetch-all/fail :simulators.fetch-one/fail}}
-               (let [reducer (collaj.reducers/map-of
-                               (comp :id :simulator second)
-                               (fn
-                                 ([] nil)
-                                 ([state [type {:keys [simulator request]}]]
-                                  (case type
-                                    :simulators.fetch-one/succeed simulator
-                                    :simulators.activity/receive (update state :requests (fnil conj []) request)
-                                    :simulators.activity/reset-requests (assoc state :requests [])
-                                    :simulators.activity/add simulator
-                                    state))))]
-                 (fn
-                   ([] (reducer))
-                   ([state [type {id :id} :as action]]
-                    (case type
-                      :simulators/clear (reducer)
-                      :simulators.activity/delete (dissoc state id)
-                      (reducer state action)))))))
+  (with-status
+    {:pending   #{:simulators.fetch-one/request :simulators.fetch-all/request}
+     :available #{:simulators.fetch-one/succeed :simulators/clear :simulators.activity/receive
+                  :simulators.activity/add :simulators.activity/delete :simulators.activity/reset-requests}
+     :failed    #{:simulators.fetch-all/fail :simulators.fetch-one/fail}}
+    (fn
+      ([] (simulators-reducer))
+      ([state [type {id :id} :as action]]
+       (case type
+         :simulators/clear (simulators-reducer)
+         :simulators.activity/delete (dissoc state id)
+         (simulators-reducer state action))))))
 
 (def root
   (collaj.reducers/combine (maps/->map page modal toasts simulators)))

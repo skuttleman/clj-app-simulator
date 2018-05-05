@@ -6,7 +6,8 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
             [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations :as tr]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
 
 (defn ^:private with-attrs [attrs form path]
   (assoc attrs
@@ -18,7 +19,7 @@
 
 (defn sim-details [{{:keys [method path]} :config}]
   [:div.sim-card-identifier
-   [:div.sim-card-method (string/upper-case (name method))]
+   [:div.sim-card-method (when method (string/upper-case (name method)))]
    [:div.sim-card-path path]])
 
 (defn name-field [form]
@@ -62,6 +63,17 @@
    (-> {:label "Body"}
        (with-attrs form [:response :body]))])
 
+(defn method-field [form]
+  [fields/select
+   (-> {:label "HTTP Method"}
+       (with-attrs form [:method]))
+   resources/http-methods])
+
+(defn path-field [form]
+  [fields/input
+   (-> {:label "Path"}
+       (with-attrs form [:path]))])
+
 (defn sim-edit-form* [id form]
   (let [disabled? (or (forms/errors form) (not (forms/changed? form)))]
     [:form.simulator-edit
@@ -85,7 +97,7 @@
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [form (-> sim
                  (tr/sim->model)
-                 (forms/create resources/validate))]
+                 (forms/create resources/validate-existing))]
     (fn [_simulator]
       [sim-edit-form* id form])))
 
@@ -114,3 +126,34 @@
     [:button.button.button-error.pure-button.delete-button
      {:on-click (interactions/show-delete-modal id)}
      "Delete Simulator"]]])
+
+(defn sim-create-form* [form]
+  (let [disabled? (forms/errors form)]
+    [:form.simulator-edit
+     {:on-submit (interactions/create-simulator form (not disabled?))}
+     [method-field form]
+     [path-field form]
+     [name-field form]
+     [group-field form]
+     [description-field form]
+     [status-field form]
+     [delay-field form]
+     [headers-field form]
+     [body-field form]
+     [:div.button-row
+      [:a.button.button-warning.pure-button.reset-button
+       {:href (nav/path-for :home)}
+       "Cancel"]
+      [:button.button.button-secondary.pure-button.save-button
+       {:disabled disabled?}
+
+       "Save"]]]))
+
+(defn sim-create-form []
+  (let [form (-> {:response {:status 200}
+                  :method   :http/get
+                  :path     "/"
+                  :delay    0}
+                 (forms/create resources/validate-new))]
+    (fn []
+      [sim-create-form* form])))

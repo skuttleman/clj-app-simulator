@@ -3,7 +3,8 @@
             [immutant.web.async :as web.async]
             [com.ben-allred.clj-app-simulator.utils.transit :as transit]
             [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
-            [clojure.core.async :as async]))
+            [clojure.core.async :as async]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (def ^:private emitter (emitter/new))
 
@@ -12,8 +13,8 @@
         {"application/edn"     pr-str
          "application/transit" transit/stringify}))
 
-(defn sub [{:keys [query-params] :as request}]
-  (when (:websocket? request)
+(defn sub [{:keys [query-params headers] :as request}]
+  (when (or (:websocket? request) (= "websocket" (get headers "upgrade")))
     (let [stringify (accept->stringify (get query-params "accept"))
           chan (async/chan 100)]
       (web.async/as-channel

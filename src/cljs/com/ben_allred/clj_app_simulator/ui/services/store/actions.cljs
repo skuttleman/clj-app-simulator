@@ -44,7 +44,7 @@
   (fn [[dispatch]]
     (dispatch [:simulators.reset/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :simulator/reset}})
+        (http/patch {:body {:action :simulators/reset}})
         (request* dispatch :simulators.reset/succeed :simulators.reset/fail))))
 
 (defn update-simulator [id config]

@@ -184,7 +184,7 @@
                   f (actions/reset-simulator 123)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.reset/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulator/reset}}))
+              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators/reset}}))
               (done))))))))
 
 (deftest ^:unit reset-simulator-failure-test

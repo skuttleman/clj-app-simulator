@@ -24,6 +24,7 @@
   (context "/" []
     (simulators/routes)
     (ANY "/simulators/*" [] (respond/with [:not-implemented {:message "simulator not found"}]))
+    (ANY "/simulators" [] (respond/with [:not-implemented {:message "simulator not found"}]))
     (GET "/health" [] (respond/with [:ok {:a :ok}]))
     (route/resources "/")
     (GET "/*" [] (response/resource-response "index.html" {:root "public"}))

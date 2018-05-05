@@ -334,7 +334,7 @@
                                                   [:header-b "things"]
                                                   [:header-c "header-c"]]}}]
             (testing "creates a form from source data"
-              (is (spies/called-with? form-spy expected resources/validate)))
+              (is (spies/called-with? form-spy expected resources/validate-existing)))
 
             (testing "returns a function that renders the form"
               (is (= [sim/sim-edit-form* ::id ::form]

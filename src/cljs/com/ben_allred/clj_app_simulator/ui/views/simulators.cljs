@@ -7,8 +7,8 @@
   (->> simulators
        (vals)
        (remove nil?)
-       (sort-by (juxt :path :method))
-       (group-by :group)
+       (sort-by (juxt (comp :path :config) (comp :method :config)))
+       (group-by (comp :group :config))
        (sort-by key #(cond (nil? %1) 1 (nil? %2) -1 :else (compare %1 %2)))))
 
 (defn sim-card [{:keys [requests config id] :as sim}]

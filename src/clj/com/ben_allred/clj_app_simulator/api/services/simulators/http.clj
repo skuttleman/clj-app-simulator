@@ -73,8 +73,8 @@
               (assoc :id id)))
         (reset [_]
           (dispatch actions/reset))
-        (routes [this delete]
-          (routes.sim/http-sim->routes this delete))
+        (routes [this delete!]
+          (routes.sim/http-sim->routes this delete!))
 
         common/IHTTPSimulator
         (reset-requests [_]

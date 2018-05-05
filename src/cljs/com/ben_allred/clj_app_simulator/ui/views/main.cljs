@@ -16,7 +16,11 @@
 (defn root [{{:keys [data status]} :simulators}]
   [:div
    [:h2 "Simulators"]
-   [components/with-status status sims/simulators data #(store/dispatch actions/request-simulators)]])
+   [components/with-status status sims/simulators data #(store/dispatch actions/request-simulators)]
+   [:div.button-row
+    [:a.button.button-success.pure-button
+     {:href (nav/path-for :new {:query-params {:type :http}})}
+     "Create"]]])
 
 (defn details [state]
   (let [id (uuid (get-in state [:page :route-params :id]))
@@ -25,3 +29,9 @@
     [:div
      [:h2 "Simulator Details"]
      [components/with-status status sim/sim simulator #(store/dispatch actions/request-simulators)]]))
+
+(defn new [state]
+  (let [type (keyword (get-in state [:page :query-params :type]))]
+    [:div
+     [:h2 "New Simulator"]
+     [sim/sim-create-form]]))

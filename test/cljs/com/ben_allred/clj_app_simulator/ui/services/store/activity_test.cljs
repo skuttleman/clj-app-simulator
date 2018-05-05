@@ -35,7 +35,7 @@
           (testing "dispatches on :simulators/add"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/add :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/add ::data])))
+            (is (spies/called-with? dispatch-spy [:simulators.activity/add {:simulator ::data}])))
           (testing "dispatches on :simulators/delete"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/delete :data ::data})

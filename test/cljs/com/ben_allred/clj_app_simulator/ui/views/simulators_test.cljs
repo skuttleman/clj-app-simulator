@@ -106,11 +106,11 @@
     (let [dispatch-spy (spies/create)]
       (with-redefs [store/dispatch dispatch-spy]
         (testing "when status is :available"
-          (let [sims {111 {:group ::group-1 :path "path" :method :method-b ::data ::1}
-                      222 {:group ::group-2 :path "path-2" :method :method ::data ::2}
-                      333 {:group ::group-1 :path "path" :method :method-a ::data ::3}
-                      444 {:group ::group-2 :path "path-1" :method :method ::data ::4}
-                      555 {:path "path" :method :method ::data ::5}}
+          (let [sims {111 {:config {:group ::group-1 :path "path" :method :method-b ::data ::1}}
+                      222 {:config {:group ::group-2 :path "path-2" :method :method ::data ::2}}
+                      333 {:config {:group ::group-1 :path "path" :method :method-a ::data ::3}}
+                      444 {:config {:group ::group-2 :path "path-1" :method :method ::data ::4}}
+                      555 {:config {:path "path" :method :method ::data ::5}}}
                 [sim-group-1 sim-group-2 sim-group-3] (-> sims
                                                           (sims/simulators)
                                                           (test.dom/query-all sims/sim-group))]
