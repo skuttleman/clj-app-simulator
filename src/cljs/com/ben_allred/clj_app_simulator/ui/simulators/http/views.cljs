@@ -129,7 +129,7 @@
 
 (defn sim-create-form* [form]
   (let [disabled? (forms/errors form)]
-    [:form.simulator-edit
+    [:form.simulator-create
      {:on-submit (interactions/create-simulator form (not disabled?))}
      [method-field form]
      [path-field form]
@@ -156,4 +156,5 @@
                   :delay    0}
                  (forms/create resources/validate-new))]
     (fn []
-      [sim-create-form* form])))
+      [:div.simulator
+       [sim-create-form* form]])))

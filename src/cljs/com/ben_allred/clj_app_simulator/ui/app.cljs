@@ -26,7 +26,7 @@
        [component state]]]
      [modal/modal (:modal state)]]))
 
-(defn mount! []
+(defn ^:export mount! []
   (r/render
     [app]
     (.getElementById js/document "app")))
