@@ -23,18 +23,18 @@
     (GET "/activity" request (activity/sub request)))
   (context "/" []
     (simulators/routes)
-    (ANY "/simulators/*" [] (respond/with [:not-implemented {:message "simulator not found"}]))
-    (ANY "/simulators" [] (respond/with [:not-implemented {:message "simulator not found"}]))
-    (GET "/health" [] (respond/with [:ok {:a :ok}]))
+    (context "/simulators" []
+      (ANY "/" [] (respond/with [:not-found {:message "simulator not found"}]))
+      (ANY "/*" [] (respond/with [:not-found {:message "simulator not found"}])))
     (route/resources "/")
     (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
     (ANY "/*" [] (respond/with [:not-found]))))
 
 (def ^:private app
   (-> #'base
-      (middleware/log-response)
+      (site)
       (middleware/content-type)
-      (site)))
+      (middleware/log-response)))
 
 (defn ^:private server-port [env key fallback]
   (let [port (str (or (get env key) (env/get key) fallback))]

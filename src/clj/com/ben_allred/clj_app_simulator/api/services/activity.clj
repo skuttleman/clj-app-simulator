@@ -13,8 +13,8 @@
         {"application/edn"     pr-str
          "application/transit" transit/stringify}))
 
-(defn sub [{:keys [query-params headers] :as request}]
-  (when (or (:websocket? request) (= "websocket" (get headers "upgrade")))
+(defn sub [{:keys [query-params websocket?] :as request}]
+  (when websocket?
     (let [stringify (accept->stringify (get query-params "accept"))
           chan (async/chan 100)]
       (web.async/as-channel

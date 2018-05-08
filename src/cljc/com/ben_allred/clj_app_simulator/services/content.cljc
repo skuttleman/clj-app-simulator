@@ -52,9 +52,9 @@
     (edn? accept) (->
                     (maps/update-maybe :body when-not-string pr-str)
                     (with-headers header-keys "application/edn"))
-    (json? accept) (->
-                     (maps/update-maybe :body when-not-string json/stringify)
-                     (with-headers header-keys "application/json"))
     (transit? accept) (->
                         (maps/update-maybe :body when-not-string transit/stringify)
-                        (with-headers header-keys "application/transit"))))
+                        (with-headers header-keys "application/transit"))
+    :always (->
+              (maps/update-maybe :body when-not-string json/stringify)
+              (with-headers header-keys "application/json"))))

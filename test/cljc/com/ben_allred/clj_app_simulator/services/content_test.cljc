@@ -56,5 +56,6 @@
         (is (= "a string" (:body (content/prepare data header-keys "application/edn"))))
         (is (= "a string" (:body (content/prepare data header-keys "application/json"))))
         (is (= "a string" (:body (content/prepare data header-keys "application/transit"))))))
-    (testing "leaves unknown content-type untouched"
-      (is (= {:some :data} (:body (content/prepare {:body {:some :data}} header-keys "unknown-content")))))))
+    (testing "when the content-type is unknown"
+      (testing "stringifies the body as JSON"
+        (is (= "{\"some\":\"data\"}" (:body (content/prepare {:body {:some :data}} header-keys "unknown-content"))))))))

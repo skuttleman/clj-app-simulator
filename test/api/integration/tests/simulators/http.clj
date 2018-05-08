@@ -433,8 +433,8 @@
                                  (select-keys #{:method :path})))))
                     (testing "and when sending a request to deleted simulator"
                       (let [response (test.http/get "/simulators/some/missing" content-type)]
-                        (testing "returns a server error"
-                          (is (test.http/server-error? response)))
+                        (testing "returns a client error"
+                          (is (test.http/client-error? response)))
                         (testing "does not publish event on activity feed"
                           (async/put! chan ::nothing)
                           (is (= ::nothing (async/<!! chan)))))))))))
