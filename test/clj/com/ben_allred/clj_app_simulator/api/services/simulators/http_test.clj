@@ -27,21 +27,27 @@
     (testing "when config is valid"
       (testing "creates an http store"
         (is (spies/called-with? (second (simulator)))))
+
       (testing "returns a simulator"
-        (is (first (simulator)))))
+        (let [[sim] (simulator)]
+          (is (satisfies? common/ISimulator sim))
+          (is (satisfies? common/IHTTPSimulator sim)))))
+
     (testing "when config is invalid"
-      (testing "does not return a simulator"
-        (is (not (first (simulator {}))))))))
+      (testing "returns nil"
+        (is (nil? (first (simulator {}))))))
+
+    (testing "initializes the store"
+      (let [init-spy (spies/create (constantly ::start-action))]
+        (with-redefs [actions/init init-spy]
+          (let [[_ _ config dispatch] (simulator)]
+            (is (spies/called-with? init-spy config))
+            (is (spies/called-with? dispatch ::start-action))))))))
 
 (deftest ^:unit ->HttpSimulator.start-test
   (testing "(->HttpSimulator.start)"
-    (testing "initializes the store"
-      (let [[sim _ config dispatch] (simulator)
-            init-spy (spies/create (constantly ::start-action))]
-        (with-redefs [actions/init init-spy]
-          (common/start sim)
-          (is (spies/called-with? init-spy config))
-          (is (spies/called-with? dispatch ::start-action)))))))
+    (testing "does not explode"
+      (common/start (first (simulator))))))
 
 (deftest ^:unit ->HttpSimulator.stop-test
   (testing "(->HttpSimulator.stop)"
@@ -114,8 +120,8 @@
           config-spy (spies/create (constantly ::routes))]
       (with-redefs [routes.sim/http-sim->routes config-spy]
         (testing "converts simulator to routes"
-          (let [result (common/routes sim ::delete)]
-            (is (spies/called-with? config-spy sim ::delete))
+          (let [result (common/routes sim)]
+            (is (spies/called-with? config-spy sim))
             (is (= ::routes result))))))))
 
 (deftest ^:unit ->HttpSimulator.reset-requests-test

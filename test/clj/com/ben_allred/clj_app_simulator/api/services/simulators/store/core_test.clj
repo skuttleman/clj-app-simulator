@@ -3,7 +3,8 @@
             [test.utils.spies :as spies]
             [com.ben-allred.collaj.core :as collaj]
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]))
+            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
+            [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
 
 (deftest ^:unit http-store-test
   (testing "(http-store)"
@@ -12,6 +13,15 @@
         (with-redefs [collaj/create-store spy]
           (let [store (store/http-store)]
             (is (spies/called-with? spy reducers/http))
+            (is (= store ::store))))))))
+
+(deftest ^:unit ws-store-test
+  (testing "(ws-store)"
+    (testing "creates a collaj store with http reducer"
+      (let [spy (spies/create (constantly ::store))]
+        (with-redefs [collaj/create-store spy]
+          (let [store (store/ws-store)]
+            (is (spies/called-with? spy reducers/ws collaj.enhancers/with-fn-dispatch))
             (is (= store ::store))))))))
 
 (deftest ^:unit delay-test
@@ -32,5 +42,5 @@
 (deftest ^:unit details-test
   (testing "(details)"
     (testing "retrieves current config and requests from store"
-      (let [actual (store/details {:requests ::requests :config {:current ::config}})]
-        (is (= {:requests ::requests :config ::config} actual))))))
+      (let [actual (store/details {:requests ::requests :config {:current ::config} :sockets {::1 ::ws ::2 ::ws}})]
+        (is (= {:requests ::requests :config ::config :sockets #{::1 ::2}} actual))))))

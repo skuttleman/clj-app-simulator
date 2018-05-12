@@ -34,11 +34,29 @@
      :http/reset-requests []
      state)))
 
+(defn ^:private ws-sockets*
+  ([] nil)
+  ([state [type _ ws]]
+   (case type
+     :ws/connect ws
+     :ws/remove nil
+     state)))
+
 (def http-config (collaj.reducers/comp http-config* simulator-config))
 
 (def http-requests (collaj.reducers/comp http-requests* simulator-requests))
+
+(def ws-sockets (collaj.reducers/map-of #(when (#{:ws/connect :ws/remove} (first %))
+                                           (second %))
+                                        ws-sockets*))
 
 (def http
   (collaj.reducers/combine
     {:config   http-config
      :requests http-requests}))
+
+(def ws
+  (collaj.reducers/combine
+    {:config   simulator-config
+     :requests simulator-requests
+     :sockets  ws-sockets}))

@@ -14,6 +14,11 @@
             [com.ben-allred.clj-app-simulator.services.env :as env]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
+(defn ^:private not-found
+  ([] (not-found nil))
+  ([message]
+   (respond/with [:not-found (when message {:message message})])))
+
 (defroutes ^:private base
   (context "/api/simulators" []
     (GET "/" [] (simulators/details))
@@ -24,11 +29,11 @@
   (context "/" []
     (simulators/routes)
     (context "/simulators" []
-      (ANY "/" [] (respond/with [:not-found {:message "simulator not found"}]))
-      (ANY "/*" [] (respond/with [:not-found {:message "simulator not found"}])))
+      (ANY "/" [] (not-found "simulator not found"))
+      (ANY "/*" [] (not-found "simulator not found")))
     (route/resources "/")
     (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
-    (ANY "/*" [] (respond/with [:not-found]))))
+    (ANY "/*" [] (not-found))))
 
 (def ^:private app
   (-> #'base
@@ -42,17 +47,23 @@
 
 (defn ^:private run [app env]
   (let [port (server-port env :port 3000)
-        stop (partial web/stop (web/run app {:port port}))]
+        server (web/run app {:port port})]
     (println "Server is listening on port" port)
-    stop))
+    server))
+
+(def ^:private -dev-server nil)
+
+(def ^:private -dev-repl-server nil)
 
 (defn -main [& {:as env}]
-  [(run app env)])
+  [(partial web/stop (run app env))])
 
 (defn -dev [& {:as env}]
-  (let [stop-server (run (wrap-reload #'app) env)
+  (let [server (run #'app env)
         nrepl-port (server-port env :nrepl-port 7000)
-        stop-repl (nrepl/start-server :port nrepl-port)]
+        repl-server (nrepl/start-server :port nrepl-port)]
     (println "Server is running with #'wrap-reload")
     (println "REPL is listening on port" nrepl-port)
-    [stop-server stop-repl]))
+    (alter-var-root #'-dev-server (constantly server))
+    (alter-var-root #'-dev-repl-server (constantly repl-server))
+    [(partial web/stop server) (partial nrepl/stop-server repl-server)]))

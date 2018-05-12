@@ -24,26 +24,47 @@
                     :to-string    transit/stringify
                     :to-clj       transit/parse}
                    (dissoc opts :on-msg))))
+
           (testing "dispatches on :simulators/init"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/init :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.fetch-all/succeed {:simulators ::data}])))
+
           (testing "dispatches on :simulators/receive"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/receive :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.activity/receive ::data])))
+
           (testing "dispatches on :simulators/add"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/add :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.activity/add {:simulator ::data}])))
+
           (testing "dispatches on :simulators/delete"
             (spies/reset! dispatch-spy)
             (on-msg {:event :simulators/delete :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.activity/delete ::data])))
+
           (testing "dispatches on :http/reset-requests"
             (spies/reset! dispatch-spy)
             (on-msg {:event :http/reset-requests :data ::simulator})
             (is (spies/called-with? dispatch-spy [:simulators.activity/reset-requests {:simulator ::simulator}])))
+
+          (testing "dispatches on :http/change"
+            (spies/reset! dispatch-spy)
+            (on-msg {:event :http/change :data ::simulator})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/change {:simulator ::simulator}])))
+
+          (testing "dispatches on :ws/connect"
+            (spies/reset! dispatch-spy)
+            (on-msg {:event :ws/connect :data {:id ::id :socket-id ::socket-id :simulator ::simulator}})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/connect {:id ::id :socket-id ::socket-id}])))
+
+          (testing "dispatches on :ws/disconnect"
+            (spies/reset! dispatch-spy)
+            (on-msg {:event :ws/disconnect :data {:id ::id :socket-id ::socket-id :simulator ::simulator}})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/disconnect {:id ::id :socket-id ::socket-id}])))
+
           (testing "returns the store"
             (is (= result store))))))))
 

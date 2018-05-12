@@ -3,7 +3,8 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
             [test.utils.date-time :as test.dt]
             [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.content :as content])
+            [com.ben-allred.clj-app-simulator.services.content :as content]
+            [immutant.web.async :as web.async])
   (:import [java.util Date]))
 
 (deftest ^:unit init-test
@@ -18,6 +19,7 @@
         (testing "cleans request"
           (let [actual (actions/receive {:extra        ::extra
                                          :stuff        ::stuff
+                                         :socket-id    ::socket-id
                                          :headers      {"some" ::headers "accept" ::accept}
                                          :timestamp    ::timestamp
                                          :body         ::body
@@ -26,7 +28,8 @@
                 expected {:headers      {:some ::headers :accept ::accept}
                           :body         ::body
                           :query-params {:some ::query-params}
-                          :route-params ::route-params}]
+                          :route-params ::route-params
+                          :socket-id    ::socket-id}]
             (is (spies/called-with? prepare-spy expected #{:content-type :accept} ::accept))
             (is (= expected (dissoc (second actual) :timestamp)))
 
@@ -41,3 +44,80 @@
   (testing "(change)"
     (testing "wraps config in a tuple"
       (is (= (actions/change {:some :value}) [:http/change {:some :value}])))))
+
+(deftest ^:unit connect-test
+  (testing "(connect)"
+    (testing "wraps config in a tuple"
+      (is (= (actions/connect ::socket-id ::ws)
+             [:ws/connect ::socket-id ::ws])))))
+
+(deftest ^:unit remove-socket-test
+  (testing "(remove-socket)"
+    (testing "wraps config in a tuple"
+      (is (= (actions/remove-socket ::socket-id)
+             [:ws/remove ::socket-id])))))
+
+(deftest ^:unit send-one-test
+  (testing "(send-one)"
+    (let [send-spy (spies/create)
+          state-spy (spies/create (constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}}))]
+      (with-redefs [web.async/send! send-spy]
+        (let [f (actions/send-one ::id-2 ::message)]
+          (testing "sends the message to the socket"
+            (spies/reset! send-spy state-spy)
+            (f [nil state-spy])
+            (is (spies/called-with? state-spy))
+            (is (spies/called-with? send-spy ::ws-2 ::message))
+            (is (spies/called-times? send-spy 1)))
+
+          (testing "when no socket is found"
+            (spies/reset! send-spy state-spy)
+            (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
+
+            (testing "does not send the message"
+              (is (spies/never-called? send-spy)))))))))
+
+(deftest ^:unit send-all-test
+  (testing "(send-all)"
+    (let [send-spy (spies/create)
+          state-spy (spies/create (constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}}))]
+      (with-redefs [web.async/send! send-spy]
+        (let [f (actions/send-all ::message)]
+          (testing "sends the message to every socket"
+            (f [nil state-spy])
+
+            (is (spies/called-with? send-spy ::ws-1 ::message))
+            (is (spies/called-with? send-spy ::ws-2 ::message))
+            (is (spies/called-with? send-spy ::ws-3 ::message))))))))
+
+(deftest ^:unit disconnect-test
+  (testing "(disconnect)"
+    (let [disconnect-spy (spies/create)
+          state-spy (spies/create (constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}}))]
+      (with-redefs [web.async/close disconnect-spy]
+        (let [f (actions/disconnect ::id-2)]
+          (testing "disconnects the socket"
+            (spies/reset! disconnect-spy state-spy)
+            (f [nil state-spy])
+            (is (spies/called-with? state-spy))
+            (is (spies/called-with? disconnect-spy ::ws-2))
+            (is (spies/called-times? disconnect-spy 1)))
+
+          (testing "when no socket is found"
+            (spies/reset! disconnect-spy state-spy)
+            (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
+
+            (testing "does not disconnect"
+              (is (spies/never-called? disconnect-spy)))))))))
+
+(deftest ^:unit disconnect-all-test
+  (testing "(disconnect-all)"
+    (let [disconnect-spy (spies/create)
+          state-spy (spies/create (constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}}))]
+      (with-redefs [web.async/close disconnect-spy]
+        (testing "sends the message to every socket"
+          (actions/disconnect-all [nil state-spy])
+
+          (is (spies/called-with? disconnect-spy ::ws-1))
+          (is (spies/called-with? disconnect-spy ::ws-2))
+          (is (spies/called-with? disconnect-spy ::ws-3)))))))

@@ -13,6 +13,8 @@
     :simulators/reset (dispatch [:simulators.activity/reset {:simulator data}])
     :http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
     :http/change (dispatch [:simulators.activity/change {:simulator data}])
+    :ws/connect (dispatch [:simulators.activity/connect (select-keys data #{:id :socket-id})])
+    :ws/disconnect (dispatch [:simulators.activity/disconnect (select-keys data #{:id :socket-id})])
     (log/spy [:UNKNOWN-- event data])))
 
 (defn sub [{:keys [dispatch] :as store}]

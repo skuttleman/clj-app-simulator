@@ -53,10 +53,10 @@
 (defn ->HttpSimulator [id config]
   (when-let [config (conform-to :http/http-simulator config)]
     (let [{:keys [dispatch get-state]} (store/http-store)]
+      (dispatch (actions/init config))
       (reify
         common/ISimulator
-        (start [_]
-          (dispatch (actions/init config)))
+        (start [_])
         (stop [_])
         (receive [_ request]
           (dispatch (actions/receive request))
@@ -73,8 +73,8 @@
               (assoc :id id)))
         (reset [_]
           (dispatch actions/reset))
-        (routes [this delete!]
-          (routes.sim/http-sim->routes this delete!))
+        (routes [this]
+          (routes.sim/http-sim->routes this))
 
         common/IHTTPSimulator
         (reset-requests [_]
