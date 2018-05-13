@@ -50,9 +50,29 @@
         (is (= [::previous ::current] actual))))
 
     (testing "returns state for all other types"
-      (is (= ::state (reducers/http-config ::state [(keyword (rand-int 1000))]))))))
+      (is (= ::state (reducers/http-requests ::state [(keyword (rand-int 1000))]))))))
 
-(deftest ^:unit ws-sockets
+(deftest ^:unit ws-requests-test
+  (testing "(ws-requests)"
+    (testing "has default state"
+      (is (= [] (reducers/ws-requests))))
+
+    (testing "responds to :simulators/init"
+      (is (= [] (reducers/ws-requests [::1 ::2] [:simulators/init]))))
+
+    (testing "responds to :simulators/reset"
+      (is (= [] (reducers/ws-requests [::1 ::2] [:simulators/reset]))))
+
+    (testing "responds to :simulators/receive"
+      (is (= [::1 ::2 ::3] (reducers/ws-requests [::1 ::2] [:simulators/receive ::3]))))
+
+    (testing "responds to :ws/reset-messages"
+      (is (= [] (reducers/ws-requests [::1 ::2] [:ws/reset-messages]))))
+
+    (testing "returns state for all other types"
+      (is (= ::state (reducers/ws-requests ::state [(keyword (rand-int 1000))]))))))
+
+(deftest ^:unit ws-sockets-test
   (testing "(ws-sockets)"
     (testing "responds to :ws/connect"
       (is (= {::id-1 ::ws-1 ::id-2 ::ws-2}
@@ -62,6 +82,8 @@
       (is (= {::id-1 ::ws-1 ::id-2 nil}
              (reducers/ws-sockets {::id-1 ::ws-1 ::id-2 ::ws-2} [:ws/remove ::id-2]))))
 
+    (testing "response to :simulators/reset"
+      (is (empty? (reducers/ws-sockets {::id-1 ::ws-1 ::id-2 ::ws-2} [:simulators/reset]))))
+
     (testing "returns state for all other types"
-      (is (= {::some ::state} (reducers/ws-sockets {::some ::state} [::anything ::id ::ws])
-             )))))
+      (is (= {::some ::state} (reducers/ws-sockets {::some ::state} [::anything ::id ::ws]))))))

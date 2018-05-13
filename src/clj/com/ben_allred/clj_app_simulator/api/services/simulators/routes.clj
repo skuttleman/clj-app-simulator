@@ -61,8 +61,20 @@
            (respond/with [:bad-request (:problems (ex-data ex))])))))
 
 (defn patch-ws [simulator]
-  (let [f (patch-sim simulator)]
-    #(f (assoc-in % [:body :action] :simulators/reset))))
+  (fn [{{:keys [action socket-id]} :body}]
+    (let [action (keyword action)
+          socket-id (uuids/->uuid socket-id)]
+      (case action
+        :simulators/reset (common/reset simulator)
+        :ws/reset-messages (common/reset-messages simulator)
+        :ws/disconnect-all (common/disconnect simulator)
+        :ws/disconnect (common/disconnect simulator socket-id)
+        nil)
+      (let [details (cond-> (common/details simulator)
+                      socket-id (assoc :socket-id socket-id))]
+        (when (#{:simulators/reset :ws/reset-messages} action)
+          (activity/publish action details))
+        (respond/with [:ok details])))))
 
 (defn send-ws [simulator]
   (fn [{:keys [params body]}]
@@ -74,10 +86,8 @@
       (respond/with [:no-content]))))
 
 (defn disconnect-ws [simulator]
-  (fn [{:keys [params]}]
-    (if-let [socket-id (:socket-id params)]
-      (common/disconnect simulator (uuids/->uuid socket-id))
-      (common/disconnect simulator))
+  (fn [_]
+    (common/disconnect simulator)
     (respond/with [:no-content])))
 
 (defn http-routes [simulator]
@@ -122,8 +132,6 @@
      [:post socket-uuid-uri send]
      [:delete uri disconnect]
      [:delete uuid-uri disconnect]
-     [:delete socket-uri disconnect]
-     [:delete socket-uuid-uri disconnect]
      [:patch uri patch]
      [:patch uuid-uri patch]]))
 

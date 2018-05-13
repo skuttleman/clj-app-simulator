@@ -27,8 +27,9 @@
       (are [config] (ws.sim/valid? config)
         {:path "/some/path" :method :ws}
         {:path "/" :method "ws"}
+        {:path "/:id" :method :ws}
         {:path "/some/path" :method :ws}
-        {:path "/this/is/also/valid" :method "ws"}))
+        {:path "/this/:is/also/:valid" :method "ws"}))
 
     (testing "recognizes invalid configs"
       (are [config] (not (ws.sim/valid? config))
@@ -36,8 +37,10 @@
         {:path "/valid/path"}
         {:method :ws}
         {:path nil :method nil}
-        {:path "" :method :method}
-        {:path "/$$$" :method "http/get"}
+        {:path "" :method :ws}
+        {:path "/" :method :method}
+        {:path "/$$$" :method :ws}
+        {:path "/path/" :method :ws}
         {:path ::path :method ::method}))))
 
 (deftest ^:unit on-open-test
@@ -183,14 +186,14 @@
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"
-    (let [requests-spy (spies/create (constantly ::requests))]
-      (with-redefs [store/requests requests-spy]
+    (let [messages-spy (spies/create (constantly ::messages))]
+      (with-redefs [store/messages messages-spy]
         (testing "returns requests"
           (let [[sim _ _ _ get-state] (simulator)
                 result (common/requests sim)]
             (is (spies/called-with? get-state))
-            (is (spies/called-with? requests-spy ::state))
-            (is (= ::requests result))))))))
+            (is (spies/called-with? messages-spy ::state))
+            (is (= ::messages result))))))))
 
 (deftest ^:unit ->WsSimulator.details-test
   (testing "(->WsSimulator.details)"
@@ -208,6 +211,7 @@
     (testing "resets the simulator"
       (let [[sim _ _ dispatch] (simulator)]
         (common/reset sim)
+        (is (spies/called-with? dispatch actions/disconnect-all))
         (is (spies/called-with? dispatch actions/reset))))))
 
 (deftest ^:unit ->WsSimulator.routes-test
@@ -219,6 +223,12 @@
                 result (common/routes sim)]
             (is (spies/called-with? routes-spy sim))
             (is (= ::routes result))))))))
+
+(deftest ^:unit ->WsSimulator.reset-messages-test
+  (testing "(->WsSimulator.reset-messages)"
+    (let [[sim _ _ dispatch] (simulator)]
+      (common/reset-messages sim)
+      (is (spies/called-with? dispatch actions/reset-messages)))))
 
 (deftest ^:unit ->WsSimulator.connect-test
   (testing "(->WsSimulator.connect)"

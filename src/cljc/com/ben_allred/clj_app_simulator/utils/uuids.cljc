@@ -2,10 +2,11 @@
   #?(:clj (:import [java.util UUID])))
 
 (defn ->uuid [v]
-  (if (uuid? v)
-    v
-    #?(:clj  (UUID/fromString v)
-       :cljs (uuid v))))
+  (when v
+    (if (uuid? v)
+      v
+      #?(:clj  (UUID/fromString v)
+         :cljs (uuid v)))))
 
 (defn random []
   #?(:clj  (UUID/randomUUID)

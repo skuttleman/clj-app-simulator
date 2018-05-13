@@ -10,14 +10,12 @@
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity])
   (:import [java.io InputStream]))
 
-(s/def ::path (partial re-matches #"/|(/[A-Za-z-_0-9]+)+"))
+;(s/def ::path (partial re-matches #"/|(/[A-Za-z-_0-9]+)+"))
+(s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
-(s/def ::method (s/conformer (comp #{:ws} keyword)))
+(s/def ::method (s/conformer (comp #(or % ::s/invalid) #{:ws} keyword)))
 
 (s/def :ws/ws-simulator (s/keys :req-un [::path ::method]))
-
-(defn ^:private sleep [ms]
-  (Thread/sleep ms))
 
 (defn ^:private conform-to [spec config]
   (let [conformed (s/conform spec config)]
@@ -67,12 +65,13 @@
           (dispatch (actions/receive request))
           (routes.sim/receive this (select-keys request #{:socket-id})))
         (requests [_]
-          (store/requests (get-state)))
+          (store/messages (get-state)))
         (details [_]
           (-> (get-state)
               (store/details)
               (assoc :id id)))
         (reset [_]
+          (dispatch actions/disconnect-all)
           (dispatch actions/reset))
         (routes [this]
           (routes.sim/ws-sim->routes this))
@@ -85,6 +84,8 @@
               {:on-open    (partial on-open this request store)
                :on-message (partial on-message this request store)
                :on-close   (partial on-close this request store)})))
+        (reset-messages [_]
+          (dispatch actions/reset-messages))
         (disconnect [_]
           (dispatch actions/disconnect-all))
         (disconnect [_ socket-id]

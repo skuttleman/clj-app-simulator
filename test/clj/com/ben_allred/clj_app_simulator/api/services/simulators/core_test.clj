@@ -69,7 +69,7 @@
 (deftest ^:unit make-simulator!-test
   (testing "(make-simulator!)"
     (let [config-spy (spies/create (constantly ::simulator))
-          add-spy (spies/create)]
+          add-spy (spies/create (constantly ::added))]
       (with-redefs [simulators/config->?simulator config-spy
                     sims/add! add-spy]
         (testing "when a simulator is created"
@@ -80,7 +80,7 @@
               (is (spies/called-with? add-spy ::simulator)))
 
             (testing "returns the simulator"
-              (is (= ::simulator result)))))
+              (is (= ::added result)))))
 
         (testing "when a simulator is not created"
           (spies/reset! config-spy add-spy)

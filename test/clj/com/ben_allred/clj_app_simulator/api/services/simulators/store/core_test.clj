@@ -42,5 +42,9 @@
 (deftest ^:unit details-test
   (testing "(details)"
     (testing "retrieves current config and requests from store"
-      (let [actual (store/details {:requests ::requests :config {:current ::config} :sockets {::1 ::ws ::2 ::ws}})]
-        (is (= {:requests ::requests :config ::config :sockets #{::1 ::2}} actual))))))
+      (let [actual (store/details {:requests ::requests
+                                   :config {:current ::config}
+                                   :sockets {::1 ::ws ::2 ::ws ::3 nil}
+                                   :messages ::messages})]
+        (is (= {:requests ::requests :config ::config :sockets #{::1 ::2} :messages ::messages}
+               actual))))))

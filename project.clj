@@ -63,7 +63,7 @@
                                        :pretty-print  false}}]}
   :figwheel {:css-dirs   ["resources/public/css"]
              :nrepl-port 7888}
-  :sass {:src "src/scss"
+  :sass {:src              "src/scss"
          :output-directory "resources/public/css/"}
 
   :cooper {"cljs"   ["lein" "figwheel"]

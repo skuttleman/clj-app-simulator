@@ -18,5 +18,6 @@
 
 (defprotocol IWSSimulator
   (connect [this request])
+  (reset-messages [this])
   (disconnect [this] [this socket-id])
   (send [this message] [this socket-id message]))

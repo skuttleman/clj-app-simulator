@@ -8,7 +8,9 @@
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
-(s/def ::method (s/conformer (comp #{:http/delete :http/get :http/head :http/options :http/patch :http/post :http/put} keyword)))
+(s/def ::method (s/conformer (comp #(or % ::s/invalid)
+                                   #{:http/delete :http/get :http/head :http/options :http/patch :http/post :http/put}
+                                   keyword)))
 
 (s/def ::delay #(>= % 0))
 

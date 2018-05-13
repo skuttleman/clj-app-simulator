@@ -3,6 +3,7 @@
             [integration.config :as cfg]))
 
 (defn run-server [test]
+  (Thread/sleep 50)
   (let [stop-server! (sim-core/start cfg/port)]
     (test)
     (stop-server!)))

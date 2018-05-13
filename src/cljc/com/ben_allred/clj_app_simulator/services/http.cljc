@@ -60,9 +60,9 @@
   (into {} (map (comp vec reverse)) status->kw))
 
 (defn ^:private check-status [lower upper response]
-  (let [status (if (vector? response)
-                 (kw->status (clojure.core/get response 2))
-                 (:status response))]
+  (when-let [status (if (vector? response)
+                      (kw->status (clojure.core/get response 2))
+                      (:status response))]
     (<= lower status upper)))
 
 (def success?

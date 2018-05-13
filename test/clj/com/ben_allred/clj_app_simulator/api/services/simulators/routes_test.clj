@@ -40,9 +40,7 @@
                                   :simulators/receive
                                   {:simulator {:id ::id :config ::config}
                                    :request ::request-2
-                                   ::extra ::things})))
-
-        (testing "when publishing with a socket-id")))))
+                                   ::extra ::things})))))))
 
 (deftest ^:unit http-sim-route-test
   (testing "(http-sim-route)"
@@ -227,16 +225,103 @@
 
 (deftest ^:unit patch-ws-test
   (testing "(patch-ws)"
-    (let [patch-handler (spies/create (constantly ::response))
-          patch-spy (spies/create (constantly patch-handler))]
-      (with-redefs [routes.sim/patch-sim patch-spy]
-        (let [result ((routes.sim/patch-ws ::simulator) {:body {:action ::action :other ::things} :also ::exist})]
-          (testing "calls patch-sim with altered request"
-            (is (spies/called-with? patch-spy ::simulator))
-            (is (spies/called-with? patch-handler {:body {:action :simulators/reset :other ::things} :also ::exist})))
+    (let [reset-spy (spies/create)
+          reset-messages-spy (spies/create)
+          disconnect-spy (spies/create)
+          details-spy (spies/create (constantly {::some ::details}))
+          publish-spy (spies/create)
+          respond-spy (spies/create (constantly ::response))]
+      (with-redefs [common/reset reset-spy
+                    common/reset-messages reset-messages-spy
+                    common/disconnect disconnect-spy
+                    common/details details-spy
+                    activity/publish publish-spy
+                    respond/with respond-spy]
+        (let [handler (routes.sim/patch-ws ::simulator)]
+          (testing "when resetting the simulator"
+            (spies/reset! reset-spy details-spy publish-spy respond-spy)
+            (let [result (handler {:body {:action :simulators/reset}})]
+              (testing "takes the requested action"
+                (is (spies/called-with? reset-spy ::simulator)))
 
-          (testing "returns the response"
-            (is (= ::response result))))))))
+              (testing "gets the details"
+                (is (spies/called-with? details-spy ::simulator)))
+
+              (testing "publishes the event"
+                (is (spies/called-with? publish-spy :simulators/reset {::some ::details})))
+
+              (testing "responds with the details"
+                (is (spies/called-with? respond-spy [:ok {::some ::details}]))
+                (is (= ::response result)))))
+
+          (testing "when resetting the messages"
+            (spies/reset! reset-messages-spy details-spy publish-spy respond-spy)
+            (let [result (handler {:body {:action :ws/reset-messages}})]
+              (testing "takes the requested action"
+                (is (spies/called-with? reset-messages-spy ::simulator)))
+
+              (testing "gets the details"
+                (is (spies/called-with? details-spy ::simulator)))
+
+              (testing "publishes the event"
+                (is (spies/called-with? publish-spy :ws/reset-messages {::some ::details})))
+
+              (testing "responds with the details"
+                (is (spies/called-with? respond-spy [:ok {::some ::details}]))
+                (is (= ::response result)))))
+
+          (testing "when disconnecting all sockets"
+            (spies/reset! disconnect-spy details-spy publish-spy respond-spy)
+            (let [result (handler {:body {:action :ws/disconnect-all}})]
+              (testing "takes the requested action"
+                (is (spies/called-with? disconnect-spy ::simulator)))
+
+              (testing "gets the details"
+                (is (spies/called-with? details-spy ::simulator)))
+
+              (testing "does not publish an event"
+                (is (spies/never-called? publish-spy)))
+
+              (testing "responds with the details"
+                (is (spies/called-with? respond-spy [:ok {::some ::details}]))
+                (is (= ::response result)))))
+
+          (testing "when disconnecting one socket"
+            (spies/reset! disconnect-spy details-spy publish-spy respond-spy)
+            (let [socket-id (uuids/random)
+                  result (handler {:body {:action :ws/disconnect :socket-id socket-id}})]
+              (testing "takes the requested action"
+                (is (spies/called-with? disconnect-spy ::simulator socket-id)))
+
+              (testing "gets the details"
+                (is (spies/called-with? details-spy ::simulator)))
+
+              (testing "does not publish an event"
+                (is (spies/never-called? publish-spy)))
+
+              (testing "responds with the details"
+                (is (spies/called-with? respond-spy [:ok {::some ::details :socket-id socket-id}]))
+                (is (= ::response result)))))
+
+          (testing "when an unknown action is patched"
+            (spies/reset! publish-spy)
+            (handler {:body {:action :unknown}})
+            (testing "does not publish an action"
+              (spies/never-called? publish-spy)))
+
+          (testing "when the action is a string"
+            (spies/reset! reset-spy publish-spy)
+            (handler {:body {:action "simulators/reset"}})
+            (testing "converts the action to a keyword"
+              (is (spies/called-with? reset-spy ::simulator))
+              (is (spies/called-with? publish-spy :simulators/reset {::some ::details}))))
+
+          (testing "when the socket-id is a string"
+            (spies/reset! disconnect-spy publish-spy)
+            (let [socket-id (uuids/random)]
+              (handler {:body {:action :ws/disconnect :socket-id (str socket-id)}})
+              (testing "converts the socket-id to a UUID"
+                (is (spies/called-with? disconnect-spy ::simulator socket-id))))))))))
 
 (deftest ^:unit send-ws-test
   (testing "(send-ws)"
@@ -278,8 +363,7 @@
     (let [disconnect-spy (spies/create)]
       (with-redefs [common/disconnect disconnect-spy]
         (let [handler (routes.sim/disconnect-ws ::simulator)
-              result (handler {})
-              socket-id (uuids/random)]
+              result (handler {})]
           (testing "disconnects the sockets"
             (is (spies/called-with? disconnect-spy ::simulator)))
 
@@ -288,17 +372,7 @@
 
           (testing "when there is a socket-id"
             (spies/reset! disconnect-spy)
-            (handler {:params {:socket-id socket-id}})
-
-            (testing "disconnects the specific socket"
-              (is (spies/called-with? disconnect-spy ::simulator socket-id)))
-
-            (testing "and when the socket-id is a UUID string"
-              (spies/reset! disconnect-spy)
-              (handler {:params {:socket-id (str socket-id)}})
-
-              (testing "disconnects the specific socket"
-                (is (spies/called-with? disconnect-spy ::simulator socket-id))))))))))
+            (handler ::request)))))))
 
 (deftest ^:unit http-routes-test
   (testing "(http-routes)"
@@ -415,8 +489,6 @@
                          [:post "/api/simulators/123/:socket-id" ::send]
                          [:delete "/api/simulators/ws/some/path" ::disconnect]
                          [:delete "/api/simulators/123" ::disconnect]
-                         [:delete "/api/simulators/ws/some/path/:socket-id" ::disconnect]
-                         [:delete "/api/simulators/123/:socket-id" ::disconnect]
                          [:patch "/api/simulators/ws/some/path" ::reset]
                          [:patch "/api/simulators/123" ::reset]]]
               (is (contains? simulators sim)))))
@@ -438,8 +510,6 @@
                            [:post "/api/simulators/123/:socket-id" ::send]
                            [:delete "/api/simulators/ws" ::disconnect]
                            [:delete "/api/simulators/123" ::disconnect]
-                           [:delete "/api/simulators/ws/:socket-id" ::disconnect]
-                           [:delete "/api/simulators/123/:socket-id" ::disconnect]
                            [:patch "/api/simulators/ws" ::reset]
                            [:patch "/api/simulators/123" ::reset]]]
                 (is (contains? simulators sim))))))))))
