@@ -11,10 +11,10 @@
     :simulators/add (dispatch [:simulators.activity/add {:simulator data}])
     :simulators/delete (dispatch [:simulators.activity/delete data])
     :simulators/reset (dispatch [:simulators.activity/reset {:simulator data}])
-    :http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
-    :http/change (dispatch [:simulators.activity/change {:simulator data}])
-    :ws/connect (dispatch [:simulators.activity/connect (select-keys data #{:id :socket-id})])
-    :ws/disconnect (dispatch [:simulators.activity/disconnect (select-keys data #{:id :socket-id})])
+    :simulators/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
+    :simulators/change (dispatch [:simulators.activity/change {:simulator data}])
+    :ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
+    :ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
     (log/spy [:UNKNOWN-- event data])))
 
 (defn sub [{:keys [dispatch] :as store}]

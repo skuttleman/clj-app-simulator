@@ -46,9 +46,6 @@
 (defn valid? [config]
   (s/valid? :http/http-simulator config))
 
-(defn why-not? [config]
-  (s/explain-data :http/http-simulator config))
-
 (defn why-not-update? [config]
   (s/explain-data :http.partial/http-simulator config))
 
@@ -69,6 +66,8 @@
             (store/response state)))
         (requests [_]
           (store/requests (get-state)))
+        (reset-requests [_]
+          (dispatch actions/reset-requests))
         (details [_]
           (-> (get-state)
               (store/details)
@@ -77,13 +76,11 @@
           (dispatch actions/reset))
         (routes [this]
           (routes.sim/http-sim->routes this))
-
-        common/IHTTPSimulator
-        (reset-requests [_]
-          (dispatch actions/reset-requests))
-        (reset-response [_]
-          (dispatch actions/reset-response))
         (change [_ config]
           (if-let [config (conform-to :http.partial/http-simulator config)]
             (dispatch (actions/change (dissoc config :method :path)))
-            (throw (ex-info "config does not conform to spec" {:problems (why-not-update? config)}))))))))
+            (throw (ex-info "config does not conform to spec" {:problems (why-not-update? config)}))))
+
+        common/IHTTPSimulator
+        (reset-response [_]
+          (dispatch actions/reset-response))))))

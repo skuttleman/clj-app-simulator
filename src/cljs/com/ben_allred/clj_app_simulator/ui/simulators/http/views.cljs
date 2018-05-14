@@ -1,41 +1,26 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.views
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
+  (:require [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.resources :as resources]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
             [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations :as tr]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]))
 
 (defn ^:private with-attrs [attrs form path]
-  (assoc attrs
-    :on-change (partial forms/assoc-in form path)
-    :value (get-in (forms/current-model form) path)
-    :to-view (get-in tr/model->view path)
-    :to-model (get-in tr/view->model path)
-    :errors (get-in (forms/errors form) path)))
-
-(defn sim-details [{{:keys [method path]} :config}]
-  [:div.sim-card-identifier
-   [:div.sim-card-method (when method (string/upper-case (name method)))]
-   [:div.sim-card-path path]])
+  (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
 
 (defn name-field [form]
-  [fields/input
-   (-> {:label "Name"}
-       (with-attrs form [:name]))])
+  [shared.views/name-field form tr/model->view tr/view->model])
 
 (defn group-field [form]
-  [fields/input
-   (-> {:label "Group"}
-       (with-attrs form [:group]))])
+  [shared.views/group-field form tr/model->view tr/view->model])
 
 (defn description-field [form]
-  [fields/textarea
-   (-> {:label "Description"}
-       (with-attrs form [:description]))])
+  [shared.views/description-field form tr/model->view tr/view->model])
 
 (defn status-field [form]
   [fields/select
@@ -110,8 +95,7 @@
 
 (defn sim [{:keys [config requests id] :as simulator}]
   [:div.simulator
-   [:h3 "Simulator"]
-   [sim-details simulator]
+   [shared.views/sim-details simulator]
    [sim-edit-form simulator]
    [:h4 "Requests:"]
    [:ul.requests
@@ -121,10 +105,10 @@
    [:div.button-row
     [:button.button.button-error.pure-button.clear-button
      {:disabled (empty? requests)
-      :on-click (interactions/clear-requests id)}
+      :on-click (shared.interactions/clear-requests id)}
      "Clear Requests"]
     [:button.button.button-error.pure-button.delete-button
-     {:on-click (interactions/show-delete-modal id)}
+     {:on-click (shared.interactions/show-delete-modal id)}
      "Delete Simulator"]]])
 
 (defn sim-create-form* [form]
@@ -146,7 +130,6 @@
        "Cancel"]
       [:button.button.button-secondary.pure-button.save-button
        {:disabled disabled?}
-
        "Save"]]]))
 
 (defn sim-create-form []

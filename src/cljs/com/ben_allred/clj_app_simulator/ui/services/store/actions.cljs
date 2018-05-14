@@ -37,7 +37,7 @@
   (fn [[dispatch]]
     (dispatch [:simulators.clear-requests/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :http/reset-requests}})
+        (http/patch {:body {:action :simulators/reset-requests}})
         (request* dispatch :simulators.clear-requests/succeed :simulators.clear-requests/fail))))
 
 (defn reset-simulator [id]
@@ -51,8 +51,15 @@
   (fn [[dispatch]]
     (dispatch [:simulators.change/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :http/change :config config}})
+        (http/patch {:body {:action :simulators/change :config config}})
         (request* dispatch :simulators.change/succeed :simulators.change/fail))))
+
+(defn disconnect-all [id]
+  (fn [[dispatch]]
+    (dispatch [:simulators.disconnect-all/request])
+    (-> (str "/api/simulators/" id)
+        (http/patch {:body {:action :ws/disconnect-all}})
+        (request* dispatch :simulators.disconnect-all/succeed :simulators.disconnect-all/fail))))
 
 (defn show-modal [content & [title & actions]]
   (fn [[dispatch]]

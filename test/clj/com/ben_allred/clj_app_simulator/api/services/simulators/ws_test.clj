@@ -186,13 +186,13 @@
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"
-    (let [messages-spy (spies/create (constantly ::messages))]
-      (with-redefs [store/messages messages-spy]
+    (let [requests-spy (spies/create (constantly ::messages))]
+      (with-redefs [store/requests requests-spy]
         (testing "returns requests"
           (let [[sim _ _ _ get-state] (simulator)
                 result (common/requests sim)]
             (is (spies/called-with? get-state))
-            (is (spies/called-with? messages-spy ::state))
+            (is (spies/called-with? requests-spy ::state))
             (is (= ::messages result))))))))
 
 (deftest ^:unit ->WsSimulator.details-test
@@ -224,11 +224,22 @@
             (is (spies/called-with? routes-spy sim))
             (is (= ::routes result))))))))
 
-(deftest ^:unit ->WsSimulator.reset-messages-test
-  (testing "(->WsSimulator.reset-messages)"
+(deftest ^:unit ->WsSimulator.change-test
+  (testing "(->WsSimulator.change)"
+    (let [[sim _ _ dispatch] (simulator)
+          change-spy (spies/create (constantly ::action))
+          config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
+      (with-redefs [actions/change change-spy]
+        (testing "changes changeable config properties"
+          (common/change sim (assoc config :method ::method :path ::path))
+          (is (spies/called-with? change-spy config))
+          (is (spies/called-with? dispatch ::action)))))))
+
+(deftest ^:unit ->WsSimulator.reset-requests-test
+  (testing "(->WsSimulator.reset-requests)"
     (let [[sim _ _ dispatch] (simulator)]
-      (common/reset-messages sim)
-      (is (spies/called-with? dispatch actions/reset-messages)))))
+      (common/reset-requests sim)
+      (is (spies/called-with? dispatch actions/reset-requests)))))
 
 (deftest ^:unit ->WsSimulator.connect-test
   (testing "(->WsSimulator.connect)"

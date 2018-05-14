@@ -14,6 +14,12 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.resources-test :as http.resources-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations-test :as http.transformations-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.views-test :as http.views-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions-test :as shared.interactions-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.views-test :as shared.views-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test :as ws.interactions-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources-test :as ws.resources-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.transformations-test :as ws.transformations-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.views-test :as ws.views-test]
             [com.ben-allred.clj-app-simulator.ui.utils.core-test :as utils.core-test]
             [com.ben-allred.clj-app-simulator.ui.utils.macros-test :as macros-test]
             [com.ben-allred.clj-app-simulator.ui.views.components.core-test :as components.core-test]
@@ -43,6 +49,12 @@
   (http.resources-test/run-tests)
   (http.transformations-test/run-tests)
   (http.views-test/run-tests)
+  (shared.interactions-test/run-tests)
+  (shared.views-test/run-tests)
+  (ws.interactions-test/run-tests)
+  (ws.resources-test/run-tests)
+  (ws.transformations-test/run-tests)
+  (ws.views-test/run-tests)
   (utils.core-test/run-tests)
   (macros-test/run-tests)
   (components.core-test/run-tests)

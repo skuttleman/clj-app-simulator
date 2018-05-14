@@ -53,6 +53,8 @@
          :simulators.activity/reset (assoc state :config (:config simulator))
          :simulators.fetch-one/succeed simulator
          :simulators.activity/add simulator
+         :simulators.activity/connect (update state :sockets (fnil conj #{}) (:socket-id simulator))
+         :simulators.activity/disconnect (update state :sockets (fnil disj #{}) (:socket-id simulator))
          state)))))
 
 (def simulators

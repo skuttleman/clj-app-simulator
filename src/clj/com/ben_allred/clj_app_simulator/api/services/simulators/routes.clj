@@ -49,30 +49,31 @@
     (try (let [action (keyword action)]
            (case action
              :simulators/reset (common/reset simulator)
-             :http/reset-requests (common/reset-requests simulator)
+             :simulators/change (common/change simulator config)
+             :simulators/reset-requests (common/reset-requests simulator)
              :http/reset-response (common/reset-response simulator)
-             :http/change (common/change simulator config)
              nil)
            (let [details (common/details simulator)]
-             (when (#{:simulators/reset :http/reset-requests :http/reset-response :http/change} action)
+             (when (#{:simulators/reset :simulators/change :simulators/reset-requests :http/reset-response} action)
                (activity/publish action details))
              (respond/with [:ok details])))
          (catch Throwable ex
            (respond/with [:bad-request (:problems (ex-data ex))])))))
 
 (defn patch-ws [simulator]
-  (fn [{{:keys [action socket-id]} :body}]
+  (fn [{{:keys [action socket-id config]} :body}]
     (let [action (keyword action)
           socket-id (uuids/->uuid socket-id)]
       (case action
         :simulators/reset (common/reset simulator)
-        :ws/reset-messages (common/reset-messages simulator)
+        :simulators/reset-requests (common/reset-requests simulator)
+        :simulators/change (common/change simulator config)
         :ws/disconnect-all (common/disconnect simulator)
         :ws/disconnect (common/disconnect simulator socket-id)
         nil)
       (let [details (cond-> (common/details simulator)
                       socket-id (assoc :socket-id socket-id))]
-        (when (#{:simulators/reset :ws/reset-messages} action)
+        (when (#{:simulators/reset :simulators/reset-requests :simulators/change} action)
           (activity/publish action details))
         (respond/with [:ok details])))))
 

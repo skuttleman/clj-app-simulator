@@ -37,21 +37,19 @@
 
 (def reset [:simulators/reset])
 
+(defn change [config]
+  [:simulators/change config])
+
+(def reset-requests [:simulators/reset-requests])
+
 ;; http
 
-(def reset-requests [:http/reset-requests])
-
 (def reset-response [:http/reset-response])
-
-(defn change [config]
-  [:http/change config])
 
 ;; ws
 
 (defn connect [socket-id ws]
   [:ws/connect socket-id ws])
-
-(def reset-messages [:ws/reset-messages])
 
 (defn remove-socket [socket-id]
   [:ws/remove socket-id])

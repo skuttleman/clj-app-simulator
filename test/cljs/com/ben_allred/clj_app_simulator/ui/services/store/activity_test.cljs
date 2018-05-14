@@ -45,25 +45,25 @@
             (on-msg {:event :simulators/delete :data ::data})
             (is (spies/called-with? dispatch-spy [:simulators.activity/delete ::data])))
 
-          (testing "dispatches on :http/reset-requests"
+          (testing "dispatches on :simulators/reset-requests"
             (spies/reset! dispatch-spy)
-            (on-msg {:event :http/reset-requests :data ::simulator})
+            (on-msg {:event :simulators/reset-requests :data ::simulator})
             (is (spies/called-with? dispatch-spy [:simulators.activity/reset-requests {:simulator ::simulator}])))
 
-          (testing "dispatches on :http/change"
+          (testing "dispatches on :simulators/change"
             (spies/reset! dispatch-spy)
-            (on-msg {:event :http/change :data ::simulator})
+            (on-msg {:event :simulators/change :data ::simulator})
             (is (spies/called-with? dispatch-spy [:simulators.activity/change {:simulator ::simulator}])))
 
           (testing "dispatches on :ws/connect"
             (spies/reset! dispatch-spy)
-            (on-msg {:event :ws/connect :data {:id ::id :socket-id ::socket-id :simulator ::simulator}})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/connect {:id ::id :socket-id ::socket-id}])))
+            (on-msg {:event :ws/connect :data ::data})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/connect {:simulator ::data}])))
 
           (testing "dispatches on :ws/disconnect"
             (spies/reset! dispatch-spy)
-            (on-msg {:event :ws/disconnect :data {:id ::id :socket-id ::socket-id :simulator ::simulator}})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/disconnect {:id ::id :socket-id ::socket-id}])))
+            (on-msg {:event :ws/disconnect :data ::data})
+            (is (spies/called-with? dispatch-spy [:simulators.activity/disconnect {:simulator ::data}])))
 
           (testing "returns the store"
             (is (= result store))))))))

@@ -22,10 +22,8 @@
 
 (def requests :requests)
 
-(def messages :messages)
-
 (defn details [state]
   (-> state
-      (select-keys #{:config :requests :messages :sockets})
+      (select-keys #{:config :requests :sockets})
       (update :config :current)
       (maps/update-maybe :sockets (comp set keys #(maps/dissocp % nil?)))))

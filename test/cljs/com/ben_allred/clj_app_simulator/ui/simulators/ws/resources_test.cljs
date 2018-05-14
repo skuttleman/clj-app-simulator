@@ -1,0 +1,42 @@
+(ns com.ben-allred.clj-app-simulator.ui.simulators.ws.resources-test
+  (:require [cljs.test :as t :refer [deftest testing is are]]
+            [test.utils.spies :as spies]
+            [com.ben-allred.formation.core :as f]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources :as resources]))
+
+(deftest ^:unit validate-new*-test
+  (testing "(validate-new*)"
+    (let [make-spy (spies/create (constantly ::validator))
+          required-spy (spies/create (constantly ::required))
+          pred-spy (spies/create (constantly ::pred))]
+      (with-redefs [f/make-validator make-spy
+                    f/required required-spy
+                    f/pred pred-spy]
+        (let [validator (resources/validate-new*)]
+          (testing "constructs a validator"
+            (is (spies/called-times? required-spy 2))
+            (is (spies/called? pred-spy))
+            (is (-> make-spy
+                    (spies/calls)
+                    (ffirst)
+                    (update :path set)
+                    (= {:path #{::required ::pred} :method ::required})))
+            (is (= ::validator validator)))
+
+          (testing "when validating the path"
+            (let [path-pred (ffirst (spies/calls pred-spy))]
+              (testing "recognizes valid paths"
+                (are [path] (path-pred path)
+                  "/"
+                  "/some"
+                  "/:some/path"
+                  "/this/:is/_also/valid-123"))
+
+              (testing "recognizes invalid paths"
+                (are [path] (not (path-pred path))
+                  ""
+                  "\\"
+                  ":something"
+                  "/$$$")))))))))
+
+(defn run-tests [] (t/run-tests))

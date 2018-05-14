@@ -43,7 +43,7 @@
 (deftest ^:unit change-test
   (testing "(change)"
     (testing "wraps config in a tuple"
-      (is (= (actions/change {:some :value}) [:http/change {:some :value}])))))
+      (is (= (actions/change {:some :value}) [:simulators/change {:some :value}])))))
 
 (deftest ^:unit connect-test
   (testing "(connect)"

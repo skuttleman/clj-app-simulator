@@ -232,11 +232,11 @@
                                            :headers {:content-type content-type}}}]
                 (test.http/patch "/api/simulators/get/some/:url-param"
                                  content-type
-                                 {:body {:action :http/change
+                                 {:body {:action :simulators/change
                                          :config new-config}})
                 (testing "publishes event on activity feed"
                   (let [{:keys [event data]} (async/<!! chan)]
-                    (is (= :http/change (keyword event)))
+                    (is (= :simulators/change (keyword event)))
                     (is (= (-> data
                                (:config)
                                (update :method keyword))
@@ -263,10 +263,10 @@
                 (testing "and when resetting the requests"
                   (test.http/patch "/api/simulators/get/some/:url-param"
                                    content-type
-                                   {:body {:action :http/reset-requests}})
+                                   {:body {:action :simulators/reset-requests}})
                   (testing "publishes event on activity feed"
                     (let [{:keys [event data]} (async/<!! chan)]
-                      (is (= :http/reset-requests (keyword event)))
+                      (is (= :simulators/reset-requests (keyword event)))
                       (is (= {:method :http/get :path "/some/:url-param"}
                              (-> data
                                  (:config)
@@ -309,21 +309,21 @@
           (testing "when updating the simulator"
             (test.http/patch "/api/simulators/get/some/:url-param"
                              content-type
-                             {:body {:action :http/change
+                             {:body {:action :simulators/change
                                      :config {:body    (transit/stringify {:update :again})
                                               :headers {:content-type "application/transit"}}}})
             (testing "publishes event on activity feed"
               (let [event (:event (async/<!! chan))]
-                (is (= :http/change (keyword event)))))
+                (is (= :simulators/change (keyword event)))))
             (testing "and when updating a different simulator"
               (test.http/patch "/api/simulators/post/some/path"
                                content-type
-                               {:body {:action :http/change
+                               {:body {:action :simulators/change
                                        :config {:response {:status 403
                                                            :body   (pr-str {:message "not authorized"})}}}})
               (testing "publishes event on activity feed"
                 (let [{:keys [event data]} (async/<!! chan)]
-                  (is (= :http/change (keyword event)))
+                  (is (= :simulators/change (keyword event)))
                   (is (= :http/post (keyword (get-in data [:config :method]))))
                   (is (= "/some/path" (get-in data [:config :path])))
                   data)
@@ -375,11 +375,11 @@
           (testing "when updating both simulators"
             (test.http/patch "/api/simulators/get/some/:url-param"
                              content-type
-                             {:body {:action :http/change
+                             {:body {:action :simulators/change
                                      :config {:response {:body (json/stringify [:GET "some" "things"])}}}})
             (test.http/patch "/api/simulators/post/some/path"
                              content-type
-                             {:body {:action :http/change
+                             {:body {:action :simulators/change
                                      :config {:response {:body (pr-str [:POST "some" "things"])}}}})
             (testing "and when sending a request to each simulator"
               (test.http/get "/simulators/some/id-for-things" content-type)

@@ -65,7 +65,9 @@
           (dispatch (actions/receive request))
           (routes.sim/receive this (select-keys request #{:socket-id})))
         (requests [_]
-          (store/messages (get-state)))
+          (store/requests (get-state)))
+        (reset-requests [_]
+          (dispatch actions/reset-requests))
         (details [_]
           (-> (get-state)
               (store/details)
@@ -75,6 +77,8 @@
           (dispatch actions/reset))
         (routes [this]
           (routes.sim/ws-sim->routes this))
+        (change [_ config]
+          (dispatch (actions/change (dissoc config :path :method))))
 
         common/IWSSimulator
         (connect [this {:keys [websocket?] :as request}]
@@ -84,8 +88,6 @@
               {:on-open    (partial on-open this request store)
                :on-message (partial on-message this request store)
                :on-close   (partial on-close this request store)})))
-        (reset-messages [_]
-          (dispatch actions/reset-messages))
         (disconnect [_]
           (dispatch actions/disconnect-all))
         (disconnect [_ socket-id]

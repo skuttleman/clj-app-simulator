@@ -209,14 +209,14 @@
                         (is (= :simulators/receive (keyword event)))))
 
                     (testing "and when getting the simulator's details"
-                      (let [message (-> (test.http/get "/api/simulators/ws/some/:url-param" content-type)
+                      (let [request (-> (test.http/get "/api/simulators/ws/some/:url-param" content-type)
                                         (second)
                                         (:simulator)
-                                        (:messages)
+                                        (:requests)
                                         (first))]
                         (testing "includes the socket message with the socket id"
-                          (is (= socket-id-1 (:socket-id message)))
-                          (is (= "this is a message" (:body message)))))))
+                          (is (= socket-id-1 (:socket-id request)))
+                          (is (= "this is a message" (:body request)))))))
 
                   (testing "and when posting a message to the first socket"
                     (let [response (test.http/post (str "/api/simulators/ws/some/:url-param/" socket-id-1)
@@ -308,22 +308,22 @@
                 (testing "and when resetting the simulator's messages"
                   (let [response (test.http/patch "/api/simulators/ws/some/:url-param"
                                                   content-type
-                                                  {:body {:action :ws/reset-messages}})]
+                                                  {:body {:action :simulators/reset-requests}})]
                     (testing "returns a success"
                       (is (test.http/success? response)))
 
                     (testing "publishes an event"
                       (let [{:keys [event data]} (async/<!! chan)]
-                        (is (= :ws/reset-messages (keyword event)))
-                        (is (empty? (:messages data)))))
+                        (is (= :simulators/reset-requests (keyword event)))
+                        (is (empty? (:requests data)))))
 
                     (testing "and when getting the simulator's details"
-                      (let [messages (-> (test.http/get "/api/simulators/ws/some/:url-param" content-type)
+                      (let [requests (-> (test.http/get "/api/simulators/ws/some/:url-param" content-type)
                                          (second)
                                          (:simulator)
-                                         (:messages))]
+                                         (:requests))]
                         (testing "has no messages"
-                          (is (empty? messages)))))))
+                          (is (empty? requests)))))))
 
                 (testing "and when disconnecting all sockets"
                   (let [response (test.http/patch "/api/simulators/ws/some/:url-param"
@@ -374,7 +374,7 @@
                 (is (= :ws/connect (keyword event-1))))
 
               (testing "publishes an event for the second socket"
-                (is (= :ws/connect (keyword event-1))))
+                (is (= :ws/connect (keyword event-2))))
 
               (testing "and when resetting the simulator"
                 (let [response (test.http/patch (str "/api/simulators/ws/some/:url-param")
@@ -402,7 +402,7 @@
                                   (second)
                                   (:simulator))]
                       (testing "has no messages"
-                        (is (empty? (:messages sim))))
+                        (is (empty? (:requests sim))))
 
                       (testing "has no connections"
                         (is (empty? (:sockets sim))))))))

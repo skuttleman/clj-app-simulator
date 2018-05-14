@@ -7,17 +7,16 @@
   (stop [this])
   (receive [this request])
   (requests [this])
+  (reset-requests [this])
   (details [this])
+  (change [this config])
   (reset [this])
   (routes [this]))
 
 (defprotocol IHTTPSimulator
-  (reset-requests [this])
-  (reset-response [this])
-  (change [this config]))
+  (reset-response [this]))
 
 (defprotocol IWSSimulator
   (connect [this request])
-  (reset-messages [this])
   (disconnect [this] [this socket-id])
   (send [this message] [this socket-id message]))

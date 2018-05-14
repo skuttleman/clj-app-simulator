@@ -155,7 +155,7 @@
 
           (testing "when resetting the requests"
             (spies/reset! reset-requests-spy details-spy publish-spy respond-spy)
-            (let [result (handler {:body {:action :http/reset-requests}})]
+            (let [result (handler {:body {:action :simulators/reset-requests}})]
               (testing "takes the requested action"
                 (is (spies/called-with? reset-requests-spy ::simulator)))
 
@@ -163,7 +163,7 @@
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :http/reset-requests ::details)))
+                (is (spies/called-with? publish-spy :simulators/reset-requests ::details)))
 
               (testing "responds with the details"
                 (is (spies/called-with? respond-spy [:ok ::details]))
@@ -187,7 +187,7 @@
 
           (testing "when changing the simulator"
             (spies/reset! change-spy details-spy publish-spy respond-spy)
-            (let [result (handler {:body {:action :http/change :config ::config}})]
+            (let [result (handler {:body {:action :simulators/change :config ::config}})]
               (testing "takes the requested action"
                 (is (spies/called-with? change-spy ::simulator ::config)))
 
@@ -195,7 +195,7 @@
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :http/change ::details)))
+                (is (spies/called-with? publish-spy :simulators/change ::details)))
 
               (testing "responds with the details"
                 (is (spies/called-with? respond-spy [:ok ::details]))
@@ -205,7 +205,7 @@
               (spies/reset! change-spy respond-spy)
               (spies/respond-with! change-spy (fn [_ _]
                                                 (throw (ex-info "An Exception" {:problems ::problems}))))
-              (let [result (handler {:body {:action :http/change :config ::config}})]
+              (let [result (handler {:body {:action :simulators/change :config ::config}})]
                 (testing "responds with error"
                   (is (spies/called-with? respond-spy [:bad-request ::problems]))
                   (is (= ::response result))))))
@@ -226,13 +226,15 @@
 (deftest ^:unit patch-ws-test
   (testing "(patch-ws)"
     (let [reset-spy (spies/create)
-          reset-messages-spy (spies/create)
+          reset-requests-spy (spies/create)
+          change-spy (spies/create)
           disconnect-spy (spies/create)
           details-spy (spies/create (constantly {::some ::details}))
           publish-spy (spies/create)
           respond-spy (spies/create (constantly ::response))]
       (with-redefs [common/reset reset-spy
-                    common/reset-messages reset-messages-spy
+                    common/reset-requests reset-requests-spy
+                    common/change change-spy
                     common/disconnect disconnect-spy
                     common/details details-spy
                     activity/publish publish-spy
@@ -254,17 +256,33 @@
                 (is (spies/called-with? respond-spy [:ok {::some ::details}]))
                 (is (= ::response result)))))
 
-          (testing "when resetting the messages"
-            (spies/reset! reset-messages-spy details-spy publish-spy respond-spy)
-            (let [result (handler {:body {:action :ws/reset-messages}})]
+          (testing "when changing the simulator"
+            (spies/reset! change-spy details-spy publish-spy respond-spy)
+            (let [result (handler {:body {:action :simulators/change :config ::config}})]
               (testing "takes the requested action"
-                (is (spies/called-with? reset-messages-spy ::simulator)))
+                (is (spies/called-with? change-spy ::simulator ::config)))
 
               (testing "gets the details"
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :ws/reset-messages {::some ::details})))
+                (is (spies/called-with? publish-spy :simulators/change {::some ::details})))
+
+              (testing "responds with the details"
+                (is (spies/called-with? respond-spy [:ok {::some ::details}]))
+                (is (= ::response result)))))
+
+          (testing "when resetting the messages"
+            (spies/reset! reset-requests-spy details-spy publish-spy respond-spy)
+            (let [result (handler {:body {:action :simulators/reset-requests}})]
+              (testing "takes the requested action"
+                (is (spies/called-with? reset-requests-spy ::simulator)))
+
+              (testing "gets the details"
+                (is (spies/called-with? details-spy ::simulator)))
+
+              (testing "publishes the event"
+                (is (spies/called-with? publish-spy :simulators/reset-requests {::some ::details})))
 
               (testing "responds with the details"
                 (is (spies/called-with? respond-spy [:ok {::some ::details}]))
