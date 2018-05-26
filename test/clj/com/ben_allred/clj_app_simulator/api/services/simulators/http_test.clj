@@ -16,9 +16,9 @@
                   :response (respond/with [:ok "[\"some\",\"body\"]" {:header ["some" "header"]}])}))
   ([config]
    (let [dispatch (spies/create)
-         get-state (spies/create (constantly ::state))
-         spy (spies/create (constantly {:dispatch  dispatch
-                                        :get-state get-state}))]
+         get-state (spies/constantly ::state)
+         spy (spies/constantly {:dispatch  dispatch
+                                         :get-state get-state})]
      (with-redefs [store/http-store spy]
        [(http.sim/->HttpSimulator ::id config) spy config dispatch get-state]))))
 
@@ -38,7 +38,7 @@
         (is (nil? (first (simulator {}))))))
 
     (testing "initializes the store"
-      (let [init-spy (spies/create (constantly ::start-action))]
+      (let [init-spy (spies/constantly ::start-action)]
         (with-redefs [actions/init init-spy]
           (let [[_ _ config dispatch] (simulator)]
             (is (spies/called-with? init-spy config))
@@ -57,10 +57,10 @@
 (deftest ^:unit ->HttpSimulator.receive-test
   (testing "(->HttpSimulator.receive)"
     (let [[sim _ _ dispatch get-state] (simulator)
-          receive-spy (spies/create (constantly ::receive-action))
-          delay-spy (spies/create (constantly 100))
+          receive-spy (spies/constantly ::receive-action)
+          delay-spy (spies/constantly 100)
           sleep-spy (spies/create)
-          response-spy (spies/create (constantly ::response))]
+          response-spy (spies/constantly ::response)]
       (with-redefs [actions/receive receive-spy
                     store/delay delay-spy
                     http.sim/sleep sleep-spy
@@ -88,7 +88,7 @@
   (testing "(->HttpSimulator.requests)"
     (testing "returns request"
       (let [[sim _ _ _ get-state] (simulator)
-            requests-spy (spies/create (constantly ::requests))]
+            requests-spy (spies/constantly ::requests)]
         (with-redefs [store/requests requests-spy]
           (let [result (common/requests sim)]
             (is (spies/called? get-state))
@@ -99,7 +99,7 @@
   (testing "(->HttpSimulator.details)"
     (testing "returns request"
       (let [[sim _ _ _ get-state] (simulator)
-            details-spy (spies/create (constantly {:config ::details}))]
+            details-spy (spies/constantly {:config ::details})]
         (with-redefs [store/details details-spy]
           (let [result (common/details sim)]
             (is (spies/called? get-state))
@@ -117,7 +117,7 @@
 (deftest ^:unit ->HttpSimulator.routes-test
   (testing "(->HttpSimulator.routes)"
     (let [[sim] (simulator)
-          config-spy (spies/create (constantly ::routes))]
+          config-spy (spies/constantly ::routes)]
       (with-redefs [routes.sim/http-sim->routes config-spy]
         (testing "converts simulator to routes"
           (let [result (common/routes sim)]
@@ -141,7 +141,7 @@
 (deftest ^:unit ->HttpSimulator.change-test
   (testing "(->HttpSimulator.change)"
     (let [[sim _ _ dispatch] (simulator)
-          change-spy (spies/create (constantly ::action))
+          change-spy (spies/constantly ::action)
           config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
       (with-redefs [actions/change change-spy]
         (testing "changes changeable config properties"
@@ -149,7 +149,7 @@
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))
         (testing "when config is bad"
-          (with-redefs [http.sim/why-not-update? (spies/create (constantly ::reasons))]
+          (with-redefs [http.sim/why-not-update? (spies/constantly ::reasons)]
             (testing "throws exception"
               (is (thrown? Throwable (common/change sim ::bad-config))))
             (testing "explains spec errors"

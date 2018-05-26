@@ -9,8 +9,8 @@
   (testing "(sub)"
     (let [send-spy (spies/create)
           stringify-spy (spies/create identity)
-          yo-dawg-spy (spies/create (constantly stringify-spy))
-          socket-spy (spies/create (constantly ::websocket))
+          yo-dawg-spy (spies/constantly stringify-spy)
+          socket-spy (spies/constantly ::websocket)
           emitter (emitter/new)]
       (with-redefs [web.async/as-channel socket-spy
                     web.async/send! send-spy
@@ -27,22 +27,24 @@
             (testing "returns a socket channel"
               (is (spies/called-with? socket-spy request (spies/matcher map?)))
               (is (= result ::websocket)))
+
             (testing "and when an event is published"
               (spies/reset! send-spy stringify-spy send-spy)
               (emitter/publish emitter ::event ::data)
               (Thread/sleep 25)
-              (testing "the event data is sent via websocket"
+              (testing "sends the event data via websocket"
                 (is (spies/called-with? stringify-spy {:event ::event :data ::data}))
                 (is (spies/called-with? send-spy ::websocket {:event ::event :data ::data}))))
+
             (testing "and when the websocket is closed"
               (on-close nil nil)
-              (Thread/sleep 25)
               (testing "and when an event is published"
                 (spies/reset! send-spy stringify-spy send-spy)
                 (emitter/publish emitter ::event ::data)
                 (testing "does not attempt to send data via websocket"
                   (is (spies/never-called? stringify-spy))
                   (is (spies/never-called? send-spy)))))))
+
         (testing "when not given a websocket request"
           (let [result (activity/sub {})]
             (testing "returns nil"

@@ -60,7 +60,7 @@
 (deftest ^:unit send-one-test
   (testing "(send-one)"
     (let [send-spy (spies/create)
-          state-spy (spies/create (constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}}))]
+          state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})]
       (with-redefs [web.async/send! send-spy]
         (let [f (actions/send-one ::id-2 ::message)]
           (testing "sends the message to the socket"
@@ -80,7 +80,7 @@
 (deftest ^:unit send-all-test
   (testing "(send-all)"
     (let [send-spy (spies/create)
-          state-spy (spies/create (constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}}))]
+          state-spy (spies/constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})]
       (with-redefs [web.async/send! send-spy]
         (let [f (actions/send-all ::message)]
           (testing "sends the message to every socket"
@@ -93,7 +93,7 @@
 (deftest ^:unit disconnect-test
   (testing "(disconnect)"
     (let [disconnect-spy (spies/create)
-          state-spy (spies/create (constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}}))]
+          state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})]
       (with-redefs [web.async/close disconnect-spy]
         (let [f (actions/disconnect ::id-2)]
           (testing "disconnects the socket"
@@ -113,7 +113,7 @@
 (deftest ^:unit disconnect-all-test
   (testing "(disconnect-all)"
     (let [disconnect-spy (spies/create)
-          state-spy (spies/create (constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}}))]
+          state-spy (spies/constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})]
       (with-redefs [web.async/close disconnect-spy]
         (testing "sends the message to every socket"
           (actions/disconnect-all [nil state-spy])

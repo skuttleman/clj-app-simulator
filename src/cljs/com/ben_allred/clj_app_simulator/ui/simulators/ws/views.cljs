@@ -6,7 +6,11 @@
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]))
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
+
+(defn path-field [form]
+  [shared.views/path-field form tr/model->view tr/view->model])
 
 (defn name-field [form]
   [shared.views/name-field form tr/model->view tr/view->model])
@@ -17,17 +21,27 @@
 (defn description-field [form]
   [shared.views/description-field form tr/model->view tr/view->model])
 
-(defn socket [socket-id requests active?]
-  [:li.socket
-   (utils/classes {:active active? :inactive (not active?)})
-   (when (empty? requests)
-     [:span.ws-messages.no-messages "no messages"])
-   [:ul.ws-messages
-    (for [{:keys [body timestamp]} requests]
-      [:li.ws-message
-       {:key (str socket-id "-" timestamp)}
-       body
-       (mo/format (mo/->moment timestamp))])]])
+(defn socket [simulator-id socket-id requests active?]
+  (let [inactive? (not active?)]
+    [:li.socket
+     (utils/classes {:active active? :inactive inactive?})
+     (when (empty? requests)
+       [:span.ws-messages.no-messages "no messages"])
+     [:ul.ws-messages
+      (for [{:keys [body timestamp]} requests]
+        [:li.ws-message
+         {:key (str socket-id "-" timestamp)}
+         [:span.body body]
+         [:span.timestamp (mo/from-now (mo/->moment timestamp))]])]
+     [:div.button-row
+      [:button.button.button-secondary.pure-button.send-button
+       {:disabled inactive?
+        :on-click (interactions/show-message-modal simulator-id socket-id)}
+       "Send Message"]
+      [:button.button.button-error.pure-button.disconnect-button
+       {:disabled inactive?
+        :on-click (interactions/disconnect simulator-id socket-id)}
+       "Disconnect"]]]))
 
 (defn sim-edit-form* [id form]
   (let [disabled? (or (forms/errors form) (not (forms/changed? form)))]
@@ -37,13 +51,13 @@
      [group-field form]
      [description-field form]
      [:div.button-row
+      [:button.button.button-secondary.pure-button.save-button
+       {:disabled disabled?}
+       "Save"]
       [:button.button.button-warning.pure-button.reset-button
        {:type     :button
         :on-click (interactions/reset-simulator form id)}
-       "Reset"]
-      [:button.button.button-secondary.pure-button.save-button
-       {:disabled disabled?}
-       "Save"]]]))
+       "Reset"]]]))
 
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [form (-> sim
@@ -67,10 +81,14 @@
        [:ul.sockets
         (for [[socket-id {:keys [active? requests]}] connections]
           ^{:key (str socket-id)}
-          [socket socket-id requests active?])]
+          [socket id socket-id requests active?])]
        [:div.no-sockets
         "None"])
      [:div.button-row
+      [:button.button.button-secondary.pure-button.message-button
+       {:disabled (empty? sockets)
+        :on-click (interactions/show-message-modal id nil)}
+       "Broadcast Message"]
       [:button.button.button-error.pure-button.clear-button
        {:disabled (empty? requests)
         :on-click (shared.interactions/clear-requests id)}
@@ -82,3 +100,27 @@
       [:button.button.button-error.pure-button.delete-button
        {:on-click (shared.interactions/show-delete-modal id)}
        "Delete Simulator"]]]))
+
+(defn sim-create-form* [form]
+  (let [disabled? (forms/errors form)]
+    [:form.simulator-create
+     {:on-submit (interactions/create-simulator form (not disabled?))}
+     [path-field form]
+     [name-field form]
+     [group-field form]
+     [description-field form]
+     [:div.button-row
+      [:button.button.button-secondary.pure-button.save-button
+       {:disabled disabled?}
+       "Save"]
+      [:a.button.button-warning.pure-button.reset-button
+       {:href (nav/path-for :home)}
+       "Cancel"]]]))
+
+(defn sim-create-form []
+  (let [form (-> {:method   :ws
+                  :path     "/"}
+                 (forms/create resources/validate-new))]
+    (fn []
+      [:div.simulator
+       [sim-create-form* form]])))

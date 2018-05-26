@@ -244,8 +244,8 @@
 
 (deftest ^:unit header-test
   (testing "(header)"
-    (let [to-view (spies/create (constantly [::view-key ::view-value]))
-          to-model (spies/create (constantly ::model))
+    (let [to-view (spies/constantly [::view-key ::view-value])
+          to-model (spies/constantly ::model)
           on-change (spies/create)
           target-value (spies/create first)]
       (with-redefs [dom/target-value target-value]
@@ -331,7 +331,7 @@
 (deftest ^:unit multi-test
   (testing "(multi)"
     (let [key-spy (spies/create identity)
-          new-spy (spies/create (constantly ::new-value))
+          new-spy (spies/constantly ::new-value)
           change-spy (spies/create)
           errors [::error-1 ::error-2 ::error-3]
           values [::value-1 ::value-2 ::value-3]

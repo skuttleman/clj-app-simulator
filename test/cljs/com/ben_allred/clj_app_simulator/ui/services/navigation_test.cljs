@@ -8,8 +8,8 @@
 
 (deftest ^:unit match-route*-test
   (testing "(match-route*)"
-    (let [match-route-spy (spies/create (constantly {:route :info}))
-          qp-spy (spies/create (constantly {:query :params}))]
+    (let [match-route-spy (spies/constantly {:route :info})
+          qp-spy (spies/constantly {:query :params})]
       (with-redefs [bidi/match-route match-route-spy]
         (testing "calls bidi/match-route"
           (spies/reset! match-route-spy)
@@ -27,8 +27,8 @@
 
 (deftest ^:unit path-for*-test
   (testing "(path-for*)"
-    (let [path-for-spy (spies/create (constantly "/some/route"))
-          qp-spy (spies/create (constantly "some=query&params=here"))]
+    (let [path-for-spy (spies/constantly "/some/route")
+          qp-spy (spies/constantly "some=query&params=here")]
       (with-redefs [bidi/path-for path-for-spy]
         (testing "calls bidi/path-for"
           (spies/reset! path-for-spy)
@@ -47,7 +47,7 @@
 (deftest ^:unit match-route-test
   (testing "(match-route)"
     (testing "calls match-route* with routes"
-      (let [match-route-spy (spies/create (constantly ::some-result))]
+      (let [match-route-spy (spies/constantly ::some-result)]
         (with-redefs [nav/routes [::some ::routes]
                       nav/match-route* match-route-spy]
           (let [result (nav/match-route ::path)]
@@ -56,7 +56,7 @@
 
 (deftest ^:unit path-for-test
   (testing "(path-for)"
-    (let [path-for-spy (spies/create (constantly ::some-result))]
+    (let [path-for-spy (spies/constantly ::some-result)]
       (testing "calls path-for* with routes"
         (with-redefs [nav/routes [::some ::routes]
                       nav/path-for* path-for-spy]
@@ -75,7 +75,7 @@
 (deftest ^:unit navigate*-test
   (testing "(navigate*)"
     (let [pushy-spy (spies/create)
-          path-for-spy (spies/create (constantly ::path))]
+          path-for-spy (spies/constantly ::path)]
       (testing "sets history token"
         (with-redefs [pushy/set-token! pushy-spy
                       nav/path-for* path-for-spy]
@@ -86,7 +86,7 @@
 (deftest ^:unit nav-and-replace*-test
   (testing "(nav-and-replace*)"
     (let [pushy-spy (spies/create)
-          path-for-spy (spies/create (constantly ::path))]
+          path-for-spy (spies/constantly ::path)]
       (testing "sets history token"
         (with-redefs [pushy/replace-token! pushy-spy
                       nav/path-for* path-for-spy]
@@ -96,7 +96,7 @@
 
 (deftest ^:unit navigate!-test
   (testing "(navigate!)"
-    (let [navigate-spy (spies/create (constantly ::some-result))]
+    (let [navigate-spy (spies/constantly ::some-result)]
       (testing "calls navigate* with routes"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]
@@ -116,7 +116,7 @@
 
 (deftest ^:unit nav-and-replace!-test
   (testing "(nav-and-replace!)"
-    (let [navigate-spy (spies/create (constantly ::some-result))]
+    (let [navigate-spy (spies/constantly ::some-result)]
       (testing "calls navigate* with routes"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]

@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.views
   (:require [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn with-attrs [attrs form path model->view view->model]
   (assoc attrs
@@ -25,6 +26,11 @@
   [fields/textarea
    (-> {:label "Description"}
        (with-attrs form [:description] model->view view->model))])
+
+(defn path-field [form model->view view->model]
+  [fields/input
+   (-> {:label "Path"}
+       (with-attrs form [:path] model->view view->model))])
 
 (defn sim-details [{{:keys [method path]} :config}]
   [:div.sim-card-identifier

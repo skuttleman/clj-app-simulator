@@ -56,6 +56,47 @@
     }
 }
 
+.sockets {
+    .socket {
+        border-left: 8px solid;
+        border-bottom: 1px solid;
+        border-color: $blue;
+        border-bottom-color: lighten($blue, 35%);
+        padding: 0 10px;
+
+        &:not(:last-child) {
+            margin-bottom: 5px;
+        }
+
+        &.inactive {
+            border-color: $gray;
+            border-bottom-color: lighten($gray, 35%);
+        }
+    }
+
+    .no-messages {
+        font-weight: bold;
+        color: purple;
+    }
+
+    .ws-message {
+        list-style: circle;
+        margin-left: 18px;
+
+        .body {
+            color: $green;
+            margin-right: 10px;
+        }
+    }
+
+    .inactive {
+        .ws-messages .ws-message {
+            color: $gray;
+            font-style: italic;
+        }
+    }
+}
+
 .modal {
     .request-details {
         padding: 0 16px;
@@ -69,6 +110,13 @@
             .val {
                 font-style: italic;
             }
+        }
+    }
+
+    .send-ws-message {
+        textarea {
+            width: calc(100% - 2px);
+            min-height: 150px;
         }
     }
 }

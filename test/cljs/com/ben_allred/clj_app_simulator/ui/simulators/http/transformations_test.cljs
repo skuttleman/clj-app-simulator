@@ -71,7 +71,7 @@
 (deftest ^:unit sim->model-test
   (testing "(sim->model)"
     (testing "transforms values"
-      (let [spy (spies/create (constantly ::model))]
+      (let [spy (spies/constantly ::model)]
         (with-redefs [tr/source->model spy]
           (let [config {:things      ::things
                         :stuff       ::stuff

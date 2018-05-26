@@ -17,6 +17,11 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
 
+(deftest ^:unit path-field-test
+  (testing "(path-field)"
+    (is (= [shared.views/path-field ::form tr/model->view tr/view->model]
+           (http.views/path-field ::form)))))
+
 (deftest ^:unit name-field-test
   (testing "(name-field)"
     (is (= [shared.views/name-field ::form tr/model->view tr/view->model]
@@ -68,8 +73,8 @@
 (deftest ^:unit headers-field-test
   (testing "(headers-field)"
     (let [update-spy (spies/create)
-          current-spy (spies/create (constantly {:response {:headers ::headers}}))
-          error-spy (spies/create (constantly {:response {:headers ::errors}}))]
+          current-spy (spies/constantly {:response {:headers ::headers}})
+          error-spy (spies/constantly {:response {:headers ::errors}})]
       (with-redefs [forms/update-in update-spy
                     forms/current-model current-spy
                     forms/errors error-spy]
@@ -142,22 +147,6 @@
             (is (= ::attrs (:more attrs)))
             (is (= resources/http-methods resource))))))))
 
-(deftest ^:unit path-field-test
-  (testing "(path-field)"
-    (let [with-attrs-spy (spies/create (fn [v & _] (assoc v :more ::attrs)))]
-      (with-redefs [shared.views/with-attrs with-attrs-spy]
-        (testing "renders the form field"
-          (let [[node attrs] (http.views/path-field ::form)]
-            (is (spies/called-with? with-attrs-spy
-                                    (spies/matcher any?)
-                                    ::form
-                                    [:path]
-                                    tr/model->view
-                                    tr/view->model))
-            (is (= fields/input node))
-            (is (= "Path" (:label attrs)))
-            (is (= ::attrs (:more attrs)))))))))
-
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
     (let [model {:response {:status ::status
@@ -165,9 +154,9 @@
                  :name     nil}
           errors-spy (spies/create)
           changed-spy (spies/create)
-          model-spy (spies/create (constantly model))
+          model-spy (spies/constantly model)
           event-spy (spies/create)
-          action-spy (spies/create (constantly ::action))
+          action-spy (spies/constantly ::action)
           dispatch-spy (spies/create)]
       (with-redefs [forms/errors errors-spy
                     forms/changed? changed-spy
@@ -212,7 +201,7 @@
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
-    (let [form-spy (spies/create (constantly ::form))
+    (let [form-spy (spies/constantly ::form)
           simulator {:config {:useless     ::thing
                               :also        ::useless
                               :group       ::group
@@ -245,9 +234,9 @@
 
 (deftest ^:unit sim-request-test
   (testing "(sim-request)"
-    (let [moment-spy (spies/create (constantly ::moment))
-          from-now-spy (spies/create (constantly ::from-now))
-          action-spy (spies/create (constantly ::action))
+    (let [moment-spy (spies/constantly ::moment)
+          from-now-spy (spies/constantly ::from-now)
+          action-spy (spies/constantly ::action)
           dispatch-spy (spies/create)]
       (with-redefs [mo/->moment moment-spy
                     mo/from-now from-now-spy
@@ -279,8 +268,8 @@
                            ::data     ::123}
                           {:timestamp 456
                            ::data     ::456}]}
-          clear-spy (spies/create (constantly ::clear))
-          delete-spy (spies/create (constantly ::delete))]
+          clear-spy (spies/constantly ::clear)
+          delete-spy (spies/constantly ::delete)]
       (with-redefs [shared.interactions/clear-requests clear-spy
                     shared.interactions/show-delete-modal delete-spy]
         (let [root (http.views/sim sim)]
@@ -325,8 +314,8 @@
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
     (let [errors-spy (spies/create)
-          create-spy (spies/create (constantly ::submit))
-          nav-spy (spies/create (constantly ::href))]
+          create-spy (spies/constantly ::submit)
+          nav-spy (spies/constantly ::href)]
       (with-redefs [forms/errors errors-spy
                     interactions/create-simulator create-spy
                     nav/path-for nav-spy]
@@ -376,7 +365,7 @@
 
 (deftest ^:unit sim-create-form-test
   (testing "(sim-create-form)"
-    (let [form-spy (spies/create (constantly ::form))]
+    (let [form-spy (spies/constantly ::form)]
       (with-redefs [forms/create form-spy]
         (testing "renders the form"
           (let [component (http.views/sim-create-form)]

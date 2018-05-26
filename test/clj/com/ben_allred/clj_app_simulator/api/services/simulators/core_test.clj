@@ -68,8 +68,8 @@
 
 (deftest ^:unit make-simulator!-test
   (testing "(make-simulator!)"
-    (let [config-spy (spies/create (constantly ::simulator))
-          add-spy (spies/create (constantly ::added))]
+    (let [config-spy (spies/constantly ::simulator)
+          add-spy (spies/constantly ::added)]
       (with-redefs [simulators/config->?simulator config-spy
                     sims/add! add-spy]
         (testing "when a simulator is created"
@@ -94,7 +94,7 @@
 
 (deftest ^:unit details-test
   (testing "(details)"
-    (let [simulators-spy (spies/create (constantly [::sim-1 ::sim-2]))
+    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
           details-spy (spies/create (partial conj [::details]))]
       (with-redefs [sims/simulators simulators-spy
                     common/details details-spy]
@@ -110,8 +110,8 @@
 
 (deftest ^:unit add-test
   (testing "(add)"
-    (let [make-spy (spies/create (constantly ::simulator))
-          details-spy (spies/create (constantly ::details))
+    (let [make-spy (spies/constantly ::simulator)
+          details-spy (spies/constantly ::details)
           publish-spy (spies/create)]
       (with-redefs [simulators/make-simulator! make-spy
                     common/details details-spy
@@ -144,7 +144,7 @@
 
 (deftest ^:unit set!-test
   (testing "(set!)"
-    (let [valid-spy (spies/create (constantly true))
+    (let [valid-spy (spies/constantly true)
           clear-spy (spies/create)
           make-spy (spies/create (partial conj [::simulator]))
           details-spy (spies/create (partial assoc {} :details))
@@ -201,7 +201,7 @@
 
 (deftest ^:unit reset-all!-test
   (testing "(reset-all!)"
-    (let [simulators-spy (spies/create (constantly [::sim-1 ::sim-2]))
+    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
           reset-spy (spies/create)
           publish-spy (spies/create)
           details-spy (spies/create (partial conj [::details]))]
@@ -228,9 +228,9 @@
 
 (deftest ^:unit routes-test
   (testing "(routes)"
-    (let [simulators-spy (spies/create (constantly [::sim-1 ::sim-2]))
-          routes-spy (spies/create (constantly [::route-1 ::route-2]))
-          make-routes-spy (spies/create (constantly ::route))]
+    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
+          routes-spy (spies/constantly [::route-1 ::route-2])
+          make-routes-spy (spies/constantly ::route)]
       (with-redefs [sims/simulators simulators-spy
                     common/routes routes-spy
                     c/routes make-routes-spy]

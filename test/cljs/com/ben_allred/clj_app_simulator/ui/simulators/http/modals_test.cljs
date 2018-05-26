@@ -4,7 +4,9 @@
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
+            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]))
 
 (deftest ^:unit sim-iterate-test
   (testing "(sim-iterate)"
@@ -48,7 +50,7 @@
 
 (deftest ^:unit request-modal-test
   (testing "(request-modal)"
-      (let [format-spy (spies/create (constantly ::formatted))]
+      (let [format-spy (spies/constantly ::formatted)]
         (with-redefs [mo/format format-spy]
           (let [qp {:a 1 :b 2}
                 headers {:header-1 "val-1" :header-2 "val-2"}
@@ -103,5 +105,15 @@
             (let [details (modals/request-modal {:method ::method} {})]
               (testing "does not display a body"
                 (is (not (test.dom/contains? details :.request-body))))))))))
+
+(deftest ^:unit message-test
+  (testing "(message)"
+    (let [with-attrs-spy (spies/create identity)]
+      (with-redefs [shared.views/with-attrs with-attrs-spy]
+        (let [root (modals/message ::form ::model->view ::view->model)
+              input (test.dom/query-one root fields/textarea)]
+          (testing "renders a message field"
+            (is (spies/called-with? with-attrs-spy (spies/matcher map?) ::form [:message] ::model->view ::view->model))
+            (is (= "Message" (:label (test.dom/attrs input))))))))))
 
 (defn run-tests [] (t/run-tests))

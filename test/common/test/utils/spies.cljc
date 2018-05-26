@@ -1,5 +1,5 @@
 (ns test.utils.spies
-  (:refer-clojure :exclude [reset!]))
+  (:refer-clojure :exclude [reset! constantly]))
 
 (defn ^:private find-override [overrides args]
   (->> overrides
@@ -34,14 +34,14 @@
      ::match    f}))
 
 (def any
-  (matcher (constantly true)))
+  (matcher (clojure.core/constantly true)))
 
 (defn spy? [obj]
   (::spy? (meta obj)))
 
 (defn create
   ([]
-   (create (constantly nil)))
+   (create (clojure.core/constantly nil)))
   ([f]
    (let [calls (atom [])
          overrides (atom ())]
@@ -54,6 +54,9 @@
        {::spy?      true
         ::calls     calls
         ::overrides overrides}))))
+
+(defn constantly [value]
+  (create (clojure.core/constantly value)))
 
 (defn and-then [& responses]
   (let [responses (atom responses)]
@@ -95,12 +98,12 @@
   (swap! (::overrides (meta spy)) conj [matcher f]))
 
 (defn respond-with! [spy f]
-  (do-when-called-with! spy (constantly true) f))
+  (do-when-called-with! spy (clojure.core/constantly true) f))
 
 (defn returning! [spy & values]
   (let [values (atom values)]
     (do-when-called-with! spy
-                          (constantly true)
+                          (clojure.core/constantly true)
                           (fn [& _]
                             (let [response (first @values)]
                               (swap! values rest)

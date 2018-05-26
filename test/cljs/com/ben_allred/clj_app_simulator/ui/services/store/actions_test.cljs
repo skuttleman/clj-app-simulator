@@ -9,7 +9,7 @@
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/get (spies/create (constantly (async/chan)))]
+      (with-redefs [http/get (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           (actions/request-simulators [dispatch])
           (is (spies/called-with? dispatch [:simulators.fetch-all/request])))))))
@@ -47,7 +47,7 @@
 (deftest ^:unit delete-simulator-test
   (testing "(delete-simulator)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/delete (spies/create (constantly (async/chan)))]
+      (with-redefs [http/delete (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           ((actions/delete-simulator ::id) [dispatch])
           (is (spies/called-with? dispatch [:simulators.delete/request])))))))
@@ -87,7 +87,7 @@
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/post (spies/create (constantly (async/chan)))]
+      (with-redefs [http/post (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           ((actions/create-simulator ::simulator) [dispatch])
           (is (spies/called-with? dispatch [:simulators.create/request])))))))
@@ -127,7 +127,7 @@
 (deftest ^:unit clear-requests-test
   (testing "(clear-requests)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/create (constantly (async/chan)))]
+      (with-redefs [http/patch (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           ((actions/clear-requests ::simulator) [dispatch])
           (is (spies/called-with? dispatch [:simulators.clear-requests/request])))))))
@@ -166,7 +166,7 @@
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/create (constantly (async/chan)))]
+      (with-redefs [http/patch (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           ((actions/reset-simulator ::id) [dispatch])
           (is (spies/called-with? dispatch [:simulators.reset/request])))))))
@@ -205,7 +205,7 @@
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/create (constantly (async/chan)))]
+      (with-redefs [http/patch (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
           ((actions/update-simulator ::id ::simulator) [dispatch])
           (is (spies/called-with? dispatch [:simulators.change/request])))))))
@@ -242,10 +242,50 @@
               (is (spies/called-with? dispatch [:simulators.change/fail {:some :error}]))
               (done))))))))
 
+(deftest ^:unit disconnect-test
+  (testing "(disconnect)"
+    (let [dispatch (spies/create)]
+      (with-redefs [http/patch (spies/constantly (async/go [:success {}]))]
+        (testing "calls dispatch with request action"
+          ((actions/disconnect ::simulator-id ::socket-id) [dispatch])
+          (is (spies/called-with? dispatch [:simulators.disconnect/request])))))))
+
+(deftest ^:unit disconnect-success-test
+  (testing "(disconnect)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/patch (spies/create
+                                     (fn [_]
+                                       (async/go
+                                         [:success {:some :result}])))]
+            (let [dispatch (spies/create)
+                  f (actions/disconnect 123 456)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.disconnect/succeed {:some :result}]))
+              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action    :ws/disconnect
+                                                                               :socket-id 456}}))
+              (done))))))))
+
+(deftest ^:unit disconnect-failure-test
+  (testing "(disconnect)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/patch (spies/create
+                                     (fn [_]
+                                       (async/go
+                                         [:error {:some :error}])))]
+            (let [dispatch (spies/create)
+                  f (actions/disconnect 123 456)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.disconnect/fail {:some :error}]))
+              (done))))))))
+
 (deftest ^:unit disconnect-all-test
   (testing "(disconnect-all)"
     (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/create (constantly (async/go [:success {}])))]
+      (with-redefs [http/patch (spies/constantly (async/go [:success {}]))]
         (testing "calls dispatch with request action"
           ((actions/disconnect-all ::id) [dispatch])
           (is (spies/called-with? dispatch [:simulators.disconnect-all/request])))))))
@@ -279,6 +319,57 @@
                   f (actions/disconnect-all 123)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.disconnect-all/fail {:some :error}]))
+              (done))))))))
+
+(deftest ^:unit send-message-test
+  (testing "(send-message)"
+    (let [dispatch (spies/create)]
+      (with-redefs [http/post (spies/constantly (async/go [:success {}]))]
+        (testing "calls dispatch with request action"
+          ((actions/send-message ::simulator-id ::socket-id "a message") [dispatch])
+          (is (spies/called-with? dispatch [:simulators.send-message/request])))))))
+
+(deftest ^:unit send-message-success-test
+  (testing "(send-message)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/post (spies/create
+                                    (fn [_]
+                                      (async/go
+                                        [:success {:some :result}])))]
+            (testing "when there is a socket id"
+              (let [dispatch (spies/create)
+                    f (actions/send-message 123 456 "a message")]
+                (async/<! (f [dispatch]))
+                (is (spies/called-with? dispatch [:simulators.send-message/succeed {:some :result}]))
+                (is (spies/called-with? http/post "/api/simulators/123/456" {:body    "a message"
+                                                                             :headers {:content-type "text/plain"}}))))
+
+            (testing "when there is no socket id"
+              (let [dispatch (spies/create)
+                    f (actions/send-message 123 nil "a message")]
+                (async/<! (f [dispatch]))
+                (is (spies/called-with? dispatch [:simulators.send-message/succeed {:some :result}]))
+                (is (spies/called-with? http/post "/api/simulators/123" {:body    "a message"
+                                                                         :headers {:content-type "text/plain"}}))
+                (done)))))))))
+
+(deftest ^:unit send-message-failure-test
+  (testing "(send-message)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/post
+                        (spies/create (fn [_]
+                                        (async/go
+                                          [:error {:some :reason}])))]
+            (let [dispatch (spies/create)
+                  f (actions/send-message 123 456 "a message")]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:simulators.send-message/fail {:some :reason}]))
+              (is (spies/called-with? http/post "/api/simulators/123/456" {:body    "a message"
+                                                                           :headers {:content-type "text/plain"}}))
               (done))))))))
 
 (deftest ^:unit show-modal-test
@@ -328,7 +419,7 @@
           timeout-spy (spies/create)
           action (actions/show-toast ::level "Some text")
           key (gensym)
-          gensym-spy (spies/create (constantly key))]
+          gensym-spy (spies/constantly key)]
       (with-redefs [gensym gensym-spy]
         (testing "displays modal"
           (spies/reset! dispatch)

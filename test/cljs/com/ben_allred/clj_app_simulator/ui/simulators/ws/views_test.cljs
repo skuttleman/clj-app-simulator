@@ -8,7 +8,9 @@
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]))
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources :as resources]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"
@@ -30,36 +32,40 @@
 
 (deftest ^:unit socket-test
   (testing "(socket)"
-    (let [format-spy (spies/create identity)
-          moment-spy (spies/create identity)]
-      (with-redefs [mo/format format-spy
-                    mo/->moment moment-spy]
+    (let [moment-spy (spies/create identity)
+          from-now-spy (spies/create identity)
+          send-spy (spies/constantly ::send-modal)
+          disconnect-spy (spies/constantly ::disconnect)]
+      (with-redefs [mo/->moment moment-spy
+                    mo/from-now from-now-spy
+                    interactions/show-message-modal send-spy
+                    interactions/disconnect disconnect-spy]
         (let [messages [{:body ::body-1 :timestamp :timestamp-1}
                         {:body ::body-2 :timestamp :timestamp-2}
                         {:body ::body-3 :timestamp :timestamp-3}]]
           (testing "when there are messages"
-            (let [root (ws.views/socket "socket-id" messages true)
+            (let [root (ws.views/socket ::simulator-id "socket-id" messages true)
                   [message-1 message-2 message-3] (test.dom/query-all root :.ws-message)]
               (is (= "socket-id-:timestamp-1" (:key (test.dom/attrs message-1))))
               (is (spies/called-with? moment-spy :timestamp-1))
-              (is (spies/called-with? format-spy :timestamp-1))
+              (is (spies/called-with? from-now-spy :timestamp-1))
               (is (test.dom/contains? message-1 :timestamp-1))
               (is (test.dom/contains? message-1 ::body-1))
 
               (is (= "socket-id-:timestamp-2" (:key (test.dom/attrs message-2))))
               (is (spies/called-with? moment-spy :timestamp-2))
-              (is (spies/called-with? format-spy :timestamp-2))
+              (is (spies/called-with? from-now-spy :timestamp-2))
               (is (test.dom/contains? message-2 :timestamp-2))
               (is (test.dom/contains? message-2 ::body-2))
 
               (is (= "socket-id-:timestamp-3" (:key (test.dom/attrs message-3))))
               (is (spies/called-with? moment-spy :timestamp-3))
-              (is (spies/called-with? format-spy :timestamp-3))
+              (is (spies/called-with? from-now-spy :timestamp-3))
               (is (test.dom/contains? message-3 :timestamp-3))
               (is (test.dom/contains? message-3 ::body-3))))
 
           (testing "when there are no messages"
-            (let [root (ws.views/socket "socket-id" nil true)]
+            (let [root (ws.views/socket ::simulator-id "socket-id" nil true)]
               (is (-> root
                       (test.dom/query-one :.no-messages)
                       (test.dom/contains? "no messages")))
@@ -68,21 +74,53 @@
                       (empty?)))))
 
           (testing "when the connection is active"
-            (let [root (ws.views/socket "socket-id" nil true)]
-              (is (test.dom/query-one root :.socket.active))
-              (is (not (test.dom/query-one root :.socket.inactive)))))
+            (let [root (ws.views/socket ::simulator-id "socket-id" nil true)]
+              (testing "can be styled as such"
+                (is (test.dom/query-one root :.socket.active))
+                (is (not (test.dom/query-one root :.socket.inactive)))
+                (is (spies/called-with? send-spy ::simulator-id "socket-id"))
+                (is (-> root
+                        (test.dom/query-one :.send-button)
+                        (test.dom/attrs)
+                        (:on-click)
+                        (= ::send-modal)))
+                (is (-> root
+                        (test.dom/query-one :.send-button)
+                        (test.dom/attrs)
+                        (:disabled)
+                        (not)))
+                (is (spies/called-with? disconnect-spy ::simulator-id "socket-id"))
+                (is (-> root
+                        (test.dom/query-one :.disconnect-button)
+                        (test.dom/attrs)
+                        (:on-click)
+                        (= ::disconnect)))
+                (is (-> root
+                        (test.dom/query-one :.disconnect-button)
+                        (test.dom/attrs)
+                        (:disabled)
+                        (not))))))
 
           (testing "when the connection is inactive"
-            (let [root (ws.views/socket "socket-id" nil false)]
-              (is (test.dom/query-one root :.socket.inactive))
-              (is (not (test.dom/query-one root :.socket.active))))))))))
+            (let [root (ws.views/socket ::simulator-id "socket-id" nil false)]
+              (testing "can be styled as such"
+                (is (test.dom/query-one root :.socket.inactive))
+                (is (not (test.dom/query-one root :.socket.active)))
+                (is (-> root
+                        (test.dom/query-one :.send-button)
+                        (test.dom/attrs)
+                        (:disabled)))
+                (is (-> root
+                        (test.dom/query-one :.disconnect-button)
+                        (test.dom/attrs)
+                        (:disabled)))))))))))
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
     (let [errors-spy (spies/create)
-          changed-spy (spies/create (constantly true))
-          update-spy (spies/create (constantly ::submit))
-          reset-spy (spies/create (constantly ::reset))]
+          changed-spy (spies/constantly true)
+          update-spy (spies/constantly ::submit)
+          reset-spy (spies/constantly ::reset)]
       (with-redefs [forms/errors errors-spy
                     forms/changed? changed-spy
                     interactions/update-simulator update-spy
@@ -126,8 +164,8 @@
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
-    (let [model-spy (spies/create (constantly ::model))
-          form-spy (spies/create (constantly ::form))]
+    (let [model-spy (spies/constantly ::model)
+          form-spy (spies/constantly ::form)]
       (with-redefs [tr/sim->model model-spy
                     forms/create form-spy]
         (testing "creates a form"
@@ -142,11 +180,13 @@
 
 (deftest ^:unit sim-test
   (testing "(sim)"
-    (let [clear-spy (spies/create (constantly ::clear))
-          disconnect-spy (spies/create (constantly ::disconnect))
-          delete-spy (spies/create (constantly ::delete))]
+    (let [clear-spy (spies/constantly ::clear)
+          disconnect-spy (spies/constantly ::disconnect)
+          send-spy (spies/constantly ::send)
+          delete-spy (spies/constantly ::delete)]
       (with-redefs [shared.interactions/clear-requests clear-spy
                     interactions/disconnect-all disconnect-spy
+                    interactions/show-message-modal send-spy
                     shared.interactions/show-delete-modal delete-spy]
         (let [requests [{:socket-id 222 :timestamp 1}
                         {:socket-id 333 :timestamp 2}
@@ -163,13 +203,13 @@
 
           (testing "has a list of connections"
             (let [[socket-1 socket-2 socket-3] (test.dom/query-all root ws.views/socket)]
-              (is (= [111 [] true]
+              (is (= [::id 111 [] true]
                      (rest socket-1)))
               (is (= "111" (:key (meta socket-1))))
-              (is (= [333 [{:socket-id 333 :timestamp 2} {:socket-id 333 :timestamp 3}] true]
+              (is (= [::id 333 [{:socket-id 333 :timestamp 2} {:socket-id 333 :timestamp 3}] true]
                      (rest socket-2)))
               (is (= "333" (:key (meta socket-2))))
-              (is (= [222 [{:socket-id 222 :timestamp 1} {:socket-id 222 :timestamp 4}] false]
+              (is (= [::id 222 [{:socket-id 222 :timestamp 1} {:socket-id 222 :timestamp 4}] false]
                      (rest socket-3)))
               (is (= "222" (:key (meta socket-3))))))
 
@@ -197,6 +237,18 @@
                       (:on-click)
                       (= ::disconnect)))))
 
+          (testing "has a button to broadcast a message"
+            (let [button (test.dom/query-one root :.message-button)]
+              (is (spies/called-with? send-spy ::id nil))
+              (is (-> button
+                      (test.dom/attrs)
+                      (:disabled)
+                      (not)))
+              (is (-> button
+                      (test.dom/attrs)
+                      (:on-click)
+                      (= ::send)))))
+
           (testing "has a button to delete the simulator"
             (let [button (test.dom/query-one root :.delete-button)]
               (is (spies/called-with? clear-spy ::id))
@@ -223,6 +275,12 @@
               (is (-> root
                       (test.dom/query-one :.disconnect-button)
                       (test.dom/attrs)
+                      (:disabled))))
+
+            (testing "has a disabled message button"
+              (is (-> root
+                      (test.dom/query-one :.message-button)
+                      (test.dom/attrs)
                       (:disabled))))))
 
         (testing "when there are no requests and no connections"
@@ -231,5 +289,84 @@
               (is (-> root
                       (test.dom/query-one :.no-sockets)
                       (test.dom/contains? "None"))))))))))
+
+(deftest ^:unit sim-create-form*-test
+  (testing "(sim-create-form*)"
+    (let [errors-spy (spies/create)
+          create-spy (spies/constantly ::submit)
+          nav-spy (spies/constantly ::home)]
+      (with-redefs [forms/errors errors-spy
+                    interactions/create-simulator create-spy
+                    nav/path-for nav-spy]
+        (let [root (ws.views/sim-create-form* ::form)
+              form (test.dom/query-one root :.simulator-create)]
+          (testing "can submit the form"
+            (is (spies/called-with? errors-spy ::form))
+            (is (spies/called-with? create-spy ::form true))
+            (is (-> form
+                    (test.dom/attrs)
+                    (:on-submit)
+                    (= ::submit))))
+
+          (testing "renders the path field"
+            (is (-> form
+                    (test.dom/query-one ws.views/path-field)
+                    (= [ws.views/path-field ::form]))))
+
+          (testing "renders the name field"
+            (is (-> form
+                    (test.dom/query-one ws.views/name-field)
+                    (= [ws.views/name-field ::form]))))
+
+          (testing "renders the group field"
+            (is (-> form
+                    (test.dom/query-one ws.views/group-field)
+                    (= [ws.views/group-field ::form]))))
+
+          (testing "renders the description field"
+            (is (-> form
+                    (test.dom/query-one ws.views/description-field)
+                    (= [ws.views/description-field ::form]))))
+
+          (testing "renders an enabled save button"
+            (is (-> form
+                    (test.dom/query-one :.save-button)
+                    (test.dom/attrs)
+                    (:disabled)
+                    (not))))
+
+          (testing "has a cancel link"
+            (is (spies/called-with? nav-spy :home))
+            (is (-> form
+                    (test.dom/query-one :a.reset-button)
+                    (test.dom/attrs)
+                    (:href)
+                    (= ::home)))))
+
+        (testing "when there are errors"
+          (spies/respond-with! errors-spy (constantly ::errors))
+          (spies/reset! create-spy)
+          (let [root (ws.views/sim-create-form* ::form)
+                form (test.dom/query-one root :.simulator-create)]
+            (testing "disables the form"
+              (is (spies/called-with? create-spy ::form false))
+              (is (-> form
+                      (test.dom/query-one :.save-button)
+                      (test.dom/attrs)
+                      (:disabled))))))))))
+
+(deftest ^:unit sim-create-form-test
+  (testing "(sim-create-form)"
+    (let [form-spy (spies/constantly ::form)]
+      (with-redefs [forms/create form-spy]
+        (let [component (ws.views/sim-create-form)]
+          (testing "creates a form"
+            (is (spies/called-with? form-spy {:method :ws :path "/"} resources/validate-new)))
+
+          (testing "renders the create form"
+            (let [root (component)]
+              (is (-> root
+                      (test.dom/query-one ws.views/sim-create-form*)
+                      (= [ws.views/sim-create-form* ::form]))))))))))
 
 (defn run-tests [] (t/run-tests))

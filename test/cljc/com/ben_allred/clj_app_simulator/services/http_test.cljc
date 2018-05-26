@@ -7,7 +7,7 @@
 
 (defn ^:private request* [method url request response]
   #?(:clj (let [response-ch (async/chan)
-                kvlt-spy (spies/create (constantly response-ch))
+                kvlt-spy (spies/constantly response-ch)
                 request (update request :headers merge {:content-type "application/edn"
                                                         :accept       "application/edn"})]
             (with-redefs [kvlt/request! kvlt-spy]
@@ -45,7 +45,7 @@
 
 (deftest ^:unit get-test
   (testing "(get)"
-    (let [spy (spies/create (constantly ::response-channel))]
+    (let [spy (spies/constantly ::response-channel)]
       (with-redefs [http/request* spy]
         (testing "sends a :get request"
           (spies/reset! spy)
@@ -58,7 +58,7 @@
 
 (deftest ^:unit post-test
   (testing "(post)"
-    (let [spy (spies/create (constantly ::response-channel))]
+    (let [spy (spies/constantly ::response-channel)]
       (with-redefs [http/request* spy]
         (testing "sends a :post request"
           (http/post ::some-url ::some-request)
@@ -66,7 +66,7 @@
 
 (deftest ^:unit patch-test
   (testing "(patch)"
-    (let [spy (spies/create (constantly ::response-channel))]
+    (let [spy (spies/constantly ::response-channel)]
       (with-redefs [http/request* spy]
         (testing "sends a :patch request"
           (http/patch ::some-url ::some-request)
@@ -74,7 +74,7 @@
 
 (deftest ^:unit put-test
   (testing "(put)"
-    (let [spy (spies/create (constantly ::response-channel))]
+    (let [spy (spies/constantly ::response-channel)]
       (with-redefs [http/request* spy]
         (testing "sends a :put request"
           (http/put ::some-url ::some-request)
@@ -82,7 +82,7 @@
 
 (deftest ^:unit delete-test
   (testing "(delete)"
-    (let [spy (spies/create (constantly ::response-channel))]
+    (let [spy (spies/constantly ::response-channel)]
       (with-redefs [http/request* spy]
         (testing "sends a :delete request"
           (http/delete ::some-url ::some-request)

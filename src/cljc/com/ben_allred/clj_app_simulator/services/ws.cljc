@@ -19,7 +19,7 @@
                                  :on-error on-err
                                  :on-close (comp on-close vector))]
          :cljs (let [ws (js/WebSocket. uri)]
-                 (set! (.-onopen on-open))
+                 (set! (.-onopen ws) on-open)
                  (set! (.-onmessage ws) (comp on-msg to-clj #(.-data %)))
                  (set! (.-onerror ws) on-err)
                  (set! (.-onclose ws) (comp on-close (juxt #(.-code %) #(.-reason %))))

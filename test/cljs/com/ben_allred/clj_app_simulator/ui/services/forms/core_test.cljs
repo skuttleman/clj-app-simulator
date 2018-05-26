@@ -72,7 +72,7 @@
             (is (not (forms/changed? form))))))
 
       (testing "and when including a validator"
-        (let [validator (spies/create (constantly ::errors))
+        (let [validator (spies/constantly ::errors)
               form (forms/create {:a :model} validator)]
           (testing "calls the validator with the model"
             (is (= ::errors (forms/errors form)))

@@ -8,7 +8,7 @@
 
 (deftest ^:unit not-found-test
   (testing "(not-found)"
-    (let [path-for-spy (spies/create (constantly ::href))]
+    (let [path-for-spy (spies/constantly ::href)]
       (with-redefs [nav/path-for path-for-spy]
         (let [not-found (error/not-found nil)]
           (testing "has a link to the home page"

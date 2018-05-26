@@ -43,9 +43,9 @@
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
     (let [prevent-spy (spies/create)
-          source-spy (spies/create (constantly ::source))
-          action-spy (spies/create (constantly ::action))
-          dispatch-spy (spies/create (constantly ::dispatch))
+          source-spy (spies/constantly ::source)
+          action-spy (spies/constantly ::action)
+          dispatch-spy (spies/constantly ::dispatch)
           reset-spy (spies/create)
           request-spy (spies/create)]
       (with-redefs [forms/current-model (constantly ::model)
@@ -88,8 +88,8 @@
 
 (deftest ^:unit clear-requests-test
   (testing "(clear-requests)"
-    (let [action-spy (spies/create (constantly ::action))
-          dispatch-spy (spies/create (constantly ::dispatch))
+    (let [action-spy (spies/constantly ::action)
+          dispatch-spy (spies/constantly ::dispatch)
           request-spy (spies/create)]
       (with-redefs [actions/clear-requests action-spy
                     store/dispatch dispatch-spy
@@ -106,8 +106,8 @@
 
 (deftest ^:unit delete-sim-test
   (testing "(delete-sim)"
-    (let [action-spy (spies/create (constantly ::action))
-          dispatch-spy (spies/create (constantly ::dispatch))
+    (let [action-spy (spies/constantly ::action)
+          dispatch-spy (spies/constantly ::dispatch)
           request-spy (spies/create)
           hide-spy (spies/create)
           nav-spy (spies/create)]
@@ -132,10 +132,10 @@
 
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
-    (let [action-spy (spies/create (constantly ::action))
-          dispatch-spy (spies/create (constantly ::dispatch))
+    (let [action-spy (spies/constantly ::action)
+          dispatch-spy (spies/constantly ::dispatch)
           reset-spy (spies/create)
-          model-spy (spies/create (constantly ::model))
+          model-spy (spies/constantly ::model)
           request-spy (spies/create)]
       (with-redefs [actions/reset-simulator action-spy
                     store/dispatch dispatch-spy
@@ -161,9 +161,9 @@
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
     (let [prevent-spy (spies/create)
-          source-spy (spies/create (constantly ::source))
-          action-spy (spies/create (constantly ::action))
-          dispatch-spy (spies/create (constantly ::dispatch))
+          source-spy (spies/constantly ::source)
+          action-spy (spies/constantly ::action)
+          dispatch-spy (spies/constantly ::dispatch)
           nav-spy (spies/create)
           request-spy (spies/create)]
       (with-redefs [forms/current-model (constantly ::model)
@@ -206,8 +206,8 @@
 
 (deftest ^:unit show-delete-modal-test
   (testing "(show-delete-modal)"
-    (let [action-spy (spies/create (constantly ::action))
-          delete-spy (spies/create (constantly ::delete))
+    (let [action-spy (spies/constantly ::action)
+          delete-spy (spies/constantly ::delete)
           dispatch-spy (spies/create)]
       (with-redefs [actions/show-modal action-spy
                     shared.interactions/delete-sim delete-spy
@@ -222,7 +222,13 @@
                                     (spies/matcher vector?)))
             (is (spies/called-with? dispatch-spy ::action)))
 
-          (let [[_ _ close-btn delete-btn] (first (spies/calls action-spy))]
+          (let [tree (->> action-spy
+                          (spies/calls)
+                          (first)
+                          (filter vector?)
+                          (into [:div]))
+                close-btn (test.dom/query-one tree :.cancel-button)
+                delete-btn (test.dom/query-one tree :.delete-button)]
             (testing "gives the modal a close button"
               (is (test.dom/query-one close-btn :.button.button-secondary.pure-button))
               (is (test.dom/contains? close-btn "Cancel")))

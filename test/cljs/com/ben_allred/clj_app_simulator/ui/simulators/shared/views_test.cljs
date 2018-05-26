@@ -9,8 +9,8 @@
 (deftest ^:unit with-attrs-test
   (testing "(with-attrs)"
     (let [assoc-spy (spies/create)
-          current-model-spy (spies/create (constantly {:some {:path ::value}}))
-          errors-spy (spies/create (constantly {:some {:path ::errors}}))
+          current-model-spy (spies/constantly {:some {:path ::value}})
+          errors-spy (spies/constantly {:some {:path ::errors}})
           model->view {:some {:path ::to-view}}
           view->model {:some {:path ::to-model}}]
       (with-redefs [forms/assoc-in assoc-spy
@@ -76,6 +76,21 @@
                                     ::model->view
                                     ::view->model))
             (is (= "Description" (:label (test.dom/attrs input))))))))))
+
+(deftest ^:unit path-field-test
+  (testing "(path-field)"
+    (let [attrs-spy (spies/create identity)]
+      (with-redefs [shared.views/with-attrs attrs-spy]
+        (let [root (shared.views/path-field ::form ::model->view ::view->model)
+              input (test.dom/query-one root fields/input)]
+          (testing "has an input with attrs"
+            (is (spies/called-with? attrs-spy
+                                    (spies/matcher map?)
+                                    ::form
+                                    [:path]
+                                    ::model->view
+                                    ::view->model))
+            (is (= "Path" (:label (test.dom/attrs input))))))))))
 
 (deftest ^:unit sim-details-test
   (testing "(sim-details)"

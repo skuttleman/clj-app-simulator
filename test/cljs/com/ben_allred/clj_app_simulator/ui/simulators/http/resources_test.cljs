@@ -17,10 +17,10 @@
 (deftest ^:unit validate-existing*-test
   (testing "(validate-existing*)"
       (let [pred-spy (spies/create pred)
-            required-spy (spies/create (constantly ::required))
-            coll-spy (spies/create (constantly ::coll))
-            tuple-spy (spies/create (constantly ::tuple))
-            validator-spy (spies/create (constantly ::validator))]
+            required-spy (spies/constantly ::required)
+            coll-spy (spies/constantly ::coll)
+            tuple-spy (spies/constantly ::tuple)
+            validator-spy (spies/constantly ::validator)]
         (with-redefs [f/pred pred-spy
                       f/required required-spy
                       f/validator-coll coll-spy
@@ -48,10 +48,10 @@
 (deftest ^:unit validate-new*-test
   (testing "(validate-new*)"
     (let [pred-spy (spies/create pred)
-          required-spy (spies/create (constantly ::required))
-          coll-spy (spies/create (constantly ::coll))
-          tuple-spy (spies/create (constantly ::tuple))
-          validator-spy (spies/create (constantly ::validator))]
+          required-spy (spies/constantly ::required)
+          coll-spy (spies/constantly ::coll)
+          tuple-spy (spies/constantly ::tuple)
+          validator-spy (spies/constantly ::validator)]
       (with-redefs [f/pred pred-spy
                     f/required required-spy
                     f/validator-coll coll-spy

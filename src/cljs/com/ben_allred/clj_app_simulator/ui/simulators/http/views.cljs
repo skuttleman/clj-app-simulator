@@ -13,6 +13,9 @@
 (defn ^:private with-attrs [attrs form path]
   (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
 
+(defn path-field [form]
+  [shared.views/path-field form tr/model->view tr/view->model])
+
 (defn name-field [form]
   [shared.views/name-field form tr/model->view tr/view->model])
 
@@ -54,11 +57,6 @@
        (with-attrs form [:method]))
    resources/http-methods])
 
-(defn path-field [form]
-  [fields/input
-   (-> {:label "Path"}
-       (with-attrs form [:path]))])
-
 (defn sim-edit-form* [id form]
   (let [disabled? (or (forms/errors form) (not (forms/changed? form)))]
     [:form.simulator-edit
@@ -71,13 +69,13 @@
      [headers-field form]
      [body-field form]
      [:div.button-row
+      [:button.button.button-secondary.pure-button.save-button
+       {:disabled disabled?}
+       "Save"]
       [:button.button.button-warning.pure-button.reset-button
        {:type     :button
         :on-click (interactions/reset-simulator form id)}
-       "Reset"]
-      [:button.button.button-secondary.pure-button.save-button
-       {:disabled disabled?}
-       "Save"]]]))
+       "Reset"]]]))
 
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [form (-> sim
@@ -125,12 +123,12 @@
      [headers-field form]
      [body-field form]
      [:div.button-row
-      [:a.button.button-warning.pure-button.reset-button
-       {:href (nav/path-for :home)}
-       "Cancel"]
       [:button.button.button-secondary.pure-button.save-button
        {:disabled disabled?}
-       "Save"]]]))
+       "Save"]
+      [:a.button.button-warning.pure-button.reset-button
+       {:href (nav/path-for :home)}
+       "Cancel"]]]))
 
 (defn sim-create-form []
   (let [form (-> {:response {:status 200}

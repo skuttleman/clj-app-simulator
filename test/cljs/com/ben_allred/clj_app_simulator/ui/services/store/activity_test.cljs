@@ -11,11 +11,11 @@
     (let [dispatch-spy (spies/create)
           store {:dispatch dispatch-spy :store ::store}
           ws-spy (spies/create)
-          env-spy (spies/create (constantly "some-host:123"))]
+          env-spy (spies/constantly "some-host:123")]
       (with-redefs [ws/connect ws-spy
                     env/get env-spy]
         (let [result (activity/sub store)
-              [url & {on-msg :on-msg :as opts}] (first (spies/calls ws-spy))]
+              [url & {:keys [on-err on-msg] :as opts}] (first (spies/calls ws-spy))]
           (testing "connects a websocket"
             (is (spies/called? ws-spy))
             (is (spies/called-with? env-spy :host))
@@ -23,7 +23,13 @@
             (is (= {:query-params {:accept "application/transit"}
                     :to-string    transit/stringify
                     :to-clj       transit/parse}
-                   (dissoc opts :on-msg))))
+                   (dissoc opts :on-msg :on-err))))
+
+          (testing "reconnects on error"
+            (spies/reset! ws-spy)
+            (on-err ::error)
+            (let [[url] (first (spies/calls ws-spy))]
+              (is (= url "ws://some-host:123/api/simulators/activity"))))
 
           (testing "dispatches on :simulators/init"
             (spies/reset! dispatch-spy)

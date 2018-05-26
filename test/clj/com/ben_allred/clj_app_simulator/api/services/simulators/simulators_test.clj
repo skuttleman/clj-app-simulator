@@ -29,7 +29,7 @@
                       [::method-1 ::path-2] ::sim-2
                       [::method-2 ::path-1] ::sim-3
                       [::method-2 ::path-2] ::sim-4})
-          details-spy (spies/create (constantly {:config {:method ::method :path ::path}}))
+          details-spy (spies/constantly {:config {:method ::method :path ::path}})
           start-spy (spies/create)]
       (with-redefs [sims/sims sims
                     common/details details-spy

@@ -15,9 +15,9 @@
                   :path   "/some/path"}))
   ([config]
    (let [dispatch (spies/create)
-         get-state (spies/create (constantly ::state))
-         spy (spies/create (constantly {:dispatch  dispatch
-                                        :get-state get-state}))]
+         get-state (spies/constantly ::state)
+         spy (spies/constantly {:dispatch  dispatch
+                                         :get-state get-state})]
      (with-redefs [store/ws-store spy]
        [(ws.sim/->WsSimulator ::id config) spy config dispatch get-state]))))
 
@@ -46,9 +46,9 @@
 (deftest ^:unit on-open-test
   (testing "(on-open)"
     (let [dispatch-spy (spies/create)
-          actions-spy (spies/create (constantly ::action))
+          actions-spy (spies/constantly ::action)
           publish-spy (spies/create)
-          details-spy (spies/create (constantly {::some ::details}))
+          details-spy (spies/constantly {::some ::details})
           uuid (uuids/random)]
       (with-redefs [actions/connect actions-spy
                     activity/publish publish-spy
@@ -66,9 +66,9 @@
 
 (deftest ^:unit on-message-test
   (testing "(on-message)"
-    (let [find-socket-spy (spies/create (constantly ::socket-id))
+    (let [find-socket-spy (spies/constantly ::socket-id)
           receive-spy (spies/create)
-          get-state-spy (spies/create (constantly ::state))]
+          get-state-spy (spies/constantly ::state)]
       (with-redefs [actions/find-socket-id find-socket-spy
                     common/receive receive-spy]
         (testing "when the socket-id is found"
@@ -97,12 +97,12 @@
 
 (deftest ^:unit on-close-test
   (testing "(on-close)"
-    (let [find-socket-spy (spies/create (constantly ::socket-id))
-          action-spy (spies/create (constantly ::action))
-          get-state-spy (spies/create (constantly ::state))
+    (let [find-socket-spy (spies/constantly ::socket-id)
+          action-spy (spies/constantly ::action)
+          get-state-spy (spies/constantly ::state)
           dispatch-spy (spies/create)
           publish-spy (spies/create)
-          details-spy (spies/create (constantly {::some ::details}))]
+          details-spy (spies/constantly {::some ::details})]
       (with-redefs [actions/find-socket-id find-socket-spy
                     actions/remove-socket action-spy
                     activity/publish publish-spy
@@ -138,7 +138,7 @@
 
 (deftest ^:unit ->WsSimulator-test
   (testing "(->WsSimulator)"
-    (let [action-spy (spies/create (constantly ::action))]
+    (let [action-spy (spies/constantly ::action)]
       (with-redefs [actions/init action-spy]
         (testing "when the config is valid"
           (let [[sim _ config dispatch] (simulator)]
@@ -172,7 +172,7 @@
 
 (deftest ^:unit ->WsSimulator.receive-test
   (testing "(->WsSimulator.receive)"
-    (let [action-spy (spies/create (constantly ::action))
+    (let [action-spy (spies/constantly ::action)
           receive-spy (spies/create)]
       (with-redefs [actions/receive action-spy
                     routes.sim/receive receive-spy]
@@ -186,7 +186,7 @@
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"
-    (let [requests-spy (spies/create (constantly ::messages))]
+    (let [requests-spy (spies/constantly ::messages)]
       (with-redefs [store/requests requests-spy]
         (testing "returns requests"
           (let [[sim _ _ _ get-state] (simulator)
@@ -197,7 +197,7 @@
 
 (deftest ^:unit ->WsSimulator.details-test
   (testing "(->WsSimulator.details)"
-    (let [details-spy (spies/create (constantly {::some ::details}))]
+    (let [details-spy (spies/constantly {::some ::details})]
       (with-redefs [store/details details-spy]
         (testing "returns details"
           (let [[sim _ _ _ get-state] (simulator)
@@ -216,7 +216,7 @@
 
 (deftest ^:unit ->WsSimulator.routes-test
   (testing "(->WsSimulator.routes)"
-    (let [routes-spy (spies/create (constantly ::routes))]
+    (let [routes-spy (spies/constantly ::routes)]
       (with-redefs [routes.sim/ws-sim->routes routes-spy]
         (testing "returns routes"
           (let [[sim] (simulator)
@@ -227,7 +227,7 @@
 (deftest ^:unit ->WsSimulator.change-test
   (testing "(->WsSimulator.change)"
     (let [[sim _ _ dispatch] (simulator)
-          change-spy (spies/create (constantly ::action))
+          change-spy (spies/constantly ::action)
           config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
       (with-redefs [actions/change change-spy]
         (testing "changes changeable config properties"
@@ -243,7 +243,7 @@
 
 (deftest ^:unit ->WsSimulator.connect-test
   (testing "(->WsSimulator.connect)"
-    (let [channel-spy (spies/create (constantly ::chan))
+    (let [channel-spy (spies/constantly ::chan)
           open-spy (spies/create)
           message-spy (spies/create)
           close-spy (spies/create)]
@@ -293,7 +293,7 @@
           (is (spies/called-with? dispatch actions/disconnect-all)))))
 
     (testing "when called with a socket-id"
-      (let [action-spy (spies/create (constantly ::action))]
+      (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/disconnect action-spy]
           (let [[sim _ _ dispatch] (simulator)]
             (common/disconnect sim ::socket-id)
@@ -304,7 +304,7 @@
 (deftest ^:unit ->WsSimulator.send-test
   (testing "(->WsSimulator.send)"
     (testing "when called without a socket-id"
-      (let [action-spy (spies/create (constantly ::action))]
+      (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/send-all action-spy]
           (let [[sim _ _ dispatch] (simulator)]
             (common/send sim ::message)
@@ -313,7 +313,7 @@
               (is (spies/called-with? dispatch ::action)))))))
 
     (testing "when called with a socket-id"
-      (let [action-spy (spies/create (constantly ::action))]
+      (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/send-one action-spy]
           (let [[sim _ _ dispatch] (simulator)]
             (common/send sim ::socket-id ::message)

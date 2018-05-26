@@ -7,7 +7,7 @@
    (flush! chan 100))
   ([chan ms]
    (async/go
-     (Thread/sleep ms)
+     (async/<! (async/timeout ms))
      (async/>! chan ::done))
    (async/<!!
      (async/go-loop [v (async/<! chan)]

@@ -1,8 +1,28 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
+  (:require [cljs.test :as t :refer-macros [deftest testing is are]]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [test.utils.spies :as spies]))
+
+(deftest ^:unit with-height-test
+  (testing "(with-height)"
+    (let [are-f (fn [open? item-count]
+                  (-> {}
+                      (components/with-height open? item-count)
+                      (:style)
+                      (:height)
+                      (js/parseInt)))]
+      (testing "calculates item height when open"
+        (are [item-count expected] (= expected (are-f true item-count))
+          0 24
+          1 42
+          2 60
+          10 204
+          25 474))
+
+      (testing "calculates item height when closed"
+        (doseq [num (repeat 10 (rand-int 1000))]
+          (is (zero? (are-f false num))))))))
 
 (deftest ^:unit spinner-overlay-test
   (testing "(spinner-overlay)"
@@ -23,31 +43,122 @@
 
 (deftest ^:unit with-status-test
   (testing "(with-status)"
-    (testing "when item is empty"
+    (testing "when status is not :available"
       (let [request-spy (spies/create)]
-        (components/with-status ::status ::component {} request-spy)
+        (components/with-status :some-status ::component {::some ::item} request-spy)
         (testing "invokes request"
           (is (spies/called? request-spy)))))
-    (testing "when item is not empty"
+
+    (testing "when status is :available"
       (let [request-spy (spies/create)]
-        (components/with-status ::status ::component {::some ::item} request-spy)
+        (components/with-status :available ::component {::some ::item} request-spy)
         (testing "does not invoke request"
           (spies/never-called? request-spy))))
+
     (testing "when status is :available and there is an item"
       (let [args [:available ::component {::some ::item} ::request]
             root (apply (apply components/with-status args) args)]
         (testing "renders the component"
           (is (= [::component {::some ::item}]
                  (test.dom/query-one root ::component))))))
-    (testing "when there is no item and the status is available"
-      (let [args [:available ::component nil (spies/create)]
-            root (apply (apply components/with-status args) args)]
-        (testing "renders an error message"
-          (is (test.dom/contains? root "Not found")))))
+
     (testing "when the status is any other value"
       (let [args [::random-status ::component nil (spies/create)]
             root (apply (apply components/with-status args) args)]
         (testing "renders a spinner"
           (is (test.dom/query-one root components/spinner)))))))
+
+(deftest ^:unit menu*-test
+  (testing "(menu*)"
+    (let [height-spy (spies/constantly {::some ::attrs})]
+      (with-redefs [components/with-height height-spy]
+        (let [btn [:button.my-button ::with ::content]
+              attrs {:open?      true
+                     :on-click   ::on-click
+                     :class-name :my-class
+                     :items      [{:href ::href-1 :label ::label-1}
+                                  {:href ::href-2 :label ::label-2}]}
+              root (components/menu* attrs btn)]
+          (testing "has a dropdown menu wrapper"
+            (is (-> root
+                    (test.dom/query-one :.dropdown-menu-wrapper.my-class)
+                    (test.dom/attrs)
+                    (:on-click)
+                    (= ::on-click))))
+
+          (testing "has menu items"
+            (let [menu (test.dom/query-one root :.menu)
+                  [item-1 item-2] (test.dom/query-all menu :.menu-item)]
+              (is (= 0 (:key (test.dom/attrs item-1))))
+              (is (-> item-1
+                      (test.dom/query-one :a)
+                      (test.dom/attrs)
+                      (:href)
+                      (= ::href-1)))
+              (is (-> item-1
+                      (test.dom/query-one :a)
+                      (test.dom/contains? ::label-1)))
+              (is (= 1 (:key (test.dom/attrs item-2))))
+              (is (-> item-2
+                      (test.dom/query-one :a)
+                      (test.dom/attrs)
+                      (:href)
+                      (= ::href-2)))
+              (is (-> item-2
+                      (test.dom/query-one :a)
+                      (test.dom/contains? ::label-2)))))
+
+          (testing "when the menu is open"
+            (testing "adds an icon to the button"
+              (let [button (test.dom/query-one root :.my-button)]
+                (is (test.dom/query-one button :.dropdown-chevron.fa.fa-chevron-up))))
+
+            (testing "has a dropdown menu"
+              (let [dropdown-menu (test.dom/query-one root :.dropdown-menu.open)]
+                (is (spies/called-with? height-spy
+                                        (spies/matcher map?)
+                                        (spies/matcher identity)
+                                        2))
+                (is (-> dropdown-menu
+                        (test.dom/attrs)
+                        (::some)
+                        (= ::attrs))))))
+
+          (testing "when the menu is closed"
+            (let [root (components/menu* (dissoc attrs :open?) btn)]
+              (testing "adds an icon to the button"
+                (let [button (test.dom/query-one root :.my-button)]
+                  (is (test.dom/query-one button :.dropdown-chevron.fa.fa-chevron-down))))
+
+              (testing "has a dropdown menu"
+                (let [dropdown-menu (test.dom/query-one root :.dropdown-menu.closed)]
+                  (is (spies/called-with? height-spy
+                                          (spies/matcher map?)
+                                          (spies/matcher not)
+                                          2))
+                  (is (-> dropdown-menu
+                          (test.dom/attrs)
+                          (::some)
+                          (= ::attrs))))))))))))
+
+(deftest ^:unit menu-test
+  (testing "(menu)"
+    (let [component (components/menu {::some ::attrs} ::button)]
+      (testing "renders menu* as closed"
+        (let [root (component {::some ::attrs} ::button)
+              [component* attrs button] root]
+          (is (= component* components/menu*))
+          (is (= ::attrs (::some attrs)))
+          (is (not (:open? attrs)))
+          (is (= ::button button))
+
+          (testing "when clicking on the menu"
+            (-> root
+                (test.dom/query-one components/menu*)
+                (test.dom/simulate-event :click))
+            (let [root (component {::some ::attrs} ::button)
+                  [_ {:keys [open?]}] root]
+              (testing "renders menu* as open"
+                (is open?)))))))))
 
 (defn run-tests [] (t/run-tests))

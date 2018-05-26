@@ -28,3 +28,28 @@
         margin-right: 10px;
     }
 }
+
+.dropdown-menu-wrapper {
+    cursor: pointer;
+
+    .dropdown-cheveron {
+        margin-left: 5px;
+    }
+
+    .dropdown-menu {
+        position: fixed;
+        transition: height 0.125s linear;
+        overflow-y: hidden;
+        width:      200px;
+        border: 1px solid $light-gray;
+
+        &.closed {
+            border: none;
+        }
+
+        .menu {
+            padding: 12px;
+            background-color: $header-bg;
+        }
+    }
+}

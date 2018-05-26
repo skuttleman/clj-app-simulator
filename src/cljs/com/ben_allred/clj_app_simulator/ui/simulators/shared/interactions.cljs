@@ -66,8 +66,8 @@
       (actions/show-modal
         [modals/confirm-delete]
         "Delete Simulator"
-        [:button.button.button-secondary.pure-button
-         "Cancel"]
-        [:button.button.button-error.pure-button
+        [:button.button.button-error.pure-button.delete-button
          {:on-click (partial delete-sim id)}
-         "Delete"]))))
+         "Delete"]
+        [:button.button.button-secondary.pure-button.cancel-button
+         "Cancel"]))))

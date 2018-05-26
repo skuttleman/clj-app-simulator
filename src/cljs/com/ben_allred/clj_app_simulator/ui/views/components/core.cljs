@@ -1,5 +1,12 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [reagent.core :as r]
+            [com.ben-allred.clj-app-simulator.ui.utils.core :as utils]))
+
+(defn with-height [attrs open? item-count]
+  (assoc-in attrs [:style :height] (if open?
+              (str (+ 24 (* 18 item-count)) "px")
+              "0")))
 
 (defn spinner []
   [:div.loader])
@@ -17,16 +24,35 @@
      component]
     component))
 
-(defn with-status [_status _component item request]
-  (when (empty? item)
+(defn with-status [status _component _item request]
+  (when (not= :available status)
     (request))
   (fn [status component item _request]
-    (cond
-      (and (= :available status) (seq item))
+    (if (= :available status)
       [component item]
-
-      (= :available status)
-      [:div "Not found"]
-
-      :else
       [spinner])))
+
+(defn menu* [{:keys [open? on-click items class-name]} button]
+  [:div.dropdown-menu-wrapper
+   {:class-name class-name
+    :on-click on-click}
+   (conj button [:i.fa.dropdown-chevron
+                 {:class-name (if open? :fa-chevron-up :fa-chevron-down)}])
+   [:div.dropdown-menu
+    (-> {}
+        (with-height open? (count items))
+        (utils/classes {:open   open?
+                        :closed (not open?)}))
+    [:ul.menu
+     (for [[idx {:keys [href label]}] (map-indexed vector items)]
+       [:li.menu-item
+        {:key idx}
+        [:a {:href href}
+         label]])]]])
+
+(defn menu [attrs button]
+  (let [open? (r/atom false)]
+    (fn [attrs button]
+      [menu*
+       (assoc attrs :on-click #(swap! open? not) :open? @open?)
+       button])))

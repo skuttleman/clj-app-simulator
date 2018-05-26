@@ -9,7 +9,7 @@
 (deftest ^:unit http-store-test
   (testing "(http-store)"
     (testing "creates a collaj store with http reducer"
-      (let [spy (spies/create (constantly ::store))]
+      (let [spy (spies/constantly ::store)]
         (with-redefs [collaj/create-store spy]
           (let [store (store/http-store)]
             (is (spies/called-with? spy reducers/http))
@@ -18,7 +18,7 @@
 (deftest ^:unit ws-store-test
   (testing "(ws-store)"
     (testing "creates a collaj store with http reducer"
-      (let [spy (spies/create (constantly ::store))]
+      (let [spy (spies/constantly ::store)]
         (with-redefs [collaj/create-store spy]
           (let [store (store/ws-store)]
             (is (spies/called-with? spy reducers/ws collaj.enhancers/with-fn-dispatch))

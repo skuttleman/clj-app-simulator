@@ -6,9 +6,9 @@
 
 (deftest ^:unit validate-new*-test
   (testing "(validate-new*)"
-    (let [make-spy (spies/create (constantly ::validator))
-          required-spy (spies/create (constantly ::required))
-          pred-spy (spies/create (constantly ::pred))]
+    (let [make-spy (spies/constantly ::validator)
+          required-spy (spies/constantly ::required)
+          pred-spy (spies/constantly ::pred)]
       (with-redefs [f/make-validator make-spy
                     f/required required-spy
                     f/pred pred-spy]
@@ -38,5 +38,16 @@
                   "\\"
                   ":something"
                   "/$$$")))))))))
+
+(deftest ^:unit socket-message*-test
+  (testing "(socket-message*)"
+    (let [validator-spy (spies/constantly ::validator)
+          pred-spy (spies/constantly ::required)]
+      (with-redefs [f/make-validator validator-spy
+                    f/pred pred-spy]
+        (let [socket-message (resources/socket-message*)]
+          (is (spies/called-with? pred-spy seq (spies/matcher string?)))
+          (is (spies/called-with? validator-spy {:message ::required}))
+          (is (= ::validator socket-message)))))))
 
 (defn run-tests [] (t/run-tests))

@@ -1,7 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.modals
   (:require [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
             [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
+            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]))
 
 (defn sim-iterate
   ([label m class]
@@ -36,3 +39,9 @@
 (defn confirm-delete []
   [:div.confirm
    [:p "Are you sure you want to delete this simulator?"]])
+
+(defn message [form model->view view->model]
+  [:div.send-ws-message
+   [fields/textarea
+    (-> {:label "Message"}
+        (shared.views/with-attrs form [:message] model->view view->model))]])

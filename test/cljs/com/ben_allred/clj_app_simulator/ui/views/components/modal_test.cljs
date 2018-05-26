@@ -55,7 +55,7 @@
       (testing "when rendering action components"
         (spies/reset! spy)
         (with-redefs [store/dispatch spy]
-          (let [click-spy (spies/create (constantly ::click))
+          (let [click-spy (spies/constantly ::click)
                 modal (modal :some-state ::content ::title [:button {:on-click click-spy} "Contents"] [:button "Contents"])
                 [button-1 button-2] (-> modal
                                         (test.dom/query-one :.modal-actions)

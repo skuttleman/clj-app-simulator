@@ -10,7 +10,7 @@
     {:component tag
      :args      args}
     (let [[_ tag id classes] (re-find #"([^\#\.]+)?(\#[^\.]+)?(\..*)?" (name tag))
-          class-name (->> (string/split (str (:class-name attrs)) #"\s")
+          class-name (->> (string/split (str (keywords/safe-name (:class-name attrs))) #"\s")
                           (string/join "."))
           classes (->> (string/split (str classes "." class-name) #"\.")
                        (map string/trim)

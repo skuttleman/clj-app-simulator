@@ -29,7 +29,7 @@
           (let [toast-message (nth (test.dom/query-all toast :.toast-message) idx)
                 button (test.dom/query-one toast-message :.remove-button)
                 dispatch-spy (spies/create)
-                action-spy (spies/create (constantly ::action))]
+                action-spy (spies/constantly ::action)]
             (with-redefs [store/dispatch dispatch-spy
                           actions/remove-toast action-spy]
               (test.dom/simulate-event button :click)

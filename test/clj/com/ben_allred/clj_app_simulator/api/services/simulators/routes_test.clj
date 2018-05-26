@@ -27,8 +27,8 @@
 (deftest ^:unit receive-test
   (testing "(receive)"
     (let [publish-spy (spies/create)
-          details-spy (spies/create (constantly {:id ::id :config ::config :other ::things}))
-          request-spy (spies/create (constantly [::request-1 ::request-2]))]
+          details-spy (spies/constantly {:id ::id :config ::config :other ::things})
+          request-spy (spies/constantly [::request-1 ::request-2])]
       (with-redefs [activity/publish publish-spy
                     common/details details-spy
                     common/requests request-spy]
@@ -44,7 +44,7 @@
 
 (deftest ^:unit http-sim-route-test
   (testing "(http-sim-route)"
-    (let [receive-spy (spies/create (constantly ::response))
+    (let [receive-spy (spies/constantly ::response)
           publish-spy (spies/create)
           receive-publish-spy (spies/create)]
       (with-redefs [common/receive receive-spy
@@ -81,7 +81,7 @@
 
 (deftest ^:unit ws-sim-route-test
   (testing "(ws-sim-route)"
-    (let [connect-spy (spies/create (constantly ::socket-upgrade))]
+    (let [connect-spy (spies/constantly ::socket-upgrade)]
       (with-redefs [common/connect connect-spy]
         (let [result ((routes.sim/ws-sim-route ::simulator) ::request)]
           (testing "connects the socket request"
@@ -92,8 +92,8 @@
 
 (deftest ^:unit get-sim-test
   (testing "(get-sim)"
-    (let [details-spy (spies/create (constantly ::details))
-          respond-spy (spies/create (constantly ::response))]
+    (let [details-spy (spies/constantly ::details)
+          respond-spy (spies/constantly ::response)]
       (with-redefs [common/details details-spy
                     respond/with respond-spy]
         (let [handler (routes.sim/get-sim ::simulator)
@@ -105,13 +105,13 @@
 
 (deftest ^:unit delete-sim-test
   (testing "(delete-sim)"
-    (let [details-spy (spies/create (constantly {:id       ::id
-                                                 :config   ::config
-                                                 :details  ::details
-                                                 :requests ::requests}))
+    (let [details-spy (spies/constantly {:id       ::id
+                                                  :config   ::config
+                                                  :details  ::details
+                                                  :requests ::requests})
           publish-spy (spies/create)
           delete-spy (spies/create)
-          respond-spy (spies/create (constantly ::response))]
+          respond-spy (spies/constantly ::response)]
       (with-redefs [common/details details-spy
                     activity/publish publish-spy
                     respond/with respond-spy]
@@ -127,8 +127,8 @@
 (deftest ^:unit patch-sim-test
   (testing "(patch-sim)"
     (let [[reset-spy reset-requests-spy reset-response-spy change-spy publish-spy] (repeatedly spies/create)
-          details-spy (spies/create (constantly ::details))
-          respond-spy (spies/create (constantly ::response))]
+          details-spy (spies/constantly ::details)
+          respond-spy (spies/constantly ::response)]
       (with-redefs [common/reset reset-spy
                     common/reset-requests reset-requests-spy
                     common/reset-response reset-response-spy
@@ -229,9 +229,9 @@
           reset-requests-spy (spies/create)
           change-spy (spies/create)
           disconnect-spy (spies/create)
-          details-spy (spies/create (constantly {::some ::details}))
+          details-spy (spies/constantly {::some ::details})
           publish-spy (spies/create)
-          respond-spy (spies/create (constantly ::response))]
+          respond-spy (spies/constantly ::response)]
       (with-redefs [common/reset reset-spy
                     common/reset-requests reset-requests-spy
                     common/change change-spy
@@ -394,12 +394,12 @@
 
 (deftest ^:unit http-routes-test
   (testing "(http-routes)"
-    (let [details-spy (spies/create (constantly {:config {:method ::method :path "/some/path"}
-                                                 :id     "some-id"}))
-          get-sim-spy (spies/create (constantly ::get-sim))
-          delete-sim-spy (spies/create (constantly ::delete-sim))
-          patch-sim-spy (spies/create (constantly ::patch-sim))
-          sim-route-spy (spies/create (constantly ::sim-route))]
+    (let [details-spy (spies/constantly {:config {:method ::method :path "/some/path"}
+                                                  :id     "some-id"})
+          get-sim-spy (spies/constantly ::get-sim)
+          delete-sim-spy (spies/constantly ::delete-sim)
+          patch-sim-spy (spies/constantly ::patch-sim)
+          sim-route-spy (spies/constantly ::sim-route)]
       (with-redefs [common/details details-spy
                     routes.sim/get-sim get-sim-spy
                     routes.sim/delete-sim delete-sim-spy
@@ -451,14 +451,14 @@
 
 (deftest ^:unit ws-routes-test
   (testing "(ws-routes)"
-    (let [details-spy (spies/create (constantly {:config {:path "/some/path"} :id 123}))
+    (let [details-spy (spies/constantly {:config {:path "/some/path"} :id 123})
           remove-spy (spies/create)
-          delete-sim-spy (spies/create (constantly ::delete-sim))
-          ws-sim-spy (spies/create (constantly ::connect))
-          get-sim-spy (spies/create (constantly ::details))
-          send-ws-spy (spies/create (constantly ::send))
-          patch-ws-spy (spies/create (constantly ::reset))
-          disconnect-spy (spies/create (constantly ::disconnect))]
+          delete-sim-spy (spies/constantly ::delete-sim)
+          ws-sim-spy (spies/constantly ::connect)
+          get-sim-spy (spies/constantly ::details)
+          send-ws-spy (spies/constantly ::send)
+          patch-ws-spy (spies/constantly ::reset)
+          disconnect-spy (spies/constantly ::disconnect)]
       (with-redefs [common/details details-spy
                     sims/remove! remove-spy
                     routes.sim/delete-sim delete-sim-spy
@@ -534,7 +534,7 @@
 
 (deftest ^:unit http-sim->routes-test
   (testing "(http-sim->routes)"
-    (let [routes-spy (spies/create (constantly [[::route ::1] [::route ::2]]))
+    (let [routes-spy (spies/constantly [[::route ::1] [::route ::2]])
           make-route-spy (spies/create (comp second vector))]
       (with-redefs [routes.sim/http-routes routes-spy
                     c/make-route make-route-spy]
@@ -547,7 +547,7 @@
 
 (deftest ^:unit ws-sim->routes-test
   (testing "(ws-sim->routes)"
-    (let [routes-spy (spies/create (constantly [[::route ::1] [::route ::2]]))
+    (let [routes-spy (spies/constantly [[::route ::1] [::route ::2]])
           make-route-spy (spies/create (comp second vector))]
       (with-redefs [routes.sim/ws-routes routes-spy
                     c/make-route make-route-spy]

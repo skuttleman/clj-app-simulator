@@ -54,12 +54,27 @@
         (http/patch {:body {:action :simulators/change :config config}})
         (request* dispatch :simulators.change/succeed :simulators.change/fail))))
 
+(defn disconnect [simulator-id socket-id]
+  (fn [[dispatch]]
+    (dispatch [:simulators.disconnect/request])
+    (-> (str "/api/simulators/" simulator-id)
+        (http/patch {:body {:action :ws/disconnect :socket-id socket-id}})
+        (request* dispatch :simulators.disconnect/succeed :simulators.disconnect/fail))))
+
 (defn disconnect-all [id]
   (fn [[dispatch]]
     (dispatch [:simulators.disconnect-all/request])
     (-> (str "/api/simulators/" id)
         (http/patch {:body {:action :ws/disconnect-all}})
         (request* dispatch :simulators.disconnect-all/succeed :simulators.disconnect-all/fail))))
+
+(defn send-message [simulator-id socket-id message]
+  (fn [[dispatch]]
+    (dispatch [:simulators.send-message/request])
+    (let [socket-path (when socket-id (str "/" socket-id))]
+      (-> (str "/api/simulators/" simulator-id socket-path)
+          (http/post {:body message :headers {:content-type "text/plain"}})
+          (request* dispatch :simulators.send-message/succeed :simulators.send-message/fail)))))
 
 (defn show-modal [content & [title & actions]]
   (fn [[dispatch]]

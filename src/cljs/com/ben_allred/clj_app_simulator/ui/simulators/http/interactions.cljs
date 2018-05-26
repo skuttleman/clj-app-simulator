@@ -10,7 +10,7 @@
   (shared.interactions/update-simulator form tr/model->source id submittable?))
 
 (defn reset-simulator [form id]
-  (shared.interactions/reset-simulator form tr/model->source id))
+  (shared.interactions/reset-simulator form tr/sim->model id))
 
 (defn create-simulator [form submittable?]
   (shared.interactions/create-simulator form tr/model->source submittable?))

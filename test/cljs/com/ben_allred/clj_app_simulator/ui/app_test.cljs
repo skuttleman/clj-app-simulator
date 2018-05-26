@@ -22,7 +22,7 @@
   (testing "(app-test)"
     (let [state (state)
           components (components)
-          get-state-spy (spies/create (constantly state))]
+          get-state-spy (spies/constantly state)]
       (with-redefs [app/components components
                     store/get-state get-state-spy]
         (testing "gets state from store"

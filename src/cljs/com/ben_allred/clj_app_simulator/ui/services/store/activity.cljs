@@ -17,7 +17,7 @@
     :ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
     (log/spy [:UNKNOWN-- event data])))
 
-(defn sub [{:keys [dispatch] :as store}]
+(defn ^:private reconnect [dispatch]
   (let [host (env/get :host)
         protocol (if (= (env/get :protocol) :https)
                    :wss
@@ -26,5 +26,9 @@
                 :query-params {:accept "application/transit"}
                 :to-string transit/stringify
                 :to-clj transit/parse
-                :on-msg (partial on-msg dispatch))
-    store))
+                :on-msg (partial on-msg dispatch)
+                :on-err (partial reconnect dispatch))))
+
+(defn sub [{:keys [dispatch] :as store}]
+  (reconnect dispatch)
+  store)

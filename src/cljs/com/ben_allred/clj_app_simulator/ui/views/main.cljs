@@ -7,11 +7,15 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [com.ben-allred.clj-app-simulator.ui.utils.simulators :as utils.sims]))
+            [com.ben-allred.clj-app-simulator.ui.utils.simulators :as utils.sims]
+            [clojure.string :as string]))
 
 (def ^:private section->component
   {:http http.views/sim
    :ws   ws.views/sim})
+
+(defn request-simulators []
+  (store/dispatch actions/request-simulators))
 
 (defn header []
   [:header.header
@@ -22,11 +26,14 @@
 (defn root [{{:keys [data status]} :simulators}]
   [:div
    [:h2 "Simulators"]
-   [components/with-status status sims/simulators data #(store/dispatch actions/request-simulators)]
    [:div.button-row
-    [:a.button.button-success.pure-button
-     {:href (nav/path-for :new {:query-params {:type :http}})}
-     "Create"]]])
+    [components/menu
+     {:items (->> [[:http "HTTP Simulator"] [:ws "WS Simulator"]]
+                  (map (fn [[type label]]
+                         {:href  (nav/path-for :new {:query-params {:type type}})
+                          :label label})))}
+     [:button.button.button-success.pure-button "Create"]]]
+   [components/with-status status sims/simulators data request-simulators]])
 
 (defn details [state]
   (let [id (uuid (get-in state [:page :route-params :id]))
@@ -35,15 +42,19 @@
         component (-> config
                       (utils.sims/config->section)
                       (keyword)
-                      (section->component))]
+                      (section->component components/spinner))]
     [:div
      [:h2 "Simulator Details"]
-     (if component
-       [components/with-status status component simulator #(store/dispatch actions/request-simulators)]
-       [components/spinner])]))
+     [components/with-status status component simulator request-simulators]]))
 
 (defn new [state]
-  (let [type (keyword (get-in state [:page :query-params :type]))]
-    [:div
-     [:h2 "New Simulator"]
-     [http.views/sim-create-form]]))
+  (let [type (get-in state [:page :query-params :type])
+        {:keys [status data]} (:simulators state)
+        component (case (keyword type)
+                    :ws ws.views/sim-create-form
+                    :http http.views/sim-create-form
+                    nil)]
+    (when component
+      [:div
+       [:h2 (str "New " (string/upper-case type) " Simulator")]
+       [components/with-status status component data request-simulators]])))
