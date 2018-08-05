@@ -3,7 +3,6 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.resources :as resources]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations :as tr]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
@@ -84,13 +83,6 @@
     (fn [_simulator]
       [sim-edit-form* id form])))
 
-(defn sim-request [sim {:keys [timestamp] :as request}]
-  (let [dt (mo/->moment timestamp)]
-    [:li.request
-     {:on-click (interactions/show-request-modal sim request dt)}
-     [:div
-      (mo/from-now dt)]]))
-
 (defn sim [{:keys [config requests id] :as simulator}]
   [:div.simulator
    [shared.views/sim-details simulator]
@@ -99,7 +91,7 @@
    [:ul.requests
     (for [request (sort-by :timestamp > requests)]
       ^{:key (str (:timestamp request))}
-      [sim-request config request])]
+      [shared.views/sim-request config request])]
    [:div.button-row
     [:button.button.button-error.pure-button.clear-button
      {:disabled (empty? requests)

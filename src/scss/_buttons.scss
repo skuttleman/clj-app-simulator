@@ -23,6 +23,7 @@
 }
 
 .button-row {
+    display: flex;
     margin: 5px 0;
     & > *:not(:last-child) {
         margin-right: 10px;

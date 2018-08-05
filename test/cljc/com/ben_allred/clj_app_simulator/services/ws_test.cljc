@@ -55,7 +55,7 @@
             ((:on-error opts-2) ::error)
             ((:on-close opts-2) ::code ::reason)))))))
 
-(deftest ^:unit send-test
+(deftest ^:unit send!-test
   (testing "(send!)"
     (let [gniazdo-spy (spies/create)
           to-str-spy (spies/create str)
@@ -65,5 +65,6 @@
           (ws/send! ws :a-message)
           (testing "calls to-string on the message"
             (is (spies/called-with? to-str-spy :a-message)))
+
           (testing "sends the message via socket"
             (is (spies/called-with? gniazdo-spy ::ws ":a-message"))))))))

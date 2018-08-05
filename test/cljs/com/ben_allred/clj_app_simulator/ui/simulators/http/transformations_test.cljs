@@ -88,4 +88,5 @@
                                          :description ::description}))
             (is (= ::model result))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

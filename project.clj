@@ -7,6 +7,7 @@
   :min-lein-version "2.6.1"
 
   :dependencies [[bidi "2.1.3"]
+                 [cljs-http "0.1.45"]
                  [cljsjs/moment "2.10.6-0"]
                  [com.ben-allred/collaj "0.8.0"]
                  [com.ben-allred/formation "0.4.1"]

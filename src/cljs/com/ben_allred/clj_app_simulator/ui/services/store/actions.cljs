@@ -2,7 +2,8 @@
   (:require [com.ben-allred.clj-app-simulator.services.http :as http]
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.ui.services.files :as files]))
 
 (defn ^:private request* [request dispatch success-type error-type]
   (async/go
@@ -75,6 +76,19 @@
       (-> (str "/api/simulators/" simulator-id socket-path)
           (http/post {:body message :headers {:content-type "text/plain"}})
           (request* dispatch :simulators.send-message/succeed :simulators.send-message/fail)))))
+
+(defn upload [files]
+  (fn [[dispatch]]
+    (dispatch [:files.upload/request])
+    (-> "/api/resources"
+        (files/upload files)
+        (request* dispatch :files.upload/succeed :files.upload/fail))))
+
+(defn get-uploads [[dispatch]]
+  (dispatch [:files.fetch-all/request])
+  (-> "/api/resources"
+      (http/get)
+      (request* dispatch :files.fetch-all/succeed :files.fetch-all/fail)))
 
 (defn show-modal [content & [title & actions]]
   (fn [[dispatch]]

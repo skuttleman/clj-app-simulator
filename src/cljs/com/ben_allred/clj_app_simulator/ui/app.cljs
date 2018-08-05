@@ -6,7 +6,8 @@
             [com.ben-allred.clj-app-simulator.ui.views.error :as error]
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
             [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]))
 
 (enable-console-print!)
 
@@ -16,15 +17,18 @@
    :details main/details})
 
 (defn app []
-  (let [state (store/get-state)
-        component (components (get-in state [:page :handler]) error/not-found)]
-    [:div.app
-     [toast/toast (:toasts state)]
-     [:div.scrollable
-      [main/header]
-      [:main.main
-       [component state]]]
-     [modal/modal (:modal state)]]))
+  (store/dispatch actions/get-uploads)
+  (store/dispatch actions/request-simulators)
+  (fn []
+    (let [state (store/get-state)
+          component (components (get-in state [:page :handler]) error/not-found)]
+      [:div.app
+       [toast/toast (:toasts state)]
+       [:div.scrollable
+        [main/header]
+        [:main.main
+         [component state]]]
+       [modal/modal (:modal state)]])))
 
 (defn ^:export mount! []
   (r/render

@@ -1,15 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.resources
-  (:require [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
-            [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.clj-app-simulator.services.http :as http]))
+  (:require [clojure.string :as string]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.resources :as shared.resources]
+            [com.ben-allred.formation.core :as f]))
 
-(def statuses
-  (->> http/kw->status
-       (map (juxt second #(str (strings/titlize (name (first %)) " ") " [" (second %) "]")))
-       (sort-by first)))
+(def statuses shared.resources/statuses)
 
 (def http-methods
   (->> [:http/get :http/post :http/put :http/patch :http/delete]

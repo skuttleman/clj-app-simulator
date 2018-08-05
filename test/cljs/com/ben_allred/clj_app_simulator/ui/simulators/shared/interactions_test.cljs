@@ -7,7 +7,7 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
@@ -238,4 +238,19 @@
                 (f ::hide)
                 (is (spies/called-with? delete-spy ::id ::hide))))))))))
 
-(defn run-tests [] (t/run-tests))
+(deftest ^:unit show-request-modal-test
+  (testing "(show-request-modal)"
+    (let [action-spy (spies/constantly ::action)
+          dispatch-spy (spies/create)]
+      (with-redefs [actions/show-modal action-spy
+                    store/dispatch dispatch-spy]
+        (testing "when making the request"
+          ((shared.interactions/show-request-modal ::sim {::some ::request} ::dt) ::event)
+          (testing "dispatches an action"
+            (is (spies/called-with? action-spy
+                                    [modals/request-modal ::sim {::some ::request :dt ::dt}]
+                                    "Request Details"))
+            (is (spies/called-with? dispatch-spy ::action))))))))
+
+(defn run-tests []
+  (t/run-tests))

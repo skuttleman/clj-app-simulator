@@ -8,30 +8,40 @@
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [compojure.core :as c]
             [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [integration.utils.http :as test.http]))
+            [integration.utils.http :as test.http]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
     (let [http-spy (spies/create)
-          ws-spy (spies/create)]
+          ws-spy (spies/create)
+          file-spy (spies/create)]
       (with-redefs [http.sim/valid? http-spy
-                    ws.sim/valid? ws-spy]
-        (testing "when the http validator succeeds"
-          (spies/reset! http-spy ws-spy)
+                    ws.sim/valid? ws-spy
+                    file.sim/valid? file-spy]
+        (testing "when the http validator is successful"
+          (spies/reset! http-spy ws-spy file-spy)
           (spies/respond-with! http-spy (constantly true))
 
           (testing "succeeds"
             (is (simulators/valid? ::config))))
 
-        (testing "when the ws validator succeeds"
-          (spies/reset! http-spy ws-spy)
+        (testing "when the ws validator is successful"
+          (spies/reset! http-spy ws-spy file-spy)
           (spies/respond-with! ws-spy (constantly true))
 
           (testing "succeeds"
             (is (simulators/valid? ::config))))
 
-        (testing "when all validators fail"
-          (spies/reset! http-spy ws-spy)
+        (testing "when the file validator is successful"
+          (spies/reset! http-spy ws-spy file-spy)
+          (spies/respond-with! file-spy (constantly true))
+
+          (testing "succeeds"
+            (is (simulators/valid? ::config))))
+
+        (testing "when no validators are successful"
+          (spies/reset! http-spy ws-spy file-spy)
 
           (testing "fails"
             (is (not (simulators/valid? ::config)))))))))
@@ -39,11 +49,13 @@
 (deftest ^:unit config->?simulator-test
   (testing "(config->?simulator)"
     (let [http-spy (spies/create)
-          ws-spy (spies/create)]
+          ws-spy (spies/create)
+          file-spy (spies/create)]
       (with-redefs [http.sim/->HttpSimulator http-spy
-                    ws.sim/->WsSimulator ws-spy]
+                    ws.sim/->WsSimulator ws-spy
+                    file.sim/->FileSimulator file-spy]
         (testing "when the config can be used to build an http simulator"
-          (spies/reset! http-spy ws-spy)
+          (spies/reset! http-spy ws-spy file-spy)
           (spies/respond-with! http-spy (constantly ::simulator))
 
           (testing "returns the simulator"
@@ -52,7 +64,7 @@
               (is (= result ::simulator)))))
 
         (testing "when the config can be used to build a ws simulator"
-          (spies/reset! http-spy ws-spy)
+          (spies/reset! http-spy ws-spy file-spy)
           (spies/respond-with! ws-spy (constantly ::simulator))
 
           (testing "returns the simulator"
@@ -60,8 +72,17 @@
               (is (spies/called-with? ws-spy (spies/matcher uuid?) ::config))
               (is (= result ::simulator)))))
 
+        (testing "when the config can be used to build a file simulator"
+          (spies/reset! http-spy ws-spy file-spy)
+          (spies/respond-with! file-spy (constantly ::simulator))
+
+          (testing "returns the simulator"
+            (let [result (simulators/config->?simulator ::config)]
+              (is (spies/called-with? file-spy (spies/matcher uuid?) ::config))
+              (is (= result ::simulator)))))
+
         (testing "when the config cannot be used to build any simulator"
-          (spies/reset! http-spy ws-spy)
+          (spies/reset! http-spy ws-spy file-spy)
 
           (testing "returns nil"
             (is (nil? (simulators/config->?simulator ::config)))))))))

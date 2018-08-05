@@ -33,8 +33,10 @@
   (match-route* routes path))
 
 (defn path-for
-  ([page] (path-for* routes page nil))
-  ([page params] (path-for* routes page params)))
+  ([page]
+   (path-for* routes page nil))
+  ([page params]
+   (path-for* routes page params)))
 
 (defonce ^:private history
   (let [history (pushy/pushy (comp store/dispatch (partial conj [:router/navigate])) match-route)]
@@ -50,12 +52,15 @@
 (defn navigate!
   ([page] (navigate* history routes page nil))
   ([page params]
-   (navigate* history routes page params)))
+   (navigate* history routes page params)
+    nil))
 
 (defn go-to! [path]
-  (set! (.-pathname (.-location js/window)) path))
+  (set! (.-pathname (.-location js/window)) path)
+  nil)
 
 (defn nav-and-replace!
   ([page] (nav-and-replace* history routes page nil))
   ([page params]
-   (nav-and-replace* history routes page params)))
+   (nav-and-replace* history routes page params)
+    nil))

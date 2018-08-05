@@ -8,11 +8,14 @@
             [clojure.tools.nrepl.server :as nrepl]
             [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
             [ring.util.response :as response]
+            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
             [com.ben-allred.clj-app-simulator.services.env :as env]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
 (defn ^:private not-found
   ([] (not-found nil))
@@ -20,12 +23,28 @@
    (respond/with [:not-found (when message {:message message})])))
 
 (defroutes ^:private base
-  (context "/api/simulators" []
-    (GET "/" [] (simulators/details))
-    (POST "/" request (simulators/add (get-in request [:body :simulator])))
-    (POST "/init" request (simulators/set! (get-in request [:body :simulators])))
-    (DELETE "/reset" [] (simulators/reset-all!))
-    (GET "/activity" request (activity/sub request)))
+  (context "/api" []
+    (context "/simulators" []
+      (GET "/" [] (simulators/details))
+      (POST "/" request (simulators/add (get-in request [:body :simulator])))
+      (POST "/init" request (simulators/set! (get-in request [:body :simulators])))
+      (DELETE "/reset" [] (simulators/reset-all!))
+      (GET "/activity" request (activity/sub request)))
+    (context "/resources" []
+      (POST "/" request
+        (->> (get-in request [:params :files])
+             (colls/force-sequential)
+             (resources/upload!)
+             (conj [:created])
+             (respond/with)))
+      (GET "/" []
+        (respond/with [:ok {:uploads (resources/list-files)}]))
+      (DELETE "/" []
+        (resources/clear!)
+        (respond/with [:no-content]))
+      (DELETE "/:resource-id" [resource-id]
+        (resources/remove! (uuids/->uuid resource-id))
+        (respond/with [:no-content]))))
   (context "/" []
     (simulators/routes)
     (context "/simulators" []

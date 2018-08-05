@@ -4,6 +4,7 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions-test :as actions-test]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers-test :as reducers-test]
             [com.ben-allred.clj-app-simulator.ui.services.events-test :as events-test]
+            [com.ben-allred.clj-app-simulator.ui.services.files-test :as files-test]
             [com.ben-allred.clj-app-simulator.ui.services.forms.fields-test :as fields-test]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core-test :as forms.core-test]
             [com.ben-allred.clj-app-simulator.ui.services.navigation-test :as navigation-test]
@@ -15,6 +16,7 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations-test :as http.transformations-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.views-test :as http.views-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions-test :as shared.interactions-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test :as shared.modals-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.views-test :as shared.views-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test :as ws.interactions-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources-test :as ws.resources-test]
@@ -39,6 +41,7 @@
   (actions-test/run-tests)
   (reducers-test/run-tests)
   (events-test/run-tests)
+  (files-test/run-tests)
   (fields-test/run-tests)
   (forms.core-test/run-tests)
   (navigation-test/run-tests)
@@ -50,6 +53,7 @@
   (http.transformations-test/run-tests)
   (http.views-test/run-tests)
   (shared.interactions-test/run-tests)
+  (shared.modals-test/run-tests)
   (shared.views-test/run-tests)
   (ws.interactions-test/run-tests)
   (ws.resources-test/run-tests)

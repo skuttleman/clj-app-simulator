@@ -71,5 +71,18 @@
          :simulators.activity/delete (dissoc state id)
          (simulators-reducer state action))))))
 
+(def uploads
+  (with-status
+    {:pending   #{:files.fetch-all/request}
+     :available #{:files.fetch-all/succeed :files.upload/succeed}
+     :failed    #{:files.fetch-all/fail}}
+    (fn
+      ([] [])
+      ([state [type data]]
+       (case type
+         :files.upload/succeed (into state data)
+         :files.fetch-all/succeed (:uploads data)
+         state)))))
+
 (def root
-  (collaj.reducers/combine (maps/->map page modal toasts simulators)))
+  (collaj.reducers/combine (maps/->map page modal toasts simulators uploads)))

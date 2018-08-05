@@ -4,7 +4,8 @@
             [com.ben-allred.clj-app-simulator.services.http :as http]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros]
-            [test.utils.spies :as spies]))
+            [test.utils.spies :as spies]
+            [com.ben-allred.clj-app-simulator.ui.services.files :as files]))
 
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"
@@ -370,6 +371,84 @@
               (is (spies/called-with? dispatch [:simulators.send-message/fail {:some :reason}]))
               (is (spies/called-with? http/post "/api/simulators/123/456" {:body    "a message"
                                                                            :headers {:content-type "text/plain"}}))
+              (done))))))))
+
+(deftest ^:unit upload-test
+  (testing "(upload)"
+    (let [dispatch (spies/create)]
+      (with-redefs [files/upload (spies/constantly (async/go [:success {}]))]
+        (testing "calls dispatch with request action"
+          ((actions/upload ::files) [dispatch])
+          (is (spies/called-with? dispatch [:files.upload/request])))))))
+
+(deftest ^:unit upload-success-test
+  (testing "(upload)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [files/upload (spies/create
+                                       (fn [_]
+                                         (async/go
+                                           [:success {:some :result}])))]
+            (let [dispatch (spies/create)
+                  f (actions/upload ::files)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:files.upload/succeed {:some :result}]))
+              (is (spies/called-with? files/upload "/api/resources" ::files))
+              (done))))))))
+
+(deftest ^:unit upload-failure-test
+  (testing "(upload)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [files/upload (spies/create
+                                       (fn [_]
+                                         (async/go
+                                           [:error {:some :reason}])))]
+            (let [dispatch (spies/create)
+                  f (actions/upload ::files)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:files.upload/fail {:some :reason}]))
+              (is (spies/called-with? files/upload "/api/resources" ::files))
+              (done))))))))
+
+(deftest ^:unit get-uploads-test
+  (testing "(get-uploads)"
+    (let [dispatch (spies/create)]
+      (with-redefs [http/get (constantly (async/chan))]
+        (testing "calls dispatch with request action"
+          (actions/get-uploads [dispatch])
+          (is (spies/called-with? dispatch [:files.fetch-all/request])))))))
+
+(deftest ^:unit get-uploads-success-test
+  (testing "(get-uploads)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/get (spies/create
+                                   (fn [_]
+                                     (async/go
+                                       [:success {:some :result}])))]
+            (let [dispatch (spies/create)]
+              (async/<! (actions/get-uploads [dispatch]))
+              (is (spies/called-with? dispatch [:files.fetch-all/succeed {:some :result}]))
+              (is (spies/called-with? http/get "/api/resources"))
+              (done))))))))
+
+(deftest ^:unit get-uploads-failure-test
+  (testing "(get-uploads)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/get (spies/create
+                                   (fn [_]
+                                     (async/go
+                                       [:error {:some :reason}])))]
+            (let [dispatch (spies/create)]
+              (async/<! (actions/get-uploads [dispatch]))
+              (is (spies/called-with? dispatch [:files.fetch-all/fail {:some :reason}]))
+              (is (spies/called-with? http/get "/api/resources"))
               (done))))))))
 
 (deftest ^:unit show-modal-test

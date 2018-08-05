@@ -43,28 +43,20 @@
 
 (deftest ^:unit with-status-test
   (testing "(with-status)"
-    (testing "when status is not :available"
-      (let [request-spy (spies/create)]
-        (components/with-status :some-status ::component {::some ::item} request-spy)
-        (testing "invokes request"
-          (is (spies/called? request-spy)))))
-
     (testing "when status is :available"
-      (let [request-spy (spies/create)]
-        (components/with-status :available ::component {::some ::item} request-spy)
-        (testing "does not invoke request"
-          (spies/never-called? request-spy))))
-
-    (testing "when status is :available and there is an item"
-      (let [args [:available ::component {::some ::item} ::request]
-            root (apply (apply components/with-status args) args)]
+      (let [root (components/with-status ::component {:status :available :data {::some ::item}})]
         (testing "renders the component"
           (is (= [::component {::some ::item}]
                  (test.dom/query-one root ::component))))))
 
+    (testing "when status is available for all items"
+      )
+
+    (testing "when status is not :available for at least one item"
+      )
+
     (testing "when the status is any other value"
-      (let [args [::random-status ::component nil (spies/create)]
-            root (apply (apply components/with-status args) args)]
+      (let [root (components/with-status ::component {:status ::random-status :data nil})]
         (testing "renders a spinner"
           (is (test.dom/query-one root components/spinner)))))))
 
@@ -161,4 +153,5 @@
               (testing "renders menu* as open"
                 (is open?)))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

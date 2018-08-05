@@ -3,9 +3,9 @@
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]))
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
 
 (defn do-request
   ([request]
@@ -71,3 +71,10 @@
          "Delete"]
         [:button.button.button-secondary.pure-button.cancel-button
          "Cancel"]))))
+
+(defn show-request-modal [sim request dt]
+  (fn [_]
+    (store/dispatch
+      (actions/show-modal
+        [modals/request-modal sim (assoc request :dt dt)]
+        "Request Details"))))

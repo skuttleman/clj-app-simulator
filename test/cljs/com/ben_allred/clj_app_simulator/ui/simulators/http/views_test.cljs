@@ -1,21 +1,19 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.views-test
   (:require [cljs.test :as t :refer [deftest testing is]]
-            [test.utils.spies :as spies]
-            [test.utils.dom :as test.dom]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as http.views]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.resources :as resources]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.resources :as resources]
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations :as tr]
+            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as http.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.transformations :as tr]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+            [test.utils.dom :as test.dom]
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"
@@ -232,34 +230,6 @@
             (is (= [http.views/sim-edit-form* ::id ::form]
                    (root simulator)))))))))
 
-(deftest ^:unit sim-request-test
-  (testing "(sim-request)"
-    (let [moment-spy (spies/constantly ::moment)
-          from-now-spy (spies/constantly ::from-now)
-          action-spy (spies/constantly ::action)
-          dispatch-spy (spies/create)]
-      (with-redefs [mo/->moment moment-spy
-                    mo/from-now from-now-spy
-                    actions/show-modal action-spy
-                    store/dispatch dispatch-spy]
-        (let [request {:timestamp ::timestamp :details ::details}
-              root (http.views/sim-request ::sim request)
-              tree (test.dom/query-one root :.request)]
-          (testing "converts timestamp to moment"
-            (is (spies/called-with? moment-spy ::timestamp)))
-
-          (testing "when clicking the tree"
-            (spies/reset! action-spy dispatch-spy)
-            (test.dom/simulate-event tree :click)
-            (testing "shows the modal"
-              (is (spies/called-with? action-spy
-                                      [modals/request-modal ::sim (assoc request :dt ::moment)]
-                                      "Request Details"))
-              (is (spies/called-with? dispatch-spy ::action))))
-
-          (testing "displays moment from now"
-            (is (test.dom/contains? tree ::from-now))))))))
-
 (deftest ^:unit sim-test
   (testing "(sim)"
     (let [sim {:id       ::simulator-id
@@ -282,13 +252,13 @@
               (is (= [http.views/sim-edit-form sim] form))))
 
           (testing "displays a list of sim-request components"
-            (let [[req-1 req-2 :as sim-reqs] (test.dom/query-all root http.views/sim-request)]
+            (let [[req-1 req-2 :as sim-reqs] (test.dom/query-all root shared.views/sim-request)]
               (is (= 2 (count sim-reqs)))
               (is (= "456" (:key (meta req-1))))
-              (is (= [http.views/sim-request {::some ::simulator} {:timestamp 456 ::data ::456}]
+              (is (= [shared.views/sim-request {::some ::simulator} {:timestamp 456 ::data ::456}]
                      req-1))
               (is (= "123" (:key (meta req-2))))
-              (is (= [http.views/sim-request {::some ::simulator} {:timestamp 123 ::data ::123}]
+              (is (= [shared.views/sim-request {::some ::simulator} {:timestamp 123 ::data ::123}]
                      req-2))))
 
           (testing "has a button to clear requests"
@@ -378,4 +348,5 @@
             (let [root (component)]
               (is (test.dom/contains? root [http.views/sim-create-form* ::form])))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

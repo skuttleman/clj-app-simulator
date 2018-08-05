@@ -4,7 +4,11 @@
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
             [test.utils.dom :as test.dom]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]))
+            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
+            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]))
 
 (deftest ^:unit with-attrs-test
   (testing "(with-attrs)"
@@ -104,4 +108,33 @@
                 (test.dom/query-one :.sim-card-path)
                 (test.dom/contains? ::path)))))))
 
-(defn run-tests [] (t/run-tests))
+(deftest ^:unit sim-request-test
+  (testing "(sim-request)"
+    (let [moment-spy (spies/constantly ::moment)
+          from-now-spy (spies/constantly ::from-now)
+          action-spy (spies/constantly ::action)
+          dispatch-spy (spies/create)]
+      (with-redefs [mo/->moment moment-spy
+                    mo/from-now from-now-spy
+                    actions/show-modal action-spy
+                    store/dispatch dispatch-spy]
+        (let [request {:timestamp ::timestamp :details ::details}
+              root (shared.views/sim-request ::sim request)
+              tree (test.dom/query-one root :.request)]
+          (testing "converts timestamp to moment"
+            (is (spies/called-with? moment-spy ::timestamp)))
+
+          (testing "when clicking the tree"
+            (spies/reset! action-spy dispatch-spy)
+            (test.dom/simulate-event tree :click)
+            (testing "shows the modal"
+              (is (spies/called-with? action-spy
+                                      [modals/request-modal ::sim (assoc request :dt ::moment)]
+                                      "Request Details"))
+              (is (spies/called-with? dispatch-spy ::action))))
+
+          (testing "displays moment from now"
+            (is (test.dom/contains? tree ::from-now))))))))
+
+(defn run-tests []
+  (t/run-tests))

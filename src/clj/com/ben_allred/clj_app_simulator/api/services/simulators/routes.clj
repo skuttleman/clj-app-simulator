@@ -117,12 +117,11 @@
         uuid-uri (str "/api/simulators/" id)
         socket-uri (str uri "/:socket-id")
         socket-uuid-uri (str uuid-uri "/:socket-id")
-        connect (ws-sim-route simulator)
         get (get-sim simulator)
         send (send-ws simulator)
         patch (patch-ws simulator)
         disconnect (disconnect-ws simulator)]
-    [[:get sim-path connect]
+    [[:get sim-path (ws-sim-route simulator)]
      [:get uri get]
      [:get uuid-uri get]
      [:delete uri delete]
@@ -141,3 +140,6 @@
 
 (defn ws-sim->routes [simulator]
   (sim->routes ws-routes simulator))
+
+(defn file-sim->routes [simulator]
+  (sim->routes http-routes simulator))

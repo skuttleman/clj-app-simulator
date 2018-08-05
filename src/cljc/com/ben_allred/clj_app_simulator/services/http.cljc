@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.services.http
   (:refer-clojure :exclude [get])
-  (:require #?(:clj  [clojure.core.async :as async]
-               :cljs [cljs.core.async :as async])
-                     [kvlt.chan :as kvlt]
-                     [com.ben-allred.clj-app-simulator.services.content :as content]
-                     [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require [#?(:clj clojure.core.async :cljs cljs.core.async) :as async]
+            [kvlt.chan :as kvlt]
+            [com.ben-allred.clj-app-simulator.services.content :as content]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [clojure.set :as set]))
 
 (def ^:private content-type
   #?(:clj  "application/json"
@@ -57,7 +57,7 @@
    505 :http-version-not-supported})
 
 (def kw->status
-  (into {} (map (comp vec reverse)) status->kw))
+  (set/map-invert status->kw))
 
 (defn ^:private check-status [lower upper response]
   (when-let [status (if (vector? response)
@@ -74,16 +74,9 @@
 (def server-error?
   (partial check-status 500 599))
 
-(defn request* [method url request]
+(defn request* [chan]
   (async/go
-    (let [headers (merge {:content-type "application/transit" :accept "application/transit"}
-                         (:headers request))
-          content-type (:content-type headers)
-          ch-response (async/<! (-> request
-                                    (assoc :method method :url url)
-                                    (content/prepare header-keys content-type)
-                                    (update :headers merge headers)
-                                    (kvlt/request!)))
+    (let [ch-response (async/<! chan)
           {:keys [status] :as response} (if-let [data (ex-data ch-response)]
                                           data
                                           ch-response)
@@ -95,17 +88,27 @@
         [:success body status response]
         [:error body status response]))))
 
+(defn go [method url request]
+  (let [headers (merge {:content-type "application/transit" :accept "application/transit"}
+                       (:headers request))]
+    (-> request
+        (assoc :method method :url url)
+        (content/prepare header-keys (:content-type headers))
+        (update :headers merge headers)
+        (kvlt/request!)
+        (request*))))
+
 (defn get [url & [request]]
-  (request* :get url request))
+  (go :get url request))
 
 (defn post [url request]
-  (request* :post url request))
+  (go :post url request))
 
 (defn patch [url request]
-  (request* :patch url request))
+  (go :patch url request))
 
 (defn put [url request]
-  (request* :put url request))
+  (go :put url request))
 
 (defn delete [url & [request]]
-  (request* :delete url request))
+  (go :delete url request))

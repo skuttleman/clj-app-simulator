@@ -1,24 +1,17 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.main-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.views.main :as main]
-            [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [test.utils.dom :as test.dom]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+            [com.ben-allred.clj-app-simulator.ui.simulators.file.views :as file.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as http.views]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.views :as ws.views]))
-
-(deftest ^:unit request-simulators-test
-  (testing "(request-simulators)"
-    (let [dispatch-spy (spies/create)]
-      (with-redefs [store/dispatch dispatch-spy]
-        (testing "requests simulators"
-          (main/request-simulators)
-          (is (spies/called-with? dispatch-spy actions/request-simulators)))))))
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.views :as ws.views]
+            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+            [com.ben-allred.clj-app-simulator.ui.views.main :as main]
+            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [test.utils.dom :as test.dom]
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit header-test
   (testing "(header)"
@@ -36,13 +29,38 @@
                 (is (test.dom/contains? h1 "App Simulator"))))))))))
 
 (deftest ^:unit root-test
-  (testing "(root)"
-    (let [root (main/root {:simulators {:status ::status :data ::data}})]
-      (testing "has a header"
-        (is (= "Simulators" (second (test.dom/query-one root :h2)))))
-      (testing "displays simulators"
-        (is (= [components/with-status ::status sims/simulators ::data main/request-simulators]
-               (test.dom/query-one root components/with-status)))))))
+  (let [path-for-spy (spies/constantly ::nav)
+        dispatch-spy (spies/create)
+        action-spy (spies/constantly ::action)]
+    (with-redefs [nav/path-for path-for-spy
+                  store/dispatch dispatch-spy
+                  actions/upload action-spy]
+      (testing "(root)"
+        (let [root (main/root {:simulators {:status ::status :data ::data}})]
+          (testing "has a header"
+            (is (= "Simulators" (second (test.dom/query-one root :h2)))))
+
+          (testing "has a create menu"
+            (let [[_ {:keys [items]} element] (test.dom/query-one root components/menu)]
+              (is (= [{:href ::nav :label "HTTP Simulator"} {:href ::nav :label "WS Simulator"}]
+                     items))
+              (is (spies/called-with? path-for-spy :new {:query-params {:type :http}}))
+              (is (spies/called-with? path-for-spy :new {:query-params {:type :ws}}))
+              (is (-> element
+                      (test.dom/query-one :.button-success)
+                      (test.dom/contains? "Create")))))
+
+          (testing "has an upload button"
+            (let [{:keys [on-change]} (-> root
+                                          (test.dom/query-one components/upload)
+                                          (test.dom/attrs))]
+              (on-change ::files)
+              (is (spies/called-with? action-spy ::files))
+              (is (spies/called-with? dispatch-spy ::action))))
+
+          (testing "displays simulators"
+            (is (= [components/with-status sims/simulators {:status ::status :data ::data}]
+                   (test.dom/query-one root components/with-status)))))))))
 
 (deftest ^:unit details-test
   (testing "(details)"
@@ -58,25 +76,19 @@
         (let [root (main/details state)
               [_ & args] (test.dom/query-one root components/with-status)]
           (testing "renders the component"
-            (is (= [::status
-                    http.views/sim
-                    {:config {:method :http/post :path "/path"} ::and ::things}
-                    main/request-simulators]
+            (is (= [http.views/sim {:status ::status :data {:config {:method :http/post :path "/path"} ::and ::things}}]
                    args)))))
 
       (testing "when given a :ws simulator"
         (let [root (main/details (assoc-in state [:simulators :data id :config :method] :ws))
               [_ & args] (test.dom/query-one root components/with-status)]
           (testing "renders the component"
-            (is (= [::status
-                    ws.views/sim
-                    {:config {:method :ws :path "/path"} ::and ::things}
-                    main/request-simulators]
+            (is (= [ws.views/sim {:status ::status :data {:config {:method :ws :path "/path"} ::and ::things}}]
                    args)))))
 
       (testing "when the simulator has an unknown method"
         (let [root (main/details (update-in state [:simulators :data id :config] assoc :method :unknown))
-              [_ _ component] (test.dom/query-one root components/with-status)]
+              [_ component] (test.dom/query-one root components/with-status)]
           (testing "renders a spinner"
             (is (= component components/spinner))))))))
 
@@ -91,10 +103,8 @@
                   (test.dom/query-one :h2)
                   (test.dom/contains? "New WS Simulator"))))
 
-        (let [[_ & args] (test.dom/query-one root components/with-status)]
-          (testing "renders a component with status"
-            (is (= [::status ws.views/sim-create-form ::data main/request-simulators]
-                   args))))))
+        (testing "renders the ws create form"
+          (is (test.dom/query-one root ws.views/sim-create-form)))))
 
     (testing "when type is :http"
       (let [state {:page       {:query-params {:type "http"}}
@@ -105,11 +115,29 @@
                   (test.dom/query-one :h2)
                   (test.dom/contains? "New HTTP Simulator"))))
 
-        (let [[_ & args] (test.dom/query-one root components/with-status)]
-          (testing "renders a component with status"
-            (is (= [::status http.views/sim-create-form ::data main/request-simulators]
-                   args))))))
+        (testing "renders the http create form"
+          (is (test.dom/query-one root http.views/sim-create-form)))))
 
-    (testing "when type is any other value")))
+    (testing "when type is :file"
+      (let [state {:page       {:query-params {:type "file"}}
+                   :simulators {:status ::status :data ::data}}
+            root (main/new state)]
+        (testing "renders a header"
+          (is (-> root
+                  (test.dom/query-one :h2)
+                  (test.dom/contains? "New FILE Simulator"))))
 
-(defn run-tests [] (t/run-tests))
+        (testing "renders the file create form"
+          (is (test.dom/query-one root file.views/sim-create-form)))))
+
+    (testing "when type is any other value"
+      (let [state {:page       {:query-params {:type "any"}}
+                   :simulators {:status ::status :data ::data}}
+            nav-spy (spies/create)]
+        (testing "redirects with :http type"
+          (with-redefs [nav/nav-and-replace! nav-spy]
+            (main/new state)
+            (is (spies/called-with? nav-spy :new {:query-params {:type :http}}))))))))
+
+(defn run-tests []
+  (t/run-tests))

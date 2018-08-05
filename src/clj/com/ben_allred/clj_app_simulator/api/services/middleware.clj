@@ -30,4 +30,4 @@
     (cond-> request
       :always (content/parse (get headers "content-type"))
       :always (handler)
-      (api? request) (content/prepare #{"content-type" "accept"} (get headers "accept")))))
+      (api? request) (content/prepare #{"content-type"} (get headers "accept")))))

@@ -1,16 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.ws
-  (:require [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+  (:require [clojure.spec.alpha :as s]
+            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [immutant.web.async :as web.async]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity])
-  (:import [java.io InputStream]))
+            [immutant.web.async :as web.async]))
 
-;(s/def ::path (partial re-matches #"/|(/[A-Za-z-_0-9]+)+"))
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
 (s/def ::method (s/conformer (comp #(or % ::s/invalid) #{:ws} keyword)))

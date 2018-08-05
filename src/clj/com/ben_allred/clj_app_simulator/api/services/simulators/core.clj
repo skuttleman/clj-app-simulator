@@ -2,6 +2,7 @@
   (:refer-clojure :exclude [set!])
   (:require [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
             [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
             [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
             [compojure.core :as c]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
@@ -11,10 +12,12 @@
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
 (def ^:private validators [#'http.sim/valid?
-                           #'ws.sim/valid?])
+                           #'ws.sim/valid?
+                           #'file.sim/valid?])
 
 (def ^:private sim-fns [#'http.sim/->HttpSimulator
-                        #'ws.sim/->WsSimulator])
+                        #'ws.sim/->WsSimulator
+                        #'file.sim/->FileSimulator])
 
 (defn ^:private simulator-configs
   ([]

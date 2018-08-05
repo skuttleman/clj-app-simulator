@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.transformations
   (:require [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.transformations :as shared.tr]))
 
 (def source->model identity)
 
@@ -14,9 +15,7 @@
 
 (def model->source
   (f/make-transformer
-    {:name        strings/trim-to-nil
-     :group       strings/trim-to-nil
-     :description strings/trim-to-nil}))
+    shared.tr/model->source))
 
 (defn sim->model [sim]
   (-> sim

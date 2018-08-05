@@ -1,12 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.services.content
-  (:require #?(:clj [clojure.edn :as edn]
-               :cljs [cljs.reader :as edn])
-                    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-                    [com.ben-allred.clj-app-simulator.utils.json :as json]
-                    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-                    [com.ben-allred.clj-app-simulator.utils.logging :as log])
-  #?(:clj
-     (:import [java.io InputStream])))
+  (:require [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+            [com.ben-allred.clj-app-simulator.utils.json :as json]
+            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            #?(:clj  [clojure.edn :as edn]
+               :cljs [cljs.reader :as edn]))
+  #?(:clj (:import [java.io InputStream])))
 
 (defn ^:private with-headers [request header-keys type]
   (update request :headers (partial merge (zipmap header-keys (repeat type)))))
@@ -48,13 +47,20 @@
 
 (defn prepare [data header-keys accept]
   (cond-> data
-    (= "" (:body data)) (dissoc :body)
-    (edn? accept) (->
-                    (maps/update-maybe :body when-not-string pr-str)
-                    (with-headers header-keys "application/edn"))
-    (transit? accept) (->
-                        (maps/update-maybe :body when-not-string transit/stringify)
-                        (with-headers header-keys "application/transit"))
-    :always (->
-              (maps/update-maybe :body when-not-string json/stringify)
-              (with-headers header-keys "application/json"))))
+    (= "" (:body data))
+    (dissoc :body)
+
+    (edn? accept)
+    (->
+      (maps/update-maybe :body when-not-string pr-str)
+      (with-headers header-keys "application/edn"))
+
+    (transit? accept)
+    (->
+      (maps/update-maybe :body when-not-string transit/stringify)
+      (with-headers header-keys "application/transit"))
+
+    (or (not accept) (json? accept))
+    (->
+      (maps/update-maybe :body when-not-string json/stringify)
+      (with-headers header-keys "application/json"))))

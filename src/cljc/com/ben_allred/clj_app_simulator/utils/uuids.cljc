@@ -10,4 +10,4 @@
 
 (defn random []
   #?(:clj  (UUID/randomUUID)
-     :cljs (throw (ex-info "Not implemented" {}))))
+     :cljs (random-uuid)))

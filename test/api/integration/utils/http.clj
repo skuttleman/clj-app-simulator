@@ -6,9 +6,9 @@
             [integration.config :as cfg]))
 
 (defn ^:private request* [method path content-type request]
-  (async/<!! (http/request* method (cfg/->url path) (-> request
-                                                        (update :headers merge {:accept       content-type
-                                                                                :content-type content-type})))))
+  (async/<!! (http/go method (cfg/->url path) (-> request
+                                                  (update :headers merge {:accept       content-type
+                                                                          :content-type content-type})))))
 
 (def success? http/success?)
 

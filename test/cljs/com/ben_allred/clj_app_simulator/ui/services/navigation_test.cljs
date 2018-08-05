@@ -96,42 +96,39 @@
 
 (deftest ^:unit navigate!-test
   (testing "(navigate!)"
-    (let [navigate-spy (spies/constantly ::some-result)]
+    (let [navigate-spy (spies/create)]
       (testing "calls navigate* with routes"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]
                       nav/navigate* navigate-spy]
           (spies/reset! navigate-spy)
-          (let [result (nav/navigate! ::page ::params)]
-            (is (= ::some-result result))
-            (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params)))))
+          (nav/navigate! ::page ::params)
+          (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params))))
       (testing "defaults params to nil"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]
                       nav/navigate* navigate-spy]
           (spies/reset! navigate-spy)
-          (let [result (nav/navigate! ::page)]
-            (is (= ::some-result result))
-            (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))
+          (nav/navigate! ::page)
+          (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil)))))))
 
 (deftest ^:unit nav-and-replace!-test
   (testing "(nav-and-replace!)"
-    (let [navigate-spy (spies/constantly ::some-result)]
+    (let [navigate-spy (spies/create)]
       (testing "calls navigate* with routes"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]
                       nav/nav-and-replace* navigate-spy]
           (spies/reset! navigate-spy)
-          (let [result (nav/nav-and-replace! ::page ::params)]
-            (is (= ::some-result result))
-            (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params)))))
+          (nav/nav-and-replace! ::page ::params)
+          (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page ::params))))
       (testing "defaults params to nil"
         (with-redefs [nav/history ::history
                       nav/routes [::some ::routes]
                       nav/nav-and-replace* navigate-spy]
           (spies/reset! navigate-spy)
-          (let [result (nav/nav-and-replace! ::page)]
-            (is (= ::some-result result))
-            (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil))))))))
+          (nav/nav-and-replace! ::page)
+          (is (spies/called-with? navigate-spy ::history [::some ::routes] ::page nil)))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))
