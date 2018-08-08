@@ -61,7 +61,7 @@
                         (map common/details))]
           (activity/publish :simulators/init sims)
           (respond/with [:created {:simulators sims}])))
-      (respond/with [:bad-request {:message "one more more invalid simulators"}]))))
+      (respond/with [:bad-request {:message "one or more invalid simulators"}]))))
 
 (defn reset-all! []
   (let [sims (simulator-configs)]

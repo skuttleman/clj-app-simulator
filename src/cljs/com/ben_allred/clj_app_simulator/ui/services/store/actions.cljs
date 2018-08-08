@@ -3,7 +3,7 @@
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.services.files :as files]))
+            [com.ben-allred.clj-app-simulator.services.files :as files]))
 
 (defn ^:private request* [request dispatch success-type error-type]
   (async/go

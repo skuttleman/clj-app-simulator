@@ -109,10 +109,12 @@
                                                   :config   ::config
                                                   :details  ::details
                                                   :requests ::requests})
+          identifier-spy (spies/constantly ::identifier)
           publish-spy (spies/create)
           delete-spy (spies/create)
           respond-spy (spies/constantly ::response)]
       (with-redefs [common/details details-spy
+                    common/identifier identifier-spy
                     activity/publish publish-spy
                     respond/with respond-spy]
         (testing "deletes the simulator"
@@ -120,7 +122,8 @@
                 result (handler ::request)]
             (is (spies/called-with? publish-spy :simulators/delete
                                     {:id ::id :config ::config}))
-            (is (spies/called? delete-spy))
+            (is (spies/called-with? identifier-spy ::simulator))
+            (is (spies/called-with? delete-spy ::identifier))
             (is (spies/called-with? respond-spy [:no-content]))
             (is (= result ::response))))))))
 
@@ -193,9 +196,6 @@
               (testing "responds with the details"
                 (is (spies/called-with? respond-spy [:ok ::details]))
                 (is (= ::response result)))))
-
-          (testing "when setting a resource as the response"
-            )
 
           (testing "when resetting the response"
             (spies/reset! reset-response-spy details-spy publish-spy respond-spy)
@@ -479,9 +479,7 @@
               (is (spies/called-with? delete-sim-spy ::simulator (spies/matcher fn?))))
 
             (testing "has a function for removing the simulator"
-              (let [[_ f] (first (spies/calls delete-sim-spy))]
-                (f)
-                (is (spies/called-with? remove-spy :ws "/some/path")))))
+              (is (= sims/remove! (second (first (spies/calls delete-sim-spy)))))))
 
           (testing "creates a handler to connect"
             (is (spies/called-with? ws-sim-spy ::simulator)))

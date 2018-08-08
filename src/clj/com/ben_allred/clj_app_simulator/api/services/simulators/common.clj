@@ -9,6 +9,7 @@
   (requests [this])
   (reset-requests [this])
   (details [this])
+  (identifier [this])
   (change [this config])
   (reset [this])
   (routes [this]))

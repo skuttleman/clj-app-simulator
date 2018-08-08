@@ -102,7 +102,7 @@
 
 (deftest ^:unit ->FileSimulator.details-test
   (testing "(->FileSimulator.details)"
-    (testing "returns request"
+    (testing "returns details"
       (let [[sim _ _ _ get-state] (simulator)
             details-spy (spies/constantly {:config ::details})]
         (with-redefs [store/details details-spy]
@@ -111,6 +111,13 @@
             (is (spies/called-with? details-spy ::state))
             (is (= ::details (:config result)))
             (is (= ::id (:id result)))))))))
+
+(deftest ^:unit ->FileSimulator.identifier-test
+  (testing "(->FileSimulator.identifier)"
+    (testing "returns unique identifier"
+      (let [[sim] (simulator)]
+        (let [result (common/identifier sim)]
+          (is (= [:get "/some/path"] result)))))))
 
 (deftest ^:unit ->FileSimulator.reset-test
   (testing "(->FileSimulator.reset)"

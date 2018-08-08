@@ -12,16 +12,16 @@
   (reset! sims {}))
 
 (defn add! [simulator]
-  (let [{{:keys [method path]} :config} (common/details simulator)]
-    (when-not (contains? @sims [method path])
-      (swap! sims assoc [method path] simulator)
+  (let [key (common/identifier simulator)]
+    (when-not (contains? @sims key)
+      (swap! sims assoc key simulator)
       (common/start simulator)
       simulator)))
 
-(defn remove! [method path]
-  (when-let [simulator (get @sims [method path])]
+(defn remove! [key]
+  (when-let [simulator (get @sims key)]
     (common/stop simulator)
-    (swap! sims dissoc [method path])))
+    (swap! sims dissoc key)))
 
 (defn simulators []
   (vals @sims))

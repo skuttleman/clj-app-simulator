@@ -41,7 +41,7 @@
   (fn [_]
     (activity/publish :simulators/delete
                       (select-keys (common/details simulator) #{:id :config}))
-    (delete-sim!)
+    (delete-sim! (common/identifier simulator))
     (respond/with [:no-content])))
 
 (defn patch-sim [simulator]
@@ -95,7 +95,7 @@
   (let [{{:keys [method path]} :config id :id} (common/details simulator)
         method-str (name method)
         get (get-sim simulator)
-        delete (delete-sim simulator #(sims/remove! method path))
+        delete (delete-sim simulator sims/remove!)
         patch (patch-sim simulator)
         path (when (not= path "/") path)
         uri (str "/api/simulators/" method-str path)
@@ -110,7 +110,7 @@
 
 (defn ws-routes [simulator]
   (let [{{:keys [path]} :config id :id} (common/details simulator)
-        delete (delete-sim simulator #(sims/remove! :ws path))
+        delete (delete-sim simulator sims/remove!)
         path (if (= path "/") "" path)
         sim-path (str "/simulators" path)
         uri (str "/api/simulators/ws" path)

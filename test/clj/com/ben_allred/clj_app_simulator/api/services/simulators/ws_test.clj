@@ -206,6 +206,13 @@
             (is (spies/called-with? details-spy ::state))
             (is (= {::some ::details :id ::id} result))))))))
 
+(deftest ^:unit ->WsSimulator.identifier-test
+  (testing "(->WsSimulator.identifier)"
+    (testing "returns unique identifier"
+      (let [[sim] (simulator)]
+        (let [result (common/identifier sim)]
+          (is (= [:ws "/some/path"] result)))))))
+
 (deftest ^:unit ->WsSimulator.reset-test
   (testing "(->WsSimulator.reset)"
     (testing "resets the simulator"

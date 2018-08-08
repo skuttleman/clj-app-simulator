@@ -31,9 +31,10 @@
   (activity/publish :files/clear nil))
 
 (defn remove! [id]
-  (when-let [resource (clojure.core/get @uploads id)]
-    (swap! uploads dissoc id)
-    (activity/publish :files/remove (file->data [id resource]))))
+  (let [id (uuids/->uuid id)]
+    (when-let [resource (clojure.core/get @uploads id)]
+      (swap! uploads dissoc id)
+      (activity/publish :files/remove (file->data [id resource])))))
 
 (defn list-files []
   (->> @uploads
@@ -41,7 +42,7 @@
        (sort-by :timestamp)))
 
 (defn get [id]
-  (clojure.core/get @uploads id))
+  (clojure.core/get @uploads (uuids/->uuid id)))
 
 (defn has-upload? [id]
   (boolean (get id)))

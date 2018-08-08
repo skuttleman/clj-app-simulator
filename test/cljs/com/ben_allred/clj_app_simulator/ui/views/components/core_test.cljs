@@ -4,6 +4,9 @@
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [test.utils.spies :as spies]))
 
+(defn ^:private available [data]
+  {:status :available :data data})
+
 (deftest ^:unit with-height-test
   (testing "(with-height)"
     (let [are-f (fn [open? item-count]
@@ -49,13 +52,18 @@
           (is (= [::component {::some ::item}]
                  (test.dom/query-one root ::component))))))
 
-    (testing "when status is available for all items"
-      )
+    (testing "when status is :available for all items"
+      (let [root (components/with-status ::component (available ::data1) (available ::data2) (available ::data3))]
+        (testing "renders the component"
+          (is (= [::component ::data1 ::data2 ::data3]
+                 (test.dom/query-one root ::component))))))
 
     (testing "when status is not :available for at least one item"
-      )
+      (let [root (components/with-status ::component (available ::data1) {:status :bad :data ::data2} (available ::data3))]
+        (testing "does not render the component"
+          (is (nil? (test.dom/query-one root ::component))))))
 
-    (testing "when the status is any other value"
+    (testing "when the status is not :available"
       (let [root (components/with-status ::component {:status ::random-status :data nil})]
         (testing "renders a spinner"
           (is (test.dom/query-one root components/spinner)))))))

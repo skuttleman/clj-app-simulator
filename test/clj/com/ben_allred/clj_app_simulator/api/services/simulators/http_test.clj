@@ -97,7 +97,7 @@
 
 (deftest ^:unit ->HttpSimulator.details-test
   (testing "(->HttpSimulator.details)"
-    (testing "returns request"
+    (testing "returns details"
       (let [[sim _ _ _ get-state] (simulator)
             details-spy (spies/constantly {:config ::details})]
         (with-redefs [store/details details-spy]
@@ -106,6 +106,13 @@
             (is (spies/called-with? details-spy ::state))
             (is (= ::details (:config result)))
             (is (= ::id (:id result)))))))))
+
+(deftest ^:unit ->HttpSimulator.identifier-test
+  (testing "(->HttpSimulator.identifier)"
+    (testing "returns unique identifier"
+      (let [[sim] (simulator)]
+        (let [result (common/identifier sim)]
+          (is (= [:get "/some/path"] result)))))))
 
 (deftest ^:unit ->HttpSimulator.reset-test
   (testing "(->HttpSimulator.reset)"

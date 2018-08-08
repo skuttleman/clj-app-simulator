@@ -4,7 +4,6 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions-test :as actions-test]
             [com.ben-allred.clj-app-simulator.ui.services.store.reducers-test :as reducers-test]
             [com.ben-allred.clj-app-simulator.ui.services.events-test :as events-test]
-            [com.ben-allred.clj-app-simulator.ui.services.files-test :as files-test]
             [com.ben-allred.clj-app-simulator.ui.services.forms.fields-test :as fields-test]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core-test :as forms.core-test]
             [com.ben-allred.clj-app-simulator.ui.services.navigation-test :as navigation-test]
@@ -41,7 +40,6 @@
   (actions-test/run-tests)
   (reducers-test/run-tests)
   (events-test/run-tests)
-  (files-test/run-tests)
   (fields-test/run-tests)
   (forms.core-test/run-tests)
   (navigation-test/run-tests)

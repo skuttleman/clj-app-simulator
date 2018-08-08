@@ -114,9 +114,26 @@
 
 (deftest ^:unit file-field-test
   (testing "(file-field)"
-
-
-    ))
+    (let [with-attrs-spy (spies/create (fn [v & _] (assoc v :more ::attrs)))]
+      (with-redefs [shared.views/with-attrs with-attrs-spy]
+        (testing "renders the form field"
+          (let [uploads [{:id 111 :filename ::filename2}
+                         {:id 222 :filename ::filename}
+                         {:id 333 :filename ::filename1}]
+                [node attrs resource] (file.views/file-field ::form uploads)]
+            (is (spies/called-with? with-attrs-spy
+                                    (spies/matcher any?)
+                                    ::form
+                                    [:response :file]
+                                    tr/model->view
+                                    tr/view->model))
+            (is (= fields/select node))
+            (is (= "File" (:label attrs)))
+            (is (= ::attrs (:more attrs)))
+            (is (= [[222 ::filename]
+                    [333 ::filename1]
+                    [111 ::filename2]]
+                   resource))))))))
 
 (deftest ^:unit method-field-test
   (testing "(method-field)"
@@ -185,7 +202,8 @@
 
             (testing "when resetting the simulator"
               (spies/reset! dispatch-spy action-spy)
-              (testing "dispatches an action"))))))))
+              (testing "dispatches an action"
+                ))))))))
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"

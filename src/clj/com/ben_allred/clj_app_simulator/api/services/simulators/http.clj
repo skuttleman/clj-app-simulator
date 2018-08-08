@@ -72,6 +72,8 @@
           (-> (get-state)
               (store/details)
               (assoc :id id)))
+        (identifier [_]
+          [(keyword (name (:method config))) (:path config)])
         (reset [_]
           (dispatch actions/reset))
         (routes [this]

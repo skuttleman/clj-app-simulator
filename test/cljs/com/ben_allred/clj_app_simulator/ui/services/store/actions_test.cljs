@@ -5,7 +5,7 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros]
             [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.services.files :as files]))
+            [com.ben-allred.clj-app-simulator.services.files :as files]))
 
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"

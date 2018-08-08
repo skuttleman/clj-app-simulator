@@ -53,8 +53,8 @@
 
             (testing "mounts component with state"
               (let [app (root)
-                    comp (test.dom/query-one app (:component components))]
-                (is (= (second comp) state))))))))))
+                    [_ value] (test.dom/query-one app (:component components))]
+                (is (= value state))))))))))
 
 (defn run-tests []
   (t/run-tests))

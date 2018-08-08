@@ -3,20 +3,22 @@
   (:require [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
             [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps]
             [com.ben-allred.collaj.core :as collaj]
             [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
 
 (defn ^:private with-file [response]
-  (let [file (resources/get (:file response))]
+  (if-let [file (resources/get (:file response))]
     (-> response
         (dissoc :file)
         (update :headers assoc
                 "Content-Type" (:content-type file)
                 "Content-Length" (:size file)
                 "Content-Disposition" (format "inline; filename=\"%s\"" (:filename file)))
-        (assoc :body (streams/open-input-stream (:file file))))))
+        (assoc :body (streams/open-input-stream (:file file))))
+    (respond/with [:not-found])))
 
 (defn http-store []
   (collaj/create-store reducers/http))

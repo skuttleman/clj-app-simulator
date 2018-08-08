@@ -1,9 +1,11 @@
 (ns integration.utils.http
   (:refer-clojure :exclude [get])
-  (:require [clojure.test :refer :all]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
+  (:require [clojure.java.io :as io]
+            [clojure.test :refer :all]
             [clojure.core.async :as async]
-            [integration.config :as cfg]))
+            [com.ben-allred.clj-app-simulator.services.http :as http]
+            [integration.config :as cfg]
+            [com.ben-allred.clj-app-simulator.services.files :as files]))
 
 (defn ^:private request* [method path content-type request]
   (async/<!! (http/go method (cfg/->url path) (-> request
@@ -30,3 +32,9 @@
 
 (defn delete [path content-type & [request]]
   (request* :delete path content-type request))
+
+(defn upload [path content-type & fixtures]
+  (-> path
+      (cfg/->url)
+      (files/upload (map (comp io/file (partial str "test/fixtures/")) fixtures) content-type "text/plain")
+      (async/<!!)))

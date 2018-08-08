@@ -70,6 +70,8 @@
           (-> (get-state)
               (store/details)
               (assoc :id id)))
+        (identifier [_]
+          [(:method config) (:path config)])
         (reset [_]
           (dispatch actions/disconnect-all)
           (dispatch actions/reset))

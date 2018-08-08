@@ -5,7 +5,8 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
@@ -73,6 +74,8 @@
           (-> (get-state)
               (store/details)
               (assoc :id id)))
+        (identifier [_]
+          [(keyword (name (:method config))) (:path config)])
         (reset [_]
           (dispatch actions/reset))
         (routes [this]

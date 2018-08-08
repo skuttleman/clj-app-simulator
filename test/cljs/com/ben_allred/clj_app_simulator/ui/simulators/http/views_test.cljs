@@ -147,21 +147,14 @@
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
-    (let [model {:response {:status ::status
-                            :body   ""}
-                 :name     nil}
-          errors-spy (spies/create)
-          changed-spy (spies/create)
-          model-spy (spies/constantly model)
-          event-spy (spies/create)
-          action-spy (spies/constantly ::action)
-          dispatch-spy (spies/create)]
+    (let [errors-spy (spies/create)
+          changed-spy (spies/constantly true)
+          update-spy (spies/constantly ::submit)
+          reset-spy (spies/constantly ::reset)]
       (with-redefs [forms/errors errors-spy
                     forms/changed? changed-spy
-                    forms/current-model model-spy
-                    dom/prevent-default event-spy
-                    actions/update-simulator action-spy
-                    store/dispatch dispatch-spy]
+                    interactions/update-simulator update-spy
+                    interactions/reset-simulator reset-spy]
         (testing "when rendering a form"
           (let [root (http.views/sim-edit-form* ::id ::form)
                 edit-form (test.dom/query-one root :.simulator-edit)]
@@ -193,9 +186,78 @@
               (let [node (test.dom/query-one edit-form http.views/body-field)]
                 (is (= [http.views/body-field ::form] node))))
 
-            (testing "when resetting the simulator"
-              (spies/reset! dispatch-spy action-spy)
-              (testing "dispatches an action"))))))))
+            (testing "and when resetting the simulator"
+              (testing "dispatches an action"
+                (is (-> edit-form
+                        (test.dom/query-one :.reset-button)
+                        (test.dom/attrs)
+                        (:on-click)
+                        (= ::reset)))
+                (is (spies/called-with? reset-spy ::form ::id)))))
+
+          (testing "and when submitting the form"
+            (testing "and when there are errors"
+              (spies/reset! update-spy errors-spy changed-spy)
+              (spies/respond-with! errors-spy (constantly ::errors))
+              (let [root (http.views/sim-edit-form* ::id ::form)
+                    edit-form (test.dom/query-one root :.simulator-edit)]
+                (testing "has an :on-submit attr"
+                  (is (-> edit-form
+                          (test.dom/query-one :.simulator-edit)
+                          (test.dom/attrs)
+                          (:on-submit)
+                          (= ::submit))))
+
+                (testing "has a disabled :on-submit"
+                  (is (spies/called-with? update-spy ::form ::id false)))
+
+                (testing "has a disabled save button"
+                  (is (-> edit-form
+                          (test.dom/query-one :.save-button)
+                          (test.dom/attrs)
+                          (:disabled))))))
+
+            (testing "and when there are no changes"
+              (spies/reset! update-spy errors-spy changed-spy)
+              (spies/respond-with! changed-spy (constantly false))
+              (let [root (http.views/sim-edit-form* ::id ::form)
+                    edit-form (test.dom/query-one root :.simulator-edit)]
+                (testing "has an :on-submit attr"
+                  (is (-> edit-form
+                          (test.dom/query-one :.simulator-edit)
+                          (test.dom/attrs)
+                          (:on-submit)
+                          (= ::submit))))
+
+                (testing "has a disabled :on-submit"
+                  (is (spies/called-with? update-spy ::form ::id false)))
+
+                (testing "has a disabled save button"
+                  (is (-> edit-form
+                          (test.dom/query-one :.save-button)
+                          (test.dom/attrs)
+                          (:disabled))))))
+
+            (testing "and when there are no errors and changes"
+              (spies/reset! update-spy errors-spy changed-spy)
+              (let [root (http.views/sim-edit-form* ::id ::form)
+                    edit-form (test.dom/query-one root :.simulator-edit)]
+                (testing "has an :on-submit attr"
+                  (is (-> edit-form
+                          (test.dom/query-one :.simulator-edit)
+                          (test.dom/attrs)
+                          (:on-submit)
+                          (= ::submit))))
+
+                (testing "has an enabled :on-submit"
+                  (is (spies/called-with? update-spy ::form ::id true)))
+
+                (testing "has an enabled save button"
+                  (is (-> edit-form
+                          (test.dom/query-one :.save-button)
+                          (test.dom/attrs)
+                          (:disabled)
+                          (not))))))))))))
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
