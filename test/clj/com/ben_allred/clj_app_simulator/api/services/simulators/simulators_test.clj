@@ -29,18 +29,18 @@
                       [::method-1 ::path-2] ::sim-2
                       [::method-2 ::path-1] ::sim-3
                       [::method-2 ::path-2] ::sim-4})
-          details-spy (spies/constantly {:config {:method ::method :path ::path}})
-          start-spy (spies/create)]
+          start-spy (spies/create)
+          identifier-spy (spies/constantly ::key)]
       (with-redefs [sims/sims sims
-                    common/details details-spy
-                    common/start start-spy]
+                    common/start start-spy
+                    common/identifier identifier-spy]
         (testing "when the simulator does not exist"
           (let [result (sims/add! ::simulator)]
-            (testing "gets the simulator's details"
-              (is (spies/called-with? details-spy ::simulator)))
+            (testing "gets the simulator's identifier"
+              (is (spies/called-with? identifier-spy ::simulator)))
 
             (testing "adds the simulator"
-              (is (= (get @sims [::method ::path])
+              (is (= (get @sims ::key)
                      ::simulator)))
 
             (testing "starts the simulator"
@@ -50,11 +50,11 @@
               (is (= ::simulator result)))))
 
         (testing "when the simulator already exists"
-          (spies/reset! details-spy start-spy)
-          (reset! sims {[::method ::path] ::ws})
+          (spies/reset! start-spy)
+          (reset! sims {::key ::ws})
           (let [result (sims/add! ::simulator)]
             (testing "does not add the simulator"
-              (= (get @sims [::method ::path])
+              (= (get @sims ::key)
                  ::ws))
 
             (testing "does not start the simulator"
@@ -70,7 +70,7 @@
           stop-spy (spies/create)]
       (with-redefs [sims/sims sims
                     common/stop stop-spy]
-        (sims/remove! ::method ::path-2)
+        (sims/remove! [::method ::path-2])
         (testing "when the simulator exists"
           (testing "stops the simulator"
             (is (spies/called-with? stop-spy ::sim-2))

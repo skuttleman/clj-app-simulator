@@ -1,15 +1,16 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.core-test
   (:require [clojure.test :refer [deftest testing is]]
-            [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
             [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
             [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [compojure.core :as c]
+            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
             [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
+            [compojure.core :as c]
             [integration.utils.http :as test.http]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]))
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
@@ -121,10 +122,10 @@
                     common/details details-spy]
         (let [result (simulators/details)]
           (testing "returns the simulators' details"
-            (is (test.http/success? result))
+            (is (test.http/success? (respond/with result)))
             (is (= {:simulators [[::details ::sim-1]
                                  [::details ::sim-2]]}
-                   (:body result)))
+                   (second result)))
             (is (spies/called-with? simulators-spy))
             (is (spies/called-with? details-spy ::sim-1))
             (is (spies/called-with? details-spy ::sim-2))))))))
@@ -149,9 +150,9 @@
               (is (spies/called-with? publish-spy :simulators/add ::details)))
 
             (testing "returns a the simulator's details"
-              (is (test.http/success? result))
+              (is (test.http/success? (respond/with result)))
               (is (= {:simulator ::details}
-                     (:body result))))))
+                     (second result))))))
 
         (testing "when a simulator is not made"
           (spies/reset! make-spy details-spy publish-spy)
@@ -161,7 +162,7 @@
               (is (spies/never-called? publish-spy)))
 
             (testing "returns an error"
-              (is (test.http/client-error? result)))))))))
+              (is (test.http/client-error? (respond/with result))))))))))
 
 (deftest ^:unit set!-test
   (testing "(set!)"
@@ -193,11 +194,11 @@
                                        {:details [::simulator ::cfg-3]}])))
 
             (testing "returns the simulators' details"
-              (is (test.http/success? result))
+              (is (test.http/success? (respond/with result)))
               (is (= {:simulators [{:details [::simulator ::cfg-1]}
                                    {:details [::simulator ::cfg-2]}
                                    {:details [::simulator ::cfg-3]}]}
-                     (:body result))))
+                     (second result))))
 
             (testing "makes the simulators"
               (is (spies/called-with? make-spy ::cfg-1))
@@ -218,7 +219,7 @@
               (is (spies/never-called? publish-spy)))
 
             (testing "returns an error"
-              (is (test.http/client-error? result)))))))))
+              (is (test.http/client-error? (respond/with result))))))))))
 
 (deftest ^:unit reset-all!-test
   (testing "(reset-all!)"
@@ -245,7 +246,7 @@
             (is (spies/called-with? details-spy ::sim-2)))
 
           (testing "returns a success response"
-            (is (test.http/success? result))))))))
+            (is (test.http/success? (respond/with result)))))))))
 
 (deftest ^:unit routes-test
   (testing "(routes)"

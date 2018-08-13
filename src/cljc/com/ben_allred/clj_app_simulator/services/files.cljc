@@ -1,8 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.services.files
-  (:require [#?(:clj clj-http.client :cljs cljs-http.client) :as client]
-            [#?(:clj clojure.core.async :cljs cljs.core.async) :as async]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]))
+  (:require #?(:clj [clojure.core.async :as async])
+            [#?(:clj clj-http.client :cljs cljs-http.client) :as client]
+            [com.ben-allred.clj-app-simulator.services.http :as http]))
 
 (defn ^:private with-files [request files mime-type]
   #?(:clj  (assoc request

@@ -7,7 +7,6 @@
             [compojure.core :as c]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
@@ -41,15 +40,14 @@
 (defn details []
   (->> (simulator-configs common/details)
        (assoc {} :simulators)
-       (conj [:ok])
-       (respond/with)))
+       (conj [:ok])))
 
 (defn add [config]
   (if-let [simulator (make-simulator! config)]
     (let [sim (common/details simulator)]
       (activity/publish :simulators/add sim)
-      (respond/with [:created {:simulator sim}]))
-    (respond/with [:bad-request {:message "error creating simulator"}])))
+      [:created {:simulator sim}])
+    [:bad-request {:message "error creating simulator"}]))
 
 (defn set! [configs]
   (let [invalid-configs (remove valid? configs)]
@@ -60,14 +58,14 @@
                         (map make-simulator!)
                         (map common/details))]
           (activity/publish :simulators/init sims)
-          (respond/with [:created {:simulators sims}])))
-      (respond/with [:bad-request {:message "one or more invalid simulators"}]))))
+          [:created {:simulators sims}]))
+      [:bad-request {:message "one or more invalid simulators"}])))
 
 (defn reset-all! []
   (let [sims (simulator-configs)]
     (dorun (map common/reset sims))
     (activity/publish :simulators/reset-all (map common/details sims)))
-  (respond/with [:no-content]))
+  [:no-content])
 
 (defn routes []
   (->> (simulator-configs common/routes)

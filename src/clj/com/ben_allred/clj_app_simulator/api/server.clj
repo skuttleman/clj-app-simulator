@@ -1,26 +1,27 @@
 (ns com.ben-allred.clj-app-simulator.api.server
   (:gen-class)
   (:use compojure.core)
-  (:require [compojure.handler :refer [site]]
-            [immutant.web :as web]
-            [compojure.route :as route]
-            [ring.middleware.reload :refer [wrap-reload]]
-            [clojure.tools.nrepl.server :as nrepl]
+  (:require [clojure.tools.nrepl.server :as nrepl]
+            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
-            [ring.util.response :as response]
             [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
             [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
             [com.ben-allred.clj-app-simulator.services.env :as env]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
+            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+            [compojure.handler :refer [site]]
+            [compojure.route :as route]
+            [immutant.web :as web]
+            [ring.middleware.reload :refer [wrap-reload]]
+            [ring.util.response :as response])
+  (:import (clojure.lang IPersistentVector)))
 
-(defn ^:private not-found
-  ([] (not-found nil))
-  ([message]
-   (respond/with [:not-found (when message {:message message})])))
+(extend-protocol compojure.response/Renderable
+  IPersistentVector
+  (render [this _]
+    (respond/with this)))
 
 (defroutes ^:private base
   (context "/api" []
@@ -35,24 +36,24 @@
         (->> (get-in request [:params :files])
              (colls/force-sequential)
              (resources/upload!)
-             (conj [:created])
-             (respond/with)))
+             (conj [:created])))
       (GET "/" []
-        (respond/with [:ok {:uploads (resources/list-files)}]))
+        [:ok {:uploads (resources/list-files)}])
       (DELETE "/" []
         (resources/clear!)
-        (respond/with [:no-content]))
+        [:no-content])
       (DELETE "/:resource-id" [resource-id]
         (resources/remove! (uuids/->uuid resource-id))
-        (respond/with [:no-content]))))
+        [:no-content])))
   (context "/" []
     (simulators/routes)
     (context "/simulators" []
-      (ANY "/" [] (not-found "simulator not found"))
-      (ANY "/*" [] (not-found "simulator not found")))
+      (ANY "/" [] [:not-found {:message "simulator not found"}])
+      (ANY "/*" [] [:not-found {:message "simulator not found"}]))
     (route/resources "/")
+    (GET "/health" [] [:ok {:a :ok}])
     (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
-    (ANY "/*" [] (not-found))))
+    (ANY "/*" [] [:not-found])))
 
 (def ^:private app
   (-> #'base

@@ -60,7 +60,7 @@
       (maps/update-maybe :body when-not-string transit/stringify)
       (with-headers header-keys "application/transit"))
 
-    (or (not accept) (json? accept))
+    (or (not accept) (re-find #"\*/\*" accept) (json? accept))
     (->
       (maps/update-maybe :body when-not-string json/stringify)
       (with-headers header-keys "application/json"))))

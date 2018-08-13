@@ -2,7 +2,6 @@
   (:require [compojure.core :as c]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]
             [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
@@ -35,14 +34,14 @@
 
 (defn get-sim [simulator]
   (fn [_]
-    (respond/with [:ok {:simulator (common/details simulator)}])))
+    [:ok {:simulator (common/details simulator)}]))
 
 (defn delete-sim [simulator delete-sim!]
   (fn [_]
     (activity/publish :simulators/delete
                       (select-keys (common/details simulator) #{:id :config}))
     (delete-sim! (common/identifier simulator))
-    (respond/with [:no-content])))
+    [:no-content]))
 
 (defn patch-sim [simulator]
   (fn [{{:keys [action config]} :body}]
@@ -56,9 +55,9 @@
            (let [details (common/details simulator)]
              (when (#{:simulators/reset :simulators/change :simulators/reset-requests :http/reset-response} action)
                (activity/publish action details))
-             (respond/with [:ok details])))
+             [:ok details]))
          (catch Throwable ex
-           (respond/with [:bad-request (:problems (ex-data ex))])))))
+           [:bad-request (:problems (ex-data ex))]))))
 
 (defn patch-ws [simulator]
   (fn [{{:keys [action socket-id config]} :body}]
@@ -75,7 +74,7 @@
                       socket-id (assoc :socket-id socket-id))]
         (when (#{:simulators/reset :simulators/reset-requests :simulators/change} action)
           (activity/publish action details))
-        (respond/with [:ok details])))))
+        [:ok details]))))
 
 (defn send-ws [simulator]
   (fn [{:keys [params body]}]
@@ -84,12 +83,12 @@
       (if socket-id
         (common/send simulator (uuids/->uuid socket-id) body)
         (common/send simulator body))
-      (respond/with [:no-content]))))
+      [:no-content])))
 
 (defn disconnect-ws [simulator]
   (fn [_]
     (common/disconnect simulator)
-    (respond/with [:no-content])))
+    [:no-content]))
 
 (defn http-routes [simulator]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)

@@ -9,7 +9,7 @@
 
 (defn ^:private api? [{:keys [uri websocket?]}]
   (and (not websocket?)
-       (re-find #"(^/api|^/simulators)" uri)))
+       (re-find #"(^/api|^/simulators|^/health)" uri)))
 
 (defn log-response [handler]
   (fn [request]

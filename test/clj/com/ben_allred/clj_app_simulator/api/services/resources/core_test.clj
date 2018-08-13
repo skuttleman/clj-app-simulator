@@ -73,20 +73,21 @@
 (deftest ^:unit remove!-test
   (testing "(remove!)"
     (let [upload-data {111 {:filename     ::file-3
-                     :content-type ::content-type
-                     :file         ::file
-                     :timestamp    789}
-                222 {:filename     ::file-1
-                     :content-type ::content-type
-                     :file         ::file
-                     :timestamp    123}
-                333 {:filename     ::file-2
-                     :content-type ::content-type
-                     :file         ::file
-                     :timestamp    456}}
+                            :content-type ::content-type
+                            :file         ::file
+                            :timestamp    789}
+                       222 {:filename     ::file-1
+                            :content-type ::content-type
+                            :file         ::file
+                            :timestamp    123}
+                       333 {:filename     ::file-2
+                            :content-type ::content-type
+                            :file         ::file
+                            :timestamp    456}}
           uploads (atom upload-data)
           publish-spy (spies/create)]
-      (with-redefs [resources/uploads uploads
+      (with-redefs [uuids/->uuid identity
+                    resources/uploads uploads
                     activity/publish publish-spy]
         (resources/remove! 222)
         (testing "clears uploads"
@@ -139,7 +140,8 @@
 
 (deftest ^:unit get-test
   (testing "(get)"
-    (with-redefs [resources/uploads (atom {111 {:filename     ::file
+    (with-redefs [uuids/->uuid identity
+                  resources/uploads (atom {111 {:filename     ::file
                                                 :content-type ::content-type
                                                 :timestamp    123}})]
       (testing "returns found item"
@@ -153,7 +155,8 @@
 
 (deftest ^:unit has-upload?-test
   (testing "(has-upload?)"
-    (with-redefs [resources/uploads (atom {111 {:filename     ::file
+    (with-redefs [uuids/->uuid identity
+                  resources/uploads (atom {111 {:filename     ::file
                                                 :content-type ::content-type
                                                 :timestamp    123}})]
       (testing "returns found item"
