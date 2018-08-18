@@ -2,7 +2,7 @@
   (:require [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
-(def ^:private sims (atom {}))
+(defonce ^:private sims (atom {}))
 
 (defn clear! []
   (->> @sims

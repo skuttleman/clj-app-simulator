@@ -43,13 +43,21 @@
         .sim-card-method {
             margin-right: 4px;
             font-weight: bold;
-            color: purple;
+            color: $purple;
             font-size: 18px;
         }
+
         .sim-card-path {
-            color: $green;
             text-decoration: underline;
             font-size: 18px;
+
+            .path-prefix {
+                color: $purple;
+            }
+
+            .path-user-defined {
+                color: $green;
+            }
         }
     }
 

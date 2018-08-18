@@ -7,8 +7,7 @@
             [com.ben-allred.clj-app-simulator.utils.transit :as transit]
             [com.ben-allred.clj-app-simulator.utils.json :as json]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.core.async :as async]
-            [clojure.spec.alpha :as s]))
+            [clojure.core.async :as async]))
 
 (use-fixtures :once fixtures/run-server)
 

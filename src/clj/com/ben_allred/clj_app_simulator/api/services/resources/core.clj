@@ -6,7 +6,7 @@
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity])
   (:import (java.util Date)))
 
-(def ^:private uploads (atom {}))
+(defonce ^:private uploads (atom {}))
 
 (defn ^:private file->data [[id file]]
   (-> file

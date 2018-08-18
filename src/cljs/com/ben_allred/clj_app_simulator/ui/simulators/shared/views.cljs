@@ -37,7 +37,9 @@
 (defn sim-details [{{:keys [method path]} :config}]
   [:div.sim-card-identifier
    [:div.sim-card-method (when method (string/upper-case (name method)))]
-   [:div.sim-card-path path]])
+   [:div.sim-card-path
+    [:span.path-prefix "/simulators"]
+    [:span.path-user-defined (when (not= "/" path) path)]]])
 
 (defn sim-request [sim {:keys [timestamp] :as request}]
   (let [dt (mo/->moment timestamp)]
