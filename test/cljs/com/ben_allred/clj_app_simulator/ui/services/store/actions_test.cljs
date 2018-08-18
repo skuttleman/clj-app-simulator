@@ -394,7 +394,7 @@
                   f (actions/upload ::files)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:files.upload/succeed {:some :result}]))
-              (is (spies/called-with? files/upload "/api/resources" ::files))
+              (is (spies/called-with? files/upload "/api/resources" :post ::files))
               (done))))))))
 
 (deftest ^:unit upload-failure-test
@@ -410,7 +410,7 @@
                   f (actions/upload ::files)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:files.upload/fail {:some :reason}]))
-              (is (spies/called-with? files/upload "/api/resources" ::files))
+              (is (spies/called-with? files/upload "/api/resources" :post ::files))
               (done))))))))
 
 (deftest ^:unit get-uploads-test

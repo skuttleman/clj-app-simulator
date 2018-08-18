@@ -8,9 +8,7 @@
             [com.ben-allred.clj-app-simulator.utils.json :as json]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [clojure.core.async :as async]
-            [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
+            [clojure.spec.alpha :as s]))
 
 (use-fixtures :once fixtures/run-server)
 
@@ -18,52 +16,6 @@
   {"application/edn"     edn/read-string
    "application/transit" transit/parse
    "application/json"    json/parse})
-
-(def ^:private content-type->stringify
-  {"application/edn"     pr-str
-   "application/transit" transit/stringify
-   "application/json"    json/stringify})
-
-(def ^:private uuid-re #"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
-
-(defn ^:private simple [sim]
-  (dissoc sim :response))
-
-(def ^:private sim-mapper
-  (comp #(:config %) #(s/conform :http/http-simulator %)))
-
-(defn ^:privates sims-match? [sims-1 sims-2]
-  (= (->> sims-1
-          (map sim-mapper)
-          (set))
-     (->> sims-2
-          (map sim-mapper)
-          (set))))
-
-(def ^:private start-configs [{:method   :http/get
-                               :path     "/some/:url-param"
-                               :delay    1
-                               :response {:status  202
-                                          :body    (json/stringify {:some :json})
-                                          :headers {:content-type    "application/json"
-                                                    :x-custom-header "some value"}}}
-                              {:method   :http/post
-                               :path     "/some/path"
-                               :response {:status  201
-                                          :body    (pr-str {:some :edn})
-                                          :headers {:content-type "application/edn"}}}])
-
-(def ^:private new-sim {:method   "http/delete"
-                        :path     "/something/that/cannot/be/deleted"
-                        :response {:status  400
-                                   :headers {"Some-Header" "some value"}}})
-
-(def ^:private second-sims [{:method   :http/patch
-                             :path     "/new/simulator"
-                             :response {:status 200}}
-                            {:method   :http/get
-                             :path     "/another/new/simulator"
-                             :response {:status 403}}])
 
 (deftest ^:integration resources-test
   (testing "[resources API]"
@@ -227,13 +179,33 @@
                           (is (= :simulators/receive (keyword event)))
                           (is (= {:some "new-qp"} (get-in data [:request :query-params])))))
 
+                      (testing "and when updating the resource"
+                        (test.http/upload-put (str "/api/resources/" id-2) content-type "sample3.txt")
+
+                        (testing "publishes an event"
+                          (let [{{:keys [id filename]} :data event :event} (async/<!! chan)]
+                            (is (= id id-2))
+                            (is (= "sample3.txt" filename))
+                            (is (= :files.upload/replace (keyword event))))
+
+                          (testing "and when making a request to the file simulator"
+                            (let [[_ body :as response] (test.http/get "/simulators/some/file" "text/plain")]
+                              (testing "returns the new file data"
+                                (is (test.http/success? response))
+                                (is (= body (slurp "test/fixtures/sample3.txt"))))
+
+                              (testing "publishes an event"
+                                (let [{:keys [event data]} (async/<!! chan)]
+                                  (is (= :simulators/receive (keyword event)))
+                                  (is (empty? (get-in data [:request :query-params])))))))))
+
                       (testing "and when deleting the resource"
                         (test.http/delete (str "/api/resources/" id-2) content-type)
 
                         (let [{:keys [event data]} (async/<!! chan)]
                           (testing "publishes an event"
                             (is (= :files/remove (keyword event)))
-                            (is (= {:filename "sample2.txt" :id id-2} (select-keys data #{:filename :id}))))
+                            (is (= {:filename "sample3.txt" :id id-2} (select-keys data #{:filename :id}))))
 
                           (testing "and when making a request to the file simulator"
                             (let [[_ _ status] (test.http/get "/simulators/some/file" "text/plain")]

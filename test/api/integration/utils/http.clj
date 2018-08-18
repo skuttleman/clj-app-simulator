@@ -36,5 +36,11 @@
 (defn upload [path content-type & fixtures]
   (-> path
       (cfg/->url)
-      (files/upload (map (comp io/file (partial str "test/fixtures/")) fixtures) content-type "text/plain")
+      (files/upload :post (map (comp io/file (partial str "test/fixtures/")) fixtures) content-type "text/plain")
+      (async/<!!)))
+
+(defn upload-put [path content-type fixture]
+  (-> path
+      (cfg/->url)
+      (files/upload :put [(io/file (str "test/fixtures/" fixture))] content-type "text/plain")
       (async/<!!)))

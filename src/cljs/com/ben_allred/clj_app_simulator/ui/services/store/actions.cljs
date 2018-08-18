@@ -81,7 +81,7 @@
   (fn [[dispatch]]
     (dispatch [:files.upload/request])
     (-> "/api/resources"
-        (files/upload files)
+        (files/upload :post files)
         (request* dispatch :files.upload/succeed :files.upload/fail))))
 
 (defn get-uploads [[dispatch]]

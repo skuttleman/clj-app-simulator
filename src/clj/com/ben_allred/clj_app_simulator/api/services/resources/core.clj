@@ -13,18 +13,24 @@
       (select-keys [:filename :content-type :timestamp])
       (assoc :id id)))
 
-(defn upload! [files]
-  (let [id'ed-files (->> files
-                         (map (fn [file]
-                                [(uuids/random)
-                                 (-> file
-                                     (set/rename-keys {:tempfile :file})
-                                     (assoc :timestamp (Date.)))])))
-        result (map file->data id'ed-files)]
-    (swap! uploads into id'ed-files)
-    (doseq [file result]
-      (activity/publish :files.upload/receive file))
+(defn ^:private upload* [id file]
+  (let [file' (-> file
+                  (set/rename-keys {:tempfile :file})
+                  (assoc :timestamp (Date.)))
+        result (file->data [id file'])]
+    (swap! uploads assoc id file')
     result))
+
+(defn upload!
+  ([resource-id file]
+   (let [result (upload* (uuids/->uuid resource-id) file)]
+     (activity/publish :files.upload/replace result)
+     result))
+  ([files]
+   (let [result (map (fn [file] (upload* (uuids/random) file)) files)]
+     (doseq [file result]
+       (activity/publish :files.upload/receive file))
+     result)))
 
 (defn clear! []
   (reset! uploads {})

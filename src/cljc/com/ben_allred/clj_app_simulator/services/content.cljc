@@ -10,12 +10,12 @@
 (defn ^:private with-headers [request header-keys type]
   (update request :headers (partial merge (zipmap header-keys (repeat type)))))
 
-(defn ^:private stream? [value]
+(defn ^:private input-stream? [value]
   #?(:clj  (instance? InputStream value)
      :cljs false))
 
 (defn ^:private maybe-slurp [value]
-  (if (stream? value)
+  (if (input-stream? value)
     #?(:clj (slurp value))
     value))
 
@@ -60,7 +60,8 @@
       (maps/update-maybe :body when-not-string transit/stringify)
       (with-headers header-keys "application/transit"))
 
-    (or (not accept) (re-find #"\*/\*" accept) (json? accept))
+    (and (not (input-stream? (:body data)))
+         (or (not accept) (re-find #"\*/\*" accept) (json? accept)))
     (->
       (maps/update-maybe :body when-not-string json/stringify)
       (with-headers header-keys "application/json"))))

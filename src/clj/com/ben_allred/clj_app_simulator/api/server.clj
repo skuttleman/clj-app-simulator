@@ -37,6 +37,11 @@
              (colls/force-sequential)
              (resources/upload!)
              (conj [:created])))
+      (PUT "/:resource-id" request
+        (let [{:keys [resource-id file]} (:params request)]
+          (->> file
+               (resources/upload! resource-id)
+               (conj [:created]))))
       (GET "/" []
         [:ok {:uploads (resources/list-files)}])
       (DELETE "/" []

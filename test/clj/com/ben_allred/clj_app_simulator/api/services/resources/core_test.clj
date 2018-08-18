@@ -8,46 +8,73 @@
 
 (deftest ^:unit upload!-test
   (testing "(upload!)"
-    (let [uploads (atom {111 {:filename     ::filename-1
-                              :file         ::file-1
-                              :content-type ::content-type-1
-                              :timestamp    123}})
-          publish-spy (spies/create)
-          uuid-spy (spies/create)]
-      (with-redefs [resources/uploads uploads
-                    activity/publish publish-spy
-                    uuids/random uuid-spy]
-        (spies/returning! uuid-spy 222 333)
-        (let [result (resources/upload! [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
-                                         {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
-              [[event-1 data-1] [event-2 data-2]] (spies/calls publish-spy)
-              data @uploads]
+    (testing "when uploading new files"
+      (let [uploads (atom {111 {:filename     ::filename-1
+                                :file         ::file-1
+                                :content-type ::content-type-1
+                                :timestamp    123}})
+            publish-spy (spies/create)
+            uuid-spy (spies/create)]
+        (with-redefs [resources/uploads uploads
+                      activity/publish publish-spy
+                      uuids/random uuid-spy]
+          (spies/returning! uuid-spy 222 333)
+          (let [result (resources/upload! [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
+                                           {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
+                [[event-1 data-1] [event-2 data-2]] (spies/calls publish-spy)
+                state @uploads]
 
-          (testing "publishes an event for file-2"
-            (is (= :files.upload/receive event-1))
-            (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
-                   (dissoc data-1 :timestamp)))
-            (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-1))))))
+            (testing "publishes an event for file-2"
+              (is (= :files.upload/receive event-1))
+              (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
+                     (dissoc data-1 :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-1))))))
 
-          (testing "publishes an event for file-3"
-            (is (= :files.upload/receive event-2))
-            (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
-                   (dissoc data-2 :timestamp)))
-            (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-2))))))
+            (testing "publishes an event for file-3"
+              (is (= :files.upload/receive event-2))
+              (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
+                     (dissoc data-2 :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-2))))))
 
-          (testing "has file-1"
-            (is (= ::file-1 (get-in data [111 :file]))))
+            (testing "has file-1"
+              (is (= ::file-1 (get-in state [111 :file]))))
 
-          (testing "has file-2"
-            (is (= ::file-2 (get-in data [222 :file]))))
+            (testing "has file-2"
+              (is (= ::file-2 (get-in state [222 :file]))))
 
-          (testing "has file-3"
-            (is (= ::file-3 (get-in data [333 :file]))))
+            (testing "has file-3"
+              (is (= ::file-3 (get-in state [333 :file]))))
 
-          (testing "returns added files"
-            (is (= (map #(dissoc % :timestamp) result)
-                   [{:filename ::filename-2 :content-type ::content-type-2 :id 222}
-                    {:filename ::filename-3 :content-type ::content-type-3 :id 333}]))))))))
+            (testing "returns added files"
+              (is (= (map #(dissoc % :timestamp) result)
+                     [{:filename ::filename-2 :content-type ::content-type-2 :id 222}
+                      {:filename ::filename-3 :content-type ::content-type-3 :id 333}])))))))
+
+    (testing "when uploading a replacement file"
+      (let [uploads (atom {111 {:filename     ::filename-1
+                                :file         ::file-1
+                                :content-type ::content-type-1
+                                :timestamp    123}})
+            publish-spy (spies/create)]
+        (with-redefs [resources/uploads uploads
+                      activity/publish publish-spy
+                      uuids/->uuid identity]
+          (let [result (resources/upload! 111 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3})
+                [event data] (first (spies/calls publish-spy))
+                state @uploads]
+
+            (testing "publishes an event for file-3"
+              (is (= :files.upload/replace event))
+              (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 111}
+                     (dissoc data :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data))))))
+
+            (testing "has file-3"
+              (is (= ::file-3 (get-in state [111 :file]))))
+
+            (testing "returns added file"
+              (is (= (dissoc result :timestamp)
+                     {:filename ::filename-3 :content-type ::content-type-3 :id 111})))))))))
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"

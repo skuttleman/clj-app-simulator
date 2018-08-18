@@ -1,32 +1,35 @@
 (ns com.ben-allred.clj-app-simulator.services.files
   (:require #?(:clj [clojure.core.async :as async])
-            [#?(:clj clj-http.client :cljs cljs-http.client) :as client]
-            [com.ben-allred.clj-app-simulator.services.http :as http]))
+                    [#?(:clj clj-http.client :cljs cljs-http.client) :as client]
+                    [com.ben-allred.clj-app-simulator.services.http :as http]
+                    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
-(defn ^:private with-files [request files mime-type]
-  #?(:clj  (assoc request
-                  :async? true
-                  :multipart (map #(cond-> {:part-name "files" :name (.getName %) :content %}
-                                     mime-type (assoc :mime-type mime-type))
-                                  files))
-     :cljs (assoc request :multipart-params (map (partial conj ["files"]) files))))
+(defn ^:private with-files [request method files mime-type]
+  (let [param (if (= method :post) "files" "file")]
+    #?(:clj  (assoc request
+                    :async? true
+                    :multipart (map #(cond-> {:part-name param :name (.getName %) :content %}
+                                       mime-type (assoc :mime-type mime-type))
+                                    files))
+       :cljs (assoc request :multipart-params (map (partial conj [param]) files)))))
 
-(defn ^:private request* [request url]
-  #?(:clj  (let [chan (async/chan)]
-             (client/post url
-                          request
-                          (fn [response] (async/put! chan response))
-                          (fn [error] (async/put! chan error)))
-             chan)
-     :cljs (client/post url request)))
+(defn ^:private request* [request method url]
+  (let [do-request (if (= method :post) client/post client/put)]
+    #?(:clj  (let [chan (async/chan)]
+               (do-request url
+                           request
+                           (partial async/put! chan)
+                           (partial async/put! chan))
+               chan)
+       :cljs (do-request url request))))
 
 (defn upload
-  ([url files]
-   (upload url files "application/transit"))
-  ([url files content-type]
-   (upload url files content-type nil))
-  ([url files content-type mime-type]
+  ([url method files]
+   (upload url method files "application/transit"))
+  ([url method files content-type]
+   (upload url method files content-type nil))
+  ([url method files content-type mime-type]
    (-> {:headers {"accept" content-type}}
-       (with-files files mime-type)
-       (request* url)
+       (with-files method files mime-type)
+       (request* method url)
        (http/request*))))
