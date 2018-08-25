@@ -3,6 +3,7 @@
   (:use compojure.core)
   (:require [clojure.tools.nrepl.server :as nrepl]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+            [com.ben-allred.clj-app-simulator.api.services.html :as html]
             [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
             [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
@@ -58,7 +59,7 @@
     (ANY "/api/*" [] [:not-found])
     (route/resources "/")
     (GET "/health" [] [:ok {:a :ok}])
-    (GET "/*" [] (response/resource-response "index.html" {:root "public"}))
+    (GET "/*" [] [:ok (html/index) {:content-type "text/html"}])
     (ANY "/*" [] [:not-found])))
 
 (def ^:private app
