@@ -413,6 +413,46 @@
               (is (spies/called-with? files/upload "/api/resources" :post ::files))
               (done))))))))
 
+(deftest ^:unit upload-replace-test
+  (testing "(upload-replace)"
+    (let [dispatch (spies/create)]
+      (with-redefs [files/upload (spies/constantly (async/go [:success {}]))]
+        (testing "calls dispatch with request action"
+          ((actions/upload-replace ::id ::files) [dispatch])
+          (is (spies/called-with? dispatch [:files.replace/request])))))))
+
+(deftest ^:unit upload-replace-success-test
+  (testing "(upload-replace)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [files/upload (spies/create
+                                       (fn [_]
+                                         (async/go
+                                           [:success {:some :result}])))]
+            (let [dispatch (spies/create)
+                  f (actions/upload-replace ::id ::files)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:files.replace/succeed {:some :result}]))
+              (is (spies/called-with? files/upload (str "/api/resources/" ::id) :put ::files))
+              (done))))))))
+
+(deftest ^:unit upload-replace-failure-test
+  (testing "(upload-replace)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [files/upload (spies/create
+                                       (fn [_]
+                                         (async/go
+                                           [:error {:some :reason}])))]
+            (let [dispatch (spies/create)
+                  f (actions/upload-replace ::id ::files)]
+              (async/<! (f [dispatch]))
+              (is (spies/called-with? dispatch [:files.replace/fail {:some :reason}]))
+              (is (spies/called-with? files/upload (str "/api/resources/" ::id) :put ::files))
+              (done))))))))
+
 (deftest ^:unit get-uploads-test
   (testing "(get-uploads)"
     (let [dispatch (spies/create)]
@@ -449,6 +489,82 @@
               (async/<! (actions/get-uploads [dispatch]))
               (is (spies/called-with? dispatch [:files.fetch-all/fail {:some :reason}]))
               (is (spies/called-with? http/get "/api/resources"))
+              (done))))))))
+
+(deftest ^:unit delete-upload-test
+  (testing "(delete-upload)"
+    (let [dispatch (spies/create)]
+      (with-redefs [http/delete (constantly (async/chan))]
+        (testing "calls dispatch with request action"
+          ((actions/delete-upload ::id) [dispatch])
+          (is (spies/called-with? dispatch [:files.delete/request])))))))
+
+(deftest ^:unit delete-upload-success-test
+  (testing "(delete-upload)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/delete (spies/create
+                                      (fn [_]
+                                        (async/go
+                                          [:success {:some :result}])))]
+            (let [dispatch (spies/create)]
+              (async/<! ((actions/delete-upload ::id) [dispatch]))
+              (is (spies/called-with? dispatch [:files.delete/succeed {:id ::id} {:some :result}]))
+              (is (spies/called-with? http/delete (str "/api/resources/" ::id)))
+              (done))))))))
+
+(deftest ^:unit delete-upload-failure-test
+  (testing "(delete-upload)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/delete (spies/create
+                                      (fn [_]
+                                        (async/go
+                                          [:error {:some :reason}])))]
+            (let [dispatch (spies/create)]
+              (async/<! ((actions/delete-upload ::id) [dispatch]))
+              (is (spies/called-with? dispatch [:files.delete/fail {:some :reason}]))
+              (is (spies/called-with? http/delete (str "/api/resources/" ::id)))
+              (done))))))))
+
+(deftest ^:unit delete-uploads-test
+  (testing "(delete-uploads)"
+    (let [dispatch (spies/create)]
+      (with-redefs [http/delete (constantly (async/chan))]
+        (testing "calls dispatch with request action"
+          (actions/delete-uploads [dispatch])
+          (is (spies/called-with? dispatch [:files.delete-all/request])))))))
+
+(deftest ^:unit delete-uploads-success-test
+  (testing "(delete-uploads)"
+    (testing "calls dispatch when request succeeds"
+      (async done
+        (async/go
+          (with-redefs [http/delete (spies/create
+                                      (fn [_]
+                                        (async/go
+                                          [:success {:some :result}])))]
+            (let [dispatch (spies/create)]
+              (async/<! (actions/delete-uploads [dispatch]))
+              (is (spies/called-with? dispatch [:files.delete-all/succeed {:some :result}]))
+              (is (spies/called-with? http/delete "/api/resources"))
+              (done))))))))
+
+(deftest ^:unit delete-uploads-failure-test
+  (testing "(delete-uploads)"
+    (testing "calls dispatch when request fails"
+      (async done
+        (async/go
+          (with-redefs [http/delete (spies/create
+                                      (fn [_]
+                                        (async/go
+                                          [:error {:some :reason}])))]
+            (let [dispatch (spies/create)]
+              (async/<! (actions/delete-uploads [dispatch]))
+              (is (spies/called-with? dispatch [:files.delete-all/fail {:some :reason}]))
+              (is (spies/called-with? http/delete "/api/resources"))
               (done))))))))
 
 (deftest ^:unit show-modal-test
@@ -517,4 +633,5 @@
               (is (spies/called-with? dispatch [:toast/remove key]))
               (is (= 6000 ms)))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

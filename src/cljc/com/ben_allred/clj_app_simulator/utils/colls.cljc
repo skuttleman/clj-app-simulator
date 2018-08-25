@@ -5,6 +5,8 @@
     v
     [v]))
 
-(defn only [coll]
-  (assert (>= 1 (count coll)) "Expected a singleton collection")
-  (first coll))
+(defn replace-by [compare-fn value coll]
+  (let [comparator (compare-fn value)]
+    (cond->> coll
+      :always (map #(if (= comparator (compare-fn %)) value %))
+      (not (list? coll)) (into (empty coll)))))

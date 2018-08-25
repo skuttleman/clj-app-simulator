@@ -7,5 +7,8 @@
 (defn from-now [mo]
   (.fromNow mo))
 
-(defn format [mo]
-  (.format mo))
+(defn format
+  ([mo]
+   (format mo "ddd MMM D, YYYY [at] h:mm:ss a"))
+  ([mo fmt]
+   (.format mo fmt)))

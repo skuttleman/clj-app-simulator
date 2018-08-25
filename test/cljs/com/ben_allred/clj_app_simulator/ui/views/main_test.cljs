@@ -8,6 +8,7 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.views :as ws.views]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
+            [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
             [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [test.utils.dom :as test.dom]
@@ -15,18 +16,31 @@
 
 (deftest ^:unit header-test
   (testing "(header)"
-    (let [path-for-spy (spies/constantly ::href)]
+    (let [path-for-spy (spies/create identity)]
       (with-redefs [nav/path-for path-for-spy]
-        (let [header (main/header)]
+        (let [header (test.dom/render (main/header {:handler :home}))]
           (testing "has link to home page"
-            (let [link (test.dom/query-one header :a.home-link)
-                  logo (test.dom/query-one link :img.logo)]
-              (is (= ::href (:href (test.dom/attrs link))))
-              (is (= "/images/logo.png" (:src (test.dom/attrs logo)))))
+            (let [link (test.dom/query-one header :a.home-link)]
+              (is (= :home (:href (test.dom/attrs link))))
+              (is (test.dom/query-one link :.logo))))
 
-            (testing "has page title"
-              (let [h1 (test.dom/query-one header :h1)]
-                (is (test.dom/contains? h1 "App Simulator"))))))))))
+          (testing "has tabs"
+            (let [tabs (test.dom/query-all header :.tab)
+                  [_ attrs :as link] (test.dom/query-one (second tabs) :a.tab)
+                  home (test.dom/query-one (first tabs) :span.tab)]
+              (is (= :resources (:href attrs)))
+              (is (test.dom/contains? link "resources"))
+              (is (test.dom/contains? home "simulators")))))
+
+        (testing "when on resources page"
+          (let [header (test.dom/render (main/header {:handler :resources}))]
+            (testing "has resources tabs"
+              (let [tabs (test.dom/query-all header :.tab)
+                    [_ attrs :as link] (test.dom/query-one (first tabs) :a.tab)
+                    resources (test.dom/query-one (second tabs) :span.tab)]
+                (is (= :home (:href attrs)))
+                (is (test.dom/contains? link "simulators"))
+                (is (test.dom/contains? resources "resources"))))))))))
 
 (deftest ^:unit root-test
   (let [path-for-spy (spies/constantly ::nav)
@@ -36,7 +50,8 @@
                   store/dispatch dispatch-spy
                   actions/upload action-spy]
       (testing "(root)"
-        (let [root (main/root {:simulators {:status ::status :data ::data}})]
+        (let [root (main/root {:simulators {:status ::status :data ::data}
+                               :home-welcome? ::home-welcome?})]
           (testing "has a header"
             (is (= "Simulators" (second (test.dom/query-one root :h2)))))
 
@@ -50,16 +65,8 @@
                       (test.dom/query-one :.button-success)
                       (test.dom/contains? "Create")))))
 
-          (testing "has an upload button"
-            (let [{:keys [on-change]} (-> root
-                                          (test.dom/query-one components/upload)
-                                          (test.dom/attrs))]
-              (on-change ::files)
-              (is (spies/called-with? action-spy ::files))
-              (is (spies/called-with? dispatch-spy ::action))))
-
           (testing "displays simulators"
-            (is (= [components/with-status sims/simulators {:status ::status :data ::data}]
+            (is (= [components/with-status [sims/simulators ::home-welcome?] {:status ::status :data ::data}]
                    (test.dom/query-one root components/with-status)))))))))
 
 (deftest ^:unit details-test
@@ -138,6 +145,19 @@
           (with-redefs [nav/nav-and-replace! nav-spy]
             (main/new state)
             (is (spies/called-with? nav-spy :new {:query-params {:type :http}}))))))))
+
+(deftest ^:unit resources-test
+  (testing "(resources)"
+    (let [root (main/resources {:uploads-welcome? ::uploads-welcome?
+                                :uploads          ::uploads})]
+      (testing "has a header"
+        (is (test.dom/contains? root "Resources")))
+
+      (testing "renders the root component with status"
+        (let [[_ component uploads] (test.dom/query-one root components/with-status)]
+          (is (= [resources/root ::uploads-welcome?]
+                 component))
+          (is (= ::uploads uploads)))))))
 
 (defn run-tests []
   (t/run-tests))

@@ -209,9 +209,10 @@
 (deftest ^:unit ->WsSimulator.identifier-test
   (testing "(->WsSimulator.identifier)"
     (testing "returns unique identifier"
-      (let [[sim] (simulator)]
+      (let [[sim] (simulator {:method :ws
+                              :path   "/some/:param"})]
         (let [result (common/identifier sim)]
-          (is (= [:ws "/some/path"] result)))))))
+          (is (= [:ws "/some/*"] result)))))))
 
 (deftest ^:unit ->WsSimulator.reset-test
   (testing "(->WsSimulator.reset)"

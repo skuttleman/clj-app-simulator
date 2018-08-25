@@ -3,8 +3,9 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [clojure.string :as string]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
@@ -50,8 +51,9 @@
   (s/explain-data :http.partial/http-simulator config))
 
 (defn ->HttpSimulator [id config]
-  (when-let [config (conform-to :http/http-simulator config)]
-    (let [{:keys [dispatch get-state]} (store/http-store)]
+  (when-let [{:keys [method path] :as config} (conform-to :http/http-simulator config)]
+    (let [{:keys [dispatch get-state]} (store/http-store)
+          id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
       (reify
         common/ISimulator
@@ -73,7 +75,7 @@
               (store/details)
               (assoc :id id)))
         (identifier [_]
-          [(keyword (name (:method config))) (:path config)])
+          [(keyword (name method)) id-path])
         (reset [_]
           (dispatch actions/reset))
         (routes [this]

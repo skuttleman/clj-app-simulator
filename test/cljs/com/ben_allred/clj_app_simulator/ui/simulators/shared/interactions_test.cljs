@@ -216,7 +216,7 @@
           ((shared.interactions/show-delete-modal ::id) ::event)
           (testing "shows a modal"
             (is (spies/called-with? action-spy
-                                    [modals/confirm-delete]
+                                    [modals/confirm-delete "this simulator"]
                                     "Delete Simulator"
                                     (spies/matcher vector?)
                                     (spies/matcher vector?)))

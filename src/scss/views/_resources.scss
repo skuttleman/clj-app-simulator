@@ -1,0 +1,22 @@
+.resources {
+    .resource {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 5px;
+
+        &:nth-child(odd) {
+            background-color: #e6e6e6;
+        }
+
+        .resource-details {
+            padding: 5px 0;
+            .resource-filename {
+                font-weight: bold;
+            }
+
+            .resource-timestamp {
+                font-style: italic;
+            }
+        }
+    }
+}

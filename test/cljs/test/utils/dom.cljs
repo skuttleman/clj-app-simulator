@@ -48,6 +48,16 @@
 (defn query-one [tree selector]
   (first (query-all tree selector)))
 
+(defn render [[elem & args :as tree]]
+  (if (fn? elem)
+    (apply elem args)
+    (mapv (fn [node]
+            (cond
+              (vector? node) (render node)
+              (list? node) (map render node)
+              :else node))
+          tree)))
+
 (defn simulate-event
   ([tree event]
    (simulate-event tree event (js/Event. (name event))))

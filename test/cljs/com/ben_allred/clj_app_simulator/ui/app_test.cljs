@@ -49,7 +49,8 @@
                 (is (= (second toast) ::toasts))))
 
             (testing "mounts header"
-              (is (test.dom/query-one (root) main/header)))
+              (is (= [main/header {:handler :component}]
+                     (test.dom/query-one (root) main/header))))
 
             (testing "mounts component with state"
               (let [app (root)

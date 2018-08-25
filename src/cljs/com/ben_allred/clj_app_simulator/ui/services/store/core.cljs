@@ -11,8 +11,11 @@
   (activity/sub (collaj/create-custom-store r/atom
                                             reducers/root
                                             collaj.enhancers/with-fn-dispatch
+                                            mw/home-welcome?
+                                            mw/uploads-welcome?
                                             (collaj/apply-middleware mw/sims->sim)
-                                            (collaj.enhancers/with-log-middleware #(log/spy %) identity))))
+                                            (collaj.enhancers/with-log-middleware (partial js/console.log "Action dispatched:")
+                                                                                  (partial js/console.log "New state:")))))
 
 (def get-state (:get-state store))
 

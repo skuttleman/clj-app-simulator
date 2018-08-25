@@ -6,7 +6,7 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
+            [clojure.string :as string]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
@@ -52,8 +52,9 @@
   (s/explain-data :file.partial/file-simulator config))
 
 (defn ->FileSimulator [id config]
-  (when-let [config (conform-to :file/file-simulator config)]
-    (let [{:keys [dispatch get-state]} (store/file-store)]
+  (when-let [{:keys [method path] :as config} (conform-to :file/file-simulator config)]
+    (let [{:keys [dispatch get-state]} (store/file-store)
+          id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
       (reify
         common/ISimulator
@@ -75,7 +76,7 @@
               (store/details)
               (assoc :id id)))
         (identifier [_]
-          [(keyword (name (:method config))) (:path config)])
+          [(keyword (name method)) id-path])
         (reset [_]
           (dispatch actions/reset))
         (routes [this]

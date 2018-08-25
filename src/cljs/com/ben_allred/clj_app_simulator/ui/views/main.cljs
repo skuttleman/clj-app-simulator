@@ -5,19 +5,27 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as http.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.file.views :as file.views]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.views :as ws.views]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+            [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
             [com.ben-allred.clj-app-simulator.ui.utils.simulators :as utils.sims]
             [clojure.string :as string]))
 
-(defn header []
-  [:header.header
-   [:a.home-link {:href (nav/path-for :home)}
-    [:img.logo {:src "/images/logo.png"}]
-    [:h1 "App Simulator"]]])
+(defn ^:private header-tab [handler page display]
+  (let [tag (if (= handler page) :span :a)]
+    [tag
+     (cond-> {:class-name "tab"}
+       (= tag :a) (assoc :href (nav/path-for page)))
+     display]))
 
-(defn root [{:keys [simulators uploads]}]
+(defn header [{:keys [handler]}]
+  [:header.header
+   [:a.home-link
+    {:href (nav/path-for :home)}
+    [:span.logo]]
+   [header-tab handler :home "simulators"]
+   [header-tab handler :resources "resources"]])
+
+(defn root [{:keys [simulators uploads home-welcome?]}]
   [:div
    [:h2 "Simulators"]
    [:div.button-row
@@ -27,12 +35,8 @@
                :always (map (fn [[type label]]
                               {:href  (nav/path-for :new {:query-params {:type type}})
                                :label label})))}
-     [:button.button.button-success.pure-button "Create"]]
-    [components/upload
-     {:on-change  (comp store/dispatch actions/upload)
-      :class-name "button button-success pure-button"}
-     "Upload"]]
-   [components/with-status sims/simulators simulators]])
+     [:button.button.button-success.pure-button "Create"]]]
+   [components/with-status [sims/simulators home-welcome?] simulators]])
 
 (defn details [state]
   (let [id (uuid (get-in state [:page :route-params :id]))
@@ -66,3 +70,8 @@
          [components/with-status component input]
          [component])]
       (nav/nav-and-replace! :new {:query-params {:type :http}}))))
+
+(defn resources [state]
+  [:div
+   [:h2 "Resources"]
+   [components/with-status [resources/root (:uploads-welcome? state)] (:uploads state)]])

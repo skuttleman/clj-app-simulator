@@ -5,12 +5,17 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.services.files :as files]))
 
+(defn ^:private ->event [type value]
+  (if (vector? type)
+    (conj type value)
+    [type value]))
+
 (defn ^:private request* [request dispatch success-type error-type]
   (async/go
     (let [[status result :as response] (async/<! request)]
       (dispatch (if (= :success status)
-                  [success-type result]
-                  [error-type result]))
+                  (->event success-type result)
+                  (->event error-type result)))
       response)))
 
 (def request-simulators
@@ -84,11 +89,31 @@
         (files/upload :post files)
         (request* dispatch :files.upload/succeed :files.upload/fail))))
 
+(defn upload-replace [id files]
+  (fn [[dispatch]]
+    (dispatch [:files.replace/request])
+    (-> (str "/api/resources/" id)
+        (files/upload :put files)
+        (request* dispatch :files.replace/succeed :files.replace/fail))))
+
 (defn get-uploads [[dispatch]]
   (dispatch [:files.fetch-all/request])
   (-> "/api/resources"
       (http/get)
       (request* dispatch :files.fetch-all/succeed :files.fetch-all/fail)))
+
+(defn delete-upload [id]
+  (fn [[dispatch]]
+    (dispatch [:files.delete/request])
+    (-> (str "/api/resources/" id)
+        (http/delete)
+        (request* dispatch [:files.delete/succeed {:id id}] :files.delete/fail))))
+
+(defn delete-uploads [[dispatch]]
+  (dispatch [:files.delete-all/request])
+  (-> "/api/resources"
+      (http/delete)
+      (request* dispatch :files.delete-all/succeed :files.delete-all/fail)))
 
 (defn show-modal [content & [title & actions]]
   (fn [[dispatch]]

@@ -15,7 +15,7 @@
     :simulators/change (dispatch [:simulators.activity/change {:simulator data}])
     :ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
     :ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
-    (log/spy [:UNKNOWN-- event data])))
+    (js/console.log [:UNKNOWN-WS event data])))
 
 (defn ^:private reconnect [dispatch]
   (let [host (env/get :host)

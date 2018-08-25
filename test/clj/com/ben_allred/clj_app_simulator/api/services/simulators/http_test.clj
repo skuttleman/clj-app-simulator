@@ -110,9 +110,11 @@
 (deftest ^:unit ->HttpSimulator.identifier-test
   (testing "(->HttpSimulator.identifier)"
     (testing "returns unique identifier"
-      (let [[sim] (simulator)]
+      (let [[sim] (simulator {:method   :http/get
+                              :path     "/some/:param/url/:thing"
+                              :response {:status 204}})]
         (let [result (common/identifier sim)]
-          (is (= [:get "/some/path"] result)))))))
+          (is (= [:get "/some/*/url/*"] result)))))))
 
 (deftest ^:unit ->HttpSimulator.reset-test
   (testing "(->HttpSimulator.reset)"

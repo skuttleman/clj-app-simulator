@@ -14,6 +14,7 @@
    [["" :home]
     [["details/" [#"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}" :id]] :details]
     ["create" :new]
+    ["resources" :resources]
     [true :not-found]]])
 
 (defn match-route* [routes path]

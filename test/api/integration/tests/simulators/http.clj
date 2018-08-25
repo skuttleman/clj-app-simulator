@@ -122,8 +122,8 @@
             (testing "and when adding an existing simulator"
               (let [error (test.http/post "/api/simulators"
                                           content-type
-                                          {:body {:simulator {:method   :http/post
-                                                              :path     "/some/path"
+                                          {:body {:simulator {:method   :http/get
+                                                              :path     "/some/:different-param"
                                                               :response {:status 200
                                                                          :body   "some body"}}}})]
                 (testing "returns an error response"

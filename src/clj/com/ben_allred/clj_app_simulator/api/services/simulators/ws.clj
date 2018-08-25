@@ -7,6 +7,7 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+            [clojure.string :as string]
             [immutant.web.async :as web.async]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
@@ -51,8 +52,9 @@
                                               :socket-id socket-id)))))
 
 (defn ->WsSimulator [id config]
-  (when-let [config (conform-to :ws/ws-simulator config)]
-    (let [{:keys [dispatch get-state] :as store} (store/ws-store)]
+  (when-let [{:keys [path method] :as config} (conform-to :ws/ws-simulator config)]
+    (let [{:keys [dispatch get-state] :as store} (store/ws-store)
+          id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
       (reify
         common/ISimulator
@@ -71,7 +73,7 @@
               (store/details)
               (assoc :id id)))
         (identifier [_]
-          [(:method config) (:path config)])
+          [method id-path])
         (reset [_]
           (dispatch actions/disconnect-all)
           (dispatch actions/reset))

@@ -53,7 +53,7 @@
     (colors/with-style arg {})
     arg))
 
-(defn ^:private formatter [{:keys [env level ?ns-str] :as data}]
+(defn ^:private formatter [{:keys [level ?ns-str] :as data}]
   (update data :vargs (fn [vargs]
                         (conj #?(:clj  (seq vargs)
                                  :cljs (seq (map no-color vargs)))

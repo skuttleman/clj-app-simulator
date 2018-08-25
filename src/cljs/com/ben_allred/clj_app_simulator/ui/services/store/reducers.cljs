@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.reducers
   (:require [com.ben-allred.collaj.reducers :as collaj.reducers]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
 
 (defn ^:private with-status [m reducer]
   (fn
@@ -74,13 +75,17 @@
 (def uploads
   (with-status
     {:pending   #{:files.fetch-all/request}
-     :available #{:files.fetch-all/succeed :files.upload/succeed}
+     :available #{:files.fetch-all/succeed :files.upload/succeed :files.replace/succeed
+                  :files.delete/succeed :files.delete-all/succeed}
      :failed    #{:files.fetch-all/fail}}
     (fn
       ([] [])
       ([state [type data]]
        (case type
          :files.upload/succeed (into state data)
+         :files.replace/succeed (colls/replace-by :id data state)
+         :files.delete/succeed (vec (remove (comp #{(:id data)} :id) state))
+         :files.delete-all/succeed []
          :files.fetch-all/succeed (:uploads data)
          state)))))
 

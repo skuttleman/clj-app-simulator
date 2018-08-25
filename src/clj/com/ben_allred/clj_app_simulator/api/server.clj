@@ -41,7 +41,7 @@
         (let [{:keys [resource-id file]} (:params request)]
           (->> file
                (resources/upload! resource-id)
-               (conj [:created]))))
+               (conj [:ok]))))
       (GET "/" []
         [:ok {:uploads (resources/list-files)}])
       (DELETE "/" []
@@ -55,6 +55,7 @@
     (context "/simulators" []
       (ANY "/" [] [:not-found {:message "simulator not found"}])
       (ANY "/*" [] [:not-found {:message "simulator not found"}]))
+    (ANY "/api/*" [] [:not-found])
     (route/resources "/")
     (GET "/health" [] [:ok {:a :ok}])
     (GET "/*" [] (response/resource-response "index.html" {:root "public"}))

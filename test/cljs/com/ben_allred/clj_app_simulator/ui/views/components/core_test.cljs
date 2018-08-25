@@ -2,7 +2,8 @@
   (:require [cljs.test :as t :refer-macros [deftest testing is are]]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [test.utils.spies :as spies]))
+            [test.utils.spies :as spies]
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
 (defn ^:private available [data]
   {:status :available :data data})
@@ -46,6 +47,12 @@
 
 (deftest ^:unit with-status-test
   (testing "(with-status)"
+    (testing "when component is vector"
+      (let [root (components/with-status [::component ::arg] {:status :available :data {::some ::item}})]
+        (testing "renders the partialed component"
+          (is (= [::component ::arg {::some ::item}]
+                 (test.dom/query-one root ::component))))))
+
     (testing "when status is :available"
       (let [root (components/with-status ::component {:status :available :data {::some ::item}})]
         (testing "renders the component"
@@ -160,6 +167,61 @@
                   [_ {:keys [open?]}] root]
               (testing "renders menu* as open"
                 (is open?)))))))))
+
+(deftest ^:unit upload-test
+  (testing "(upload)"
+    (with-redefs [gensym (spies/constantly ::id)]
+      (testing "when rendering the hidden file input"
+        (let [on-change-spy (spies/create)
+              root (components/upload nil)
+              tree (root {:on-change on-change-spy :multiple ::multiple})
+              [_ attrs :as input] (test.dom/query-one tree :.hidden.file-upload)
+              event (js/Object.)
+              target (js/Object.)]
+          (set! (.-target event) target)
+          (set! (.-value target) ::value)
+          (set! (.-files target) (to-array [::file-1 ::file-2 ::file-3]))
+
+          (testing "has attrs"
+            (is (= ::id (:id attrs)))
+            (is (= :file (:type attrs)))
+            (is (= ::multiple (:multiple attrs))))
+
+          (testing "handles :on-change"
+            (spies/reset! on-change-spy)
+            (test.dom/simulate-event input :change event)
+
+            (is (spies/called-times? on-change-spy 1))
+            (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
+            (is (nil? (.-files target)))
+            (is (nil? (.-value target))))))
+
+      (testing "defaults to multiple files"
+        (let [root (components/upload nil)
+              tree (root {})
+              [_ attrs] (test.dom/query-one tree :.hidden.file-upload)]
+          (is (true? (:multiple attrs)))))
+
+      (testing "renders a button"
+        (let [query-spy (spies/constantly ::node)
+              click-spy (spies/create)
+              root (components/upload nil)
+              tree (root {:class-name ::class} ::child-1 ::child-2)
+              [_ attrs child-1 child-2 :as button] (test.dom/query-one tree :button)]
+          (testing "has attrs"
+            (is (= ::class (:class-name attrs))))
+
+          (testing "handles :on-click"
+            (with-redefs [dom/query-one query-spy
+                          dom/click click-spy]
+              (test.dom/simulate-event button :click)
+
+              (is (spies/called-with? query-spy (str "#" ::id)))
+              (is (spies/called-with? click-spy ::node))))
+
+          (testing "has children"
+            (is (= ::child-1 child-1))
+            (is (= ::child-2 child-2))))))))
 
 (defn run-tests []
   (t/run-tests))

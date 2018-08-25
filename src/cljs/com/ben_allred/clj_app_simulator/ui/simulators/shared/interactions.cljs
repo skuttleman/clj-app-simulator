@@ -64,7 +64,7 @@
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/confirm-delete]
+        [modals/confirm-delete "this simulator"]
         "Delete Simulator"
         [:button.button.button-error.pure-button.delete-button
          {:on-click (partial delete-sim id)}

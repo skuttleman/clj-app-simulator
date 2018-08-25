@@ -1,7 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core
   (:require [com.ben-allred.clj-app-simulator.ui.utils.core :as utils]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
 
 (defn with-height [attrs open? item-count]
   (assoc-in attrs [:style :height] (if open?
@@ -26,7 +28,7 @@
 
 (defn with-status [component & status-data]
   (if (every? #{:available} (map :status status-data))
-    (into [component] (map :data status-data))
+    (into (colls/force-sequential component) (map :data status-data))
     [spinner]))
 
 (defn menu* [{:keys [open? on-click items class-name]} button]
@@ -47,16 +49,16 @@
         [:a {:href href}
          label]])]]])
 
-(defn menu [attrs button]
+(defn menu [_attrs _button]
   (let [open? (r/atom false)]
     (fn [attrs button]
       [menu*
        (assoc attrs :on-click #(swap! open? not) :open? @open?)
        button])))
 
-(defn upload [attrs & _]
+(defn upload [_attrs & _children]
   (let [id (gensym)]
-    (fn [{:keys [class-name on-change]} & args]
+    (fn [{:keys [class-name on-change multiple] :or {multiple true}} & children]
       [:div
        [:input.file-upload.hidden
         {:id        id
@@ -67,10 +69,11 @@
                                     (aget files i)))
                        (set! (.-files target) nil)
                        (set! (.-value target) nil))
-         :multiple  true}]
+         :multiple  multiple}]
        (into [:button
               {:class-name class-name
-               :on-click   #(-> js/document
-                                (.querySelector (str "#" id))
-                                (.click))}]
-             args)])))
+               :on-click   #(->> id
+                                 (str "#")
+                                 (dom/query-one)
+                                 (dom/click))}]
+             children)])))

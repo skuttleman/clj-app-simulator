@@ -11,21 +11,22 @@
 
 (enable-console-print!)
 
-(def components
+(def ^:private components
   {:home    main/root
    :new     main/new
-   :details main/details})
+   :details main/details
+   :resources main/resources})
 
 (defn app []
   (store/dispatch actions/get-uploads)
   (store/dispatch actions/request-simulators)
   (fn []
-    (let [state (store/get-state)
-          component (components (get-in state [:page :handler]) error/not-found)]
+    (let [{:keys [page] :as state} (store/get-state)
+          component (components (:handler page) error/not-found)]
       [:div.app
        [toast/toast (:toasts state)]
        [:div.scrollable
-        [main/header]
+        [main/header page]
         [:main.main
          [component state]]]
        [modal/modal (:modal state)]])))

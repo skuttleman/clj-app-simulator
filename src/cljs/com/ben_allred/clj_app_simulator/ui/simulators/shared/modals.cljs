@@ -20,10 +20,12 @@
                      (string/join "," v)
                      v)]])]]))
 
-(defn request-modal [{:keys [method path]} {:keys [dt query-params headers body]}]
+(defn request-modal [{:keys [method path]} {:keys [dt route-params query-params headers body]}]
   [:div.request-details
    [:p (string/upper-case (name method)) ": " path]
    [:p (mo/format dt)]
+   (when (seq route-params)
+     [sim-iterate "Route Params:" route-params "route-params"])
    (when (seq query-params)
      [sim-iterate "Query:" query-params "query-params"])
    (when (seq headers)
@@ -33,6 +35,6 @@
       [:span "Body:"]
       [:p body]])])
 
-(defn confirm-delete []
+(defn confirm-delete [msg]
   [:div.confirm
-   [:p "Are you sure you want to delete this simulator?"]])
+   [:p "Are you sure you want to delete " msg "?"]])

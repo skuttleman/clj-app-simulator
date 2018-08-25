@@ -51,10 +51,12 @@
     (let [format-spy (spies/constantly ::formatted)]
       (with-redefs [mo/format format-spy]
         (let [qp {:a 1 :b 2}
+              rp {:id 123}
               headers {:header-1 "val-1" :header-2 "val-2"}
               root (modals/request-modal {:method ::method :path "/some/path"}
                                          {:dt           ::moment
                                           :query-params qp
+                                          :route-params rp
                                           :headers      headers
                                           :body         "this is a body"})
               details (test.dom/query-one root :.request-details)]
@@ -66,6 +68,11 @@
 
           (testing "displays the formatted moment"
             (is (test.dom/contains? details ::formatted)))
+
+          (testing "when there are route params"
+            (testing "iterates over route params"
+              (is (test.dom/contains? details
+                                      [modals/sim-iterate "Route Params:" rp "route-params"]))))
 
           (testing "when there are query params"
             (testing "iterates over query params"

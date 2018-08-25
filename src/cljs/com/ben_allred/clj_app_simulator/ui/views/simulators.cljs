@@ -45,13 +45,22 @@
     (for [[group sims] (organize simulators)]
       ^{:key (str group)} [sim-group group sims])]])
 
-(defn simulators [data]
+(defn simulators [home-welcome? data]
   (let [sections (->> data
                       (vals)
                       (remove (comp nil? :config))
                       (group-by (comp utils.sims/config->section :config))
                       (sort-by first))]
-    [:ul
-     (for [[section simulators] sections]
-       ^{:key section}
-       [sim-section section simulators])]))
+    (cond
+      home-welcome?
+      [:p "Welcome. This is where you can create and manage your application
+           simulators for both manual or automated testing."]
+
+      (seq data)
+      [:ul
+       (for [[section simulators] sections]
+         ^{:key section}
+         [sim-section section simulators])]
+
+      :else
+      [:p "There are no simulators."])))

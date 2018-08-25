@@ -114,9 +114,12 @@
 (deftest ^:unit ->FileSimulator.identifier-test
   (testing "(->FileSimulator.identifier)"
     (testing "returns unique identifier"
-      (let [[sim] (simulator)]
+      (let [[sim] (simulator {:method   :file/post
+                              :path     "/some/:param/url/:id/action"
+                              :response {:status 204
+                                         :file ::123}})]
         (let [result (common/identifier sim)]
-          (is (= [:get "/some/path"] result)))))))
+          (is (= [:post "/some/*/url/*/action"] result)))))))
 
 (deftest ^:unit ->FileSimulator.reset-test
   (testing "(->FileSimulator.reset)"
