@@ -154,7 +154,7 @@
                 333 {:config {:group ::group-1 :path "path" :method :another ::data ::3}}
                 444 {:config {:group ::group-2 :path "path-1" :method :thing/a ::data ::4}}
                 555 {:config {:path "path" :method :another ::data ::5}}}
-          [section-1 section-2] (-> (sims/simulators true sims)
+          [section-1 section-2] (-> (sims/simulators false sims)
                                     (test.dom/query-all sims/sim-section))]
       (testing "groups by method"
         (is (= [sims/sim-section "another" [(get sims 333) (get sims 555)]]
@@ -164,4 +164,5 @@
                section-2))
         (is (= "thing" (:key (meta section-2))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

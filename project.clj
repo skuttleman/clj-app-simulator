@@ -17,6 +17,7 @@
                  [com.taoensso/timbre "4.10.0"]
                  [compojure "1.6.0"]
                  [environ "1.1.0"]
+                 [hiccup "1.0.5"]
                  [io.nervous/kvlt "0.1.4"]
                  [kibu/pushy "0.3.8"]
                  [metosin/jsonista "0.1.1"]
