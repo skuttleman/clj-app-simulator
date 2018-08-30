@@ -1,4 +1,30 @@
-(ns com.ben-allred.clj-app-simulator.templates.core)
+(ns com.ben-allred.clj-app-simulator.templates.core
+  (:require [clojure.set :as set]
+            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+            [clojure.string :as string]))
+
+(declare render)
+
+(defn ^:private m->css [m]
+  (if (map? m)
+    (->> m
+         (map (fn [[k v]] (str (name k) ": " v)))
+         (string/join ";"))
+    m))
+
+(defn ^:private clean-attrs [attrs]
+  (-> attrs
+      (maps/dissocp (some-fn nil? fn?))
+      (maps/walk (fn [k v] [k (if (keyword? v) (name v) v)]))
+      (set/rename-keys {:class-name :class})
+      (maps/update-maybe :style m->css)))
+
+(defn ^:private render* [arg]
+  (cond
+    (vector? arg) (render arg)
+    (list? arg) (map render arg)
+    (map? arg) (clean-attrs arg)
+    :else arg))
 
 (defn render [[node & args :as tree]]
   (when tree
@@ -6,12 +32,8 @@
                           (loop [node (apply node args)]
                             (if (fn? node)
                               (recur (apply node args))
-                              node))
+                              (render node)))
                           tree)]
       (->> args
-           (map (fn [arg]
-                  (cond
-                    (vector? arg) (render arg)
-                    (list? arg) (map render arg)
-                    :else arg)))
+           (map render*)
            (into [node])))))

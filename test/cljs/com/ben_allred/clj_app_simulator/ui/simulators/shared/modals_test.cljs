@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+            [com.ben-allred.clj-app-simulator.utils.datetime :as dt]))
 
 (deftest ^:unit sim-iterate-test
   (testing "(sim-iterate)"
@@ -49,12 +49,12 @@
 (deftest ^:unit request-modal-test
   (testing "(request-modal)"
     (let [format-spy (spies/constantly ::formatted)]
-      (with-redefs [mo/format format-spy]
+      (with-redefs [dt/format format-spy]
         (let [qp {:a 1 :b 2}
               rp {:id 123}
               headers {:header-1 "val-1" :header-2 "val-2"}
               root (modals/request-modal {:method ::method :path "/some/path"}
-                                         {:dt           ::moment
+                                         {:dt           ::dt
                                           :query-params qp
                                           :route-params rp
                                           :headers      headers
@@ -63,10 +63,10 @@
           (testing "displays the method and path"
             (is (test.dom/contains? details [:* "METHOD" ": " "/some/path"])))
 
-          (testing "formats the dt moment"
-            (is (spies/called-with? format-spy ::moment)))
+          (testing "formats the dt timestamp"
+            (is (spies/called-with? format-spy ::dt)))
 
-          (testing "displays the formatted moment"
+          (testing "displays the formatted timestamp"
             (is (test.dom/contains? details ::formatted)))
 
           (testing "when there are route params"

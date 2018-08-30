@@ -1,15 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.transformations :as tr]
+            [com.ben-allred.clj-app-simulator.templates.simulators.ws.transformations :as tr]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources :as resources]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
+            [com.ben-allred.clj-app-simulator.services.forms :as forms]
+            [com.ben-allred.clj-app-simulator.templates.simulators.ws.resources :as resources]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.modals :as modals]
             [test.utils.dom :as test.dom]))
 
 (deftest ^:unit update-simulator-test
@@ -141,4 +140,5 @@
                 (is (spies/called-with? send-spy ::simulator-id ::socket-id ::message ::hide))
                 (is (= ::send result))))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

@@ -1,6 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals
-  (:require [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
+  (:require [com.ben-allred.clj-app-simulator.utils.datetime :as dt]
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
             [clojure.string :as string]))
 
 (defn sim-iterate
@@ -23,7 +23,7 @@
 (defn request-modal [{:keys [method path]} {:keys [dt route-params query-params headers body]}]
   [:div.request-details
    [:p (string/upper-case (name method)) ": " path]
-   [:p (mo/format dt)]
+   [:p (dt/format dt)]
    (when (seq route-params)
      [sim-iterate "Route Params:" route-params "route-params"])
    (when (seq query-params)

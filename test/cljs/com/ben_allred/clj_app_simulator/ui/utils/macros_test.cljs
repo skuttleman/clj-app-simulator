@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.utils.macros-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
             [test.utils.spies :as spies]))
 
@@ -19,4 +19,5 @@
             (is (spies/called-with? some-other-spy ::other))
             (is (= 3 result))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

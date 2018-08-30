@@ -7,13 +7,13 @@
             [com.ben-allred.clj-app-simulator.services.content :as content]))
 
 (defn ^:private request* [method url request response]
-  #?(:clj (let [response-ch (async/chan)
-                kvlt-spy (spies/constantly response-ch)
-                request (update request :headers merge {:content-type "application/edn"
-                                                        :accept       "application/edn"})]
-            (with-redefs [kvlt/request! kvlt-spy]
-              (async/put! response-ch response)
-              [(async/<!! (http/go method url request)) kvlt-spy]))))
+  (let [response-ch (async/chan)
+        kvlt-spy (spies/constantly response-ch)
+        request (update request :headers merge {:content-type "application/edn"
+                                                :accept       "application/edn"})]
+    (with-redefs [kvlt/request! kvlt-spy]
+      (async/put! response-ch response)
+      [(async/<!! (http/go method url request)) kvlt-spy])))
 
 (deftest ^:unit request*-test
   (testing "(request*)"

@@ -1,11 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.modal-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
+            [com.ben-allred.clj-app-simulator.utils.dom :as dom]))
 
 (defn ^:private modal [state & [content title & actions]]
   (modal/modal {:state state :content content :title title :actions actions}))

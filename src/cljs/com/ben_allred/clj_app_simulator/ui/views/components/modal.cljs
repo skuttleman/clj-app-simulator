@@ -2,7 +2,7 @@
   (:require [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
+            [com.ben-allred.clj-app-simulator.utils.dom :as dom]))
 
 (defn ^:private hide-modal []
   (store/dispatch actions/hide-modal))

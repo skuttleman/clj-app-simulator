@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions-test
-  (:require [cljs.test :as t :refer [deftest testing is async]]
+  (:require [clojure.test :as t :refer [deftest testing is async]]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [test.utils.spies :as spies]
             [cljs.core.async :as async]
@@ -8,8 +8,8 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
+            [com.ben-allred.clj-app-simulator.services.forms :as forms]
+            [com.ben-allred.clj-app-simulator.utils.dom :as dom]))
 
 (deftest ^:unit do-request-test
   (testing "(do-request)"

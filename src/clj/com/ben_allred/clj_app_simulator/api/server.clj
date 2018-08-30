@@ -15,8 +15,7 @@
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [immutant.web :as web]
-            [ring.middleware.reload :refer [wrap-reload]]
-            [ring.util.response :as response])
+            [ring.middleware.reload :refer [wrap-reload]])
   (:import (clojure.lang IPersistentVector)))
 
 (extend-protocol compojure.response/Renderable
@@ -59,11 +58,18 @@
     (ANY "/api/*" [] [:not-found])
     (route/resources "/")
     (GET "/health" [] [:ok {:a :ok}])
-    (GET "/*" [] [:ok (html/index) {:content-type "text/html"}])
+    (GET "/*" request [:ok
+                       (-> request
+                           (select-keys #{:params :uri})
+                           (html/render))
+                       {"content-type" "text/html"}])
     (ANY "/*" [] [:not-found])))
 
 (def ^:private app
   (-> #'base
+      #_((fn [app] (fn [req]
+                   (log/spy req)
+                   (log/spy (app req)))))
       (site)
       (middleware/content-type)
       (middleware/log-response)))

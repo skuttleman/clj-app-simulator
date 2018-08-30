@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.actions-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is async]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is async]]
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.services.http :as http]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]

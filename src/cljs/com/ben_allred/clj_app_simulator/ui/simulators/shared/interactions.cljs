@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions
   (:require [cljs.core.async :as async]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+            [com.ben-allred.clj-app-simulator.utils.dom :as dom]
+            [com.ben-allred.clj-app-simulator.services.forms :as forms]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]

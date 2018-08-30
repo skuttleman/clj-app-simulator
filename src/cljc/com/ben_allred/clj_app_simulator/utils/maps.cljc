@@ -37,3 +37,10 @@
   (->> m
        (remove (comp pred second))
        (into {})))
+
+(defn walk [m f]
+  (->> m
+       (map (fn [[k v]]
+              (let [v' (if (map? v) (walk v f) v)]
+                (f k v'))))
+       (into {})))

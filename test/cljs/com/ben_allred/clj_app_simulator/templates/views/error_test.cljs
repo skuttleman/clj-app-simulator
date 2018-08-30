@@ -1,0 +1,19 @@
+(ns com.ben-allred.clj-app-simulator.templates.views.error-test
+  (:require [clojure.test :as t :refer [deftest testing is] :include-macros true]
+            [com.ben-allred.clj-app-simulator.templates.views.error :as error]
+            [test.utils.dom :as test.dom]
+            [test.utils.spies :as spies]
+            [com.ben-allred.clj-app-simulator.templates.views.main :as main]
+            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]))
+
+(deftest ^:unit not-found-test
+  (testing "(not-found)"
+    (let [path-for-spy (spies/constantly ::href)]
+      (with-redefs [nav/path-for path-for-spy]
+        (let [not-found (error/not-found nil)]
+          (testing "has a link to the home page"
+            (let [link (test.dom/query-one not-found :a.home)]
+              (is (= (:href (test.dom/attrs link)) ::href)))))))))
+
+(defn run-tests []
+  (t/run-tests))

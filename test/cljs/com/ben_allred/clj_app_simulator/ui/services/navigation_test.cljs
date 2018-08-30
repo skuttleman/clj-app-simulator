@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.navigation-test
-  (:require [cljs.test :as t  :refer-macros [deftest testing is]]
+  (:require [clojure.test :as t  :refer-macros [deftest testing is]]
             [bidi.bidi :as bidi]
             [com.ben-allred.clj-app-simulator.utils.query-params :as qp]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]

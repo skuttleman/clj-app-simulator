@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.core
   (:require [com.ben-allred.collaj.core :as collaj]
             [com.ben-allred.collaj.enhancers :as collaj.enhancers]
-            [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]
+            [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]
             [reagent.core :as r]
             [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
             [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]

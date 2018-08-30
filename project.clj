@@ -21,6 +21,9 @@
                  [io.nervous/kvlt "0.1.4"]
                  [kibu/pushy "0.3.8"]
                  [metosin/jsonista "0.1.1"]
+
+                 [net.polyc0l0r/bote "0.1.0"]
+
                  [org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.946"]
                  [org.clojure/core.async "0.3.465"]

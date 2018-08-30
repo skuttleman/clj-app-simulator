@@ -71,3 +71,12 @@
   (->> (simulator-configs common/routes)
        (mapcat identity)
        (apply c/routes)))
+
+(comment
+  (com.ben-allred.clj-app-simulator.api.services.simulators.core/set! [{:method :http/post :path "/stepped" :response {:status 201}}])
+  (require '[bote.core :as smtp])
+  (def smtp-server (smtp/create-smtp-server #(log/spy %)
+                                       :port 2525
+                                       :enable-tls? true))
+  (.start smtp-server)
+  (.stop smtp-server))
