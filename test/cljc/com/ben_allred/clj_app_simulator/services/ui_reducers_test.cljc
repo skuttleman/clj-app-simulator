@@ -1,6 +1,6 @@
-(ns com.ben-allred.clj-app-simulator.ui.services.store.reducers-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.store.reducers :as reducers]))
+(ns com.ben-allred.clj-app-simulator.services.ui-reducers-test
+  (:require [clojure.test :refer [deftest testing is]]
+            [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]))
 
 (deftest ^:unit page-test
   (testing "(page)"
@@ -148,5 +148,3 @@
     (testing "returns unchanged state for any random action"
       (is (= {:status ::some-status :data ::same-state}
              (reducers/uploads {:status ::some-status :data ::same-state} [:any-random-action ::ignored]))))))
-
-(defn run-tests [] (t/run-tests))

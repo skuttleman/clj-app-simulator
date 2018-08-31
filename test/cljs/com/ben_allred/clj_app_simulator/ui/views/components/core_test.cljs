@@ -3,7 +3,8 @@
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]))
+            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+            [com.ben-allred.clj-app-simulator.templates.views.core :as views]))
 
 (defn ^:private available [data]
   {:status :available :data data})
@@ -34,14 +35,14 @@
       (let [spinner (components/spinner-overlay true ::component)]
         (testing "has spinner component"
           (let [node (test.dom/query-one spinner :.spinner-container)]
-            (test.dom/contains? node components/spinner)))
+            (test.dom/contains? node views/spinner)))
         (testing "has passed component"
           (let [node (test.dom/query-one spinner :.component-container)]
             (test.dom/contains? node ::component)))))
     (testing "when not show"
       (let [spinner (components/spinner-overlay false ::component)]
         (testing "does not have spinner component"
-          (is (not (test.dom/contains? spinner components/spinner))))
+          (is (not (test.dom/contains? spinner views/spinner))))
         (testing "does not have passed component"
           (is (not (test.dom/contains? spinner ::component))))))))
 
@@ -73,7 +74,7 @@
     (testing "when the status is not :available"
       (let [root (components/with-status ::component {:status ::random-status :data nil})]
         (testing "renders a spinner"
-          (is (test.dom/query-one root components/spinner)))))))
+          (is (test.dom/query-one root views/spinner)))))))
 
 (deftest ^:unit menu*-test
   (testing "(menu*)"

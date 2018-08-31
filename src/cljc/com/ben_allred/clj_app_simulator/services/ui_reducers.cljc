@@ -1,4 +1,4 @@
-(ns com.ben-allred.clj-app-simulator.ui.services.store.reducers
+(ns com.ben-allred.clj-app-simulator.services.ui-reducers
   (:require [com.ben-allred.collaj.reducers :as collaj.reducers]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps :include-macros true]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]

@@ -1,5 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.main-test
   (:require [cljs.test :as t :refer-macros [deftest testing is]]
+            [com.ben-allred.clj-app-simulator.templates.views.core :as views]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
@@ -97,7 +98,7 @@
         (let [root (main/details (update-in state [:simulators :data id :config] assoc :method :unknown))
               [_ component] (test.dom/query-one root components/with-status)]
           (testing "renders a spinner"
-            (is (= component components/spinner))))))))
+            (is (= component views/spinner))))))))
 
 (deftest ^:unit new-test
   (testing "(new)"

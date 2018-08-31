@@ -10,9 +10,6 @@
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]))
 
-(defn ^:private components []
-  {:component (keywords/join [:component.class- (str (rand-int 1000))])})
-
 (defn ^:private state []
   {:page             {:handler :component}
    :toasts           ::toasts
@@ -22,11 +19,9 @@
 (deftest ^:unit app-test
   (testing "(app-test)"
     (let [state (state)
-          components (components)
           get-state-spy (spies/constantly state)
           dispatch-spy (spies/create)]
-      (with-redefs [app/components components
-                    store/get-state get-state-spy
+      (with-redefs [store/get-state get-state-spy
                     store/dispatch dispatch-spy]
         (let [root (app/app)]
           (testing "dispatches on mount"

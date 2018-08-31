@@ -24,7 +24,7 @@
    (case type
      :simulators/init {:initial config :current config}
      :simulators/reset (assoc state :current (:initial state))
-     :simulators/change (update state :current maps/deep-merge config)
+     :simulators/change (update state :current merge config)
      state)))
 
 (defn ^:private simulator-requests

@@ -16,7 +16,7 @@
              (reducers/simulator-config {:initial ::initial :current ::current} [:simulators/reset]))))
 
     (testing "responds to :simulators/change"
-      (is (= {:current {:a 1 :b {:c 2 :d 3} :e 4}}
+      (is (= {:current {:a 1 :b {:d 3} :e 4}}
              (reducers/simulator-config {:current {:a 1 :b {:c 2}}}
                                         [:simulators/change {:e 4 :b {:d 3}}]))))
 
@@ -81,9 +81,9 @@
         (is (= expected actual))))
 
     (testing "responds to :simulators/change"
-      (let [expected {:current {:a {:b [4 5 6] :c {:d :e :f :g}}}}
+      (let [expected {:current {:a {:b [4 5 6]}}}
             actual (reducers/http-config {:current {:a {:b [1 2 3] :c {:d :e}}}}
-                                         [:simulators/change {:a {:b [4 5 6] :c {:f :g}}}])]
+                                         [:simulators/change {:a {:b [4 5 6]}}])]
         (is (= expected actual))))
 
     (testing "responds to :simulators.http/reset-response"

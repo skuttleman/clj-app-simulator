@@ -9,14 +9,14 @@
             [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
 
 (defn ^:private with-file [response]
-  (if-let [file (resources/get (:file response))]
+  (if-let [resource (resources/get (:file response))]
     (-> response
         (dissoc :file)
         (update :headers assoc
-                "Content-Type" (:content-type file)
-                "Content-Length" (:size file)
-                "Content-Disposition" (format "inline; filename=\"%s\"" (:filename file)))
-        (assoc :body (streams/open-input-stream (:file file))))
+                "Content-Type" (:content-type resource)
+                "Content-Length" (:size resource)
+                "Content-Disposition" (format "inline; filename=\"%s\"" (:filename resource)))
+        (assoc :body (streams/open-input-stream (:file resource))))
     [:not-found]))
 
 (defn http-store []
