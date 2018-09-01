@@ -6,9 +6,8 @@
             [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
             [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]))
+            [test.utils.spies :as spies]
+            [com.ben-allred.clj-app-simulator.templates.views.core :as views]))
 
 (defn ^:private state []
   {:page             {:handler :component}
@@ -18,39 +17,52 @@
 
 (deftest ^:unit app-test
   (testing "(app-test)"
-    (let [state (state)
-          get-state-spy (spies/constantly state)
-          dispatch-spy (spies/create)]
+    (let [get-state-spy (spies/constantly ::state)
+          dispatch-spy (spies/create)
+          header-spy (spies/constantly ::header)
+          toast-spy (spies/constantly ::toast)
+          modal-spy (spies/constantly ::modal)]
       (with-redefs [store/get-state get-state-spy
-                    store/dispatch dispatch-spy]
-        (let [root (app/app)]
+                    store/dispatch dispatch-spy
+                    main/header header-spy
+                    toast/toast toast-spy
+                    modal/modal modal-spy]
+        (let [app (app/app)]
           (testing "dispatches on mount"
             (is (spies/called-with? dispatch-spy actions/get-uploads))
-            (is (spies/called-with? dispatch-spy actions/request-simulators))
+            (is (spies/called-with? dispatch-spy actions/request-simulators)))
 
-            (testing "gets state from store"
-              (spies/reset! get-state-spy)
-              (root)
-              (is (spies/called-with? get-state-spy)))
+          (testing "when rendering the tree"
+            (spies/reset! get-state-spy)
+            (let [[component attrs state] (app)]
+              (testing "uses views/app*"
+                (is (spies/called-with? get-state-spy))
+                (is (= state ::state))
+                (is (= component views/app*)))
 
-            (testing "mounts modal with state"
-              (let [app (root)
-                    modal (test.dom/query-one app modal/modal)]
-                (is (= (second modal) ::modal-data))))
+              (testing "has components"
+                (is (= main/root (get-in attrs [:components :home])))
+                (is (= main/new (get-in attrs [:components :new])))
+                (is (= main/details (get-in attrs [:components :details])))
+                (is (= main/resources (get-in attrs [:components :resources]))))
 
-            (testing "mounts toast with toasts from state"
-              (let [app (root)
-                    toast (test.dom/query-one app toast/toast)]
-                (is (= (second toast) ::toasts))))
+              (testing "has a header"
+                (let [header ((:header attrs) {:page ::page})]
+                  (is (= header ::header))
+                  (is (spies/called-with? header-spy ::page))))
 
-            (testing "mounts header"
-              (is (= [main/header {:handler :component}]
-                     (test.dom/query-one (root) main/header))))
+              (testing "has a not-found component"
+                (is (= (:not-found attrs) main/not-found)))
 
-            (testing "mounts component with state"
-              (let [app (root)
-                    [_ value] (test.dom/query-one app (:component components))]
-                (is (= value state))))))))))
+              (testing "has a toast"
+                (let [toast ((:toast attrs) {:toasts ::toasts})]
+                  (is (= toast ::toast))
+                  (is (spies/called-with? toast-spy ::toasts))))
+
+              (testing "has a modal"
+                (let [modal ((:modal attrs) {:modal ::modal-data})]
+                  (is (= modal ::modal))
+                  (is (spies/called-with? modal-spy ::modal-data)))))))))))
 
 (defn run-tests []
   (t/run-tests))

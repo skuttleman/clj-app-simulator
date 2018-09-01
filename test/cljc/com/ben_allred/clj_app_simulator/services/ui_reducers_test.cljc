@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.services.ui-reducers-test
   (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]))
+            [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]
+            [clojure.test :as t]))
 
 (deftest ^:unit page-test
   (testing "(page)"
@@ -43,12 +44,12 @@
       (is (= {:status :init :data {}} (reducers/simulators))))
 
     (testing "handles :simulators.fetch-one/request"
-      (is (= {:status :pending :data ::data}
-             (reducers/simulators {:data ::data} [:simulators.fetch-one/request]))))
+      (is (= {:status :pending :data {123 ::data}}
+             (reducers/simulators {:data {123 ::data}} [:simulators.fetch-one/request]))))
 
     (testing "handles :simulators.fetch-all/request"
-      (is (= {:status :pending :data ::data}
-             (reducers/simulators {:data ::data} [:simulators.fetch-all/request]))))
+      (is (= {:status :pending :data {123 ::data}}
+             (reducers/simulators {:data {123 ::data}} [:simulators.fetch-all/request]))))
 
     (testing "handles :simulators.fetch-one/succeed"
       (is (= {:status :available :data {123 {:id 123 :config ::config}}}
@@ -60,12 +61,12 @@
              (reducers/simulators {:data ::data :status ::status} [:simulators/clear]))))
 
     (testing "handles :simulators.fetch-one/fail"
-      (is (= {:status :failed :data ::data}
-             (reducers/simulators {:data ::data} [:simulators.fetch-one/fail ::reason]))))
+      (is (= {:status :failed :data {123 ::data}}
+             (reducers/simulators {:data {123 ::data}} [:simulators.fetch-one/fail ::reason]))))
 
     (testing "handles :simulators.fetch-all/fail"
-      (is (= {:status :failed :data ::data}
-             (reducers/simulators {:data ::data} [:simulators.fetch-all/fail ::reason]))))
+      (is (= {:status :failed :data {123 ::data}}
+             (reducers/simulators {:data {123 ::data}} [:simulators.fetch-all/fail ::reason]))))
 
     (testing "handles :simulators.activity/receive"
       (is (= {:status :available :data {999 {:id 999 :requests [123 456] :other ::stuff}}}
@@ -101,8 +102,8 @@
                                    {:simulator {:id 123 :socket-id 999}}]))))
 
     (testing "returns unchanged state for any random action"
-      (is (= {:data ::data}
-             (reducers/simulators {:data ::data} [:any-random-action ::ignored]))))))
+      (is (= {:data {123 ::data}}
+             (reducers/simulators {:data {123 ::data}} [:any-random-action ::ignored]))))))
 
 (deftest ^:unit toasts-test
   (testing "(toasts)"

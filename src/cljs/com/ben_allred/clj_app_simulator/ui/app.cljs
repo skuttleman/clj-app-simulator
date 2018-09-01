@@ -12,8 +12,8 @@
 
 (enable-console-print!)
 
-(def ^:private app-attrs
-  {:header     (comp main/header :toasts)
+(defn ^:private attrs []
+  {:header     (comp main/header :page)
    :components {:home      main/root
                 :new       main/new
                 :details   main/details
@@ -25,8 +25,9 @@
 (defn app []
   (store/dispatch actions/get-uploads)
   (store/dispatch actions/request-simulators)
-  (fn []
-    [views/app* app-attrs (store/get-state)]))
+  (let [attrs (attrs)]
+    (fn []
+      [views/app* attrs (store/get-state)])))
 
 (defn ^:export mount! []
   (r/render

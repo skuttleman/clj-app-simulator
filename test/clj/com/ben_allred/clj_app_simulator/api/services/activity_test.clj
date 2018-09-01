@@ -31,7 +31,7 @@
             (testing "and when an event is published"
               (spies/reset! send-spy stringify-spy send-spy)
               (emitter/publish emitter ::event ::data)
-              (Thread/sleep 25)
+              (Thread/sleep 50)
               (testing "sends the event data via websocket"
                 (is (spies/called-with? stringify-spy {:event ::event :data ::data}))
                 (is (spies/called-with? send-spy ::websocket {:event ::event :data ::data}))))

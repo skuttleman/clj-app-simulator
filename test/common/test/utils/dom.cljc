@@ -10,7 +10,8 @@
     {:component tag
      :args      args}
     (let [[_ tag id classes] (re-find #"([^\#\.]+)?(\#[^\.]+)?(\..*)?" (name tag))
-          class-name (->> (string/split (str (keywords/safe-name (:class-name attrs))) #"\s")
+          class-name (->> [(:class attrs) (:class-name attrs)]
+                          (mapcat #(string/split (str (keywords/safe-name %)) #"\s"))
                           (string/join "."))
           classes (->> (string/split (str classes "." class-name) #"\.")
                        (map string/trim)
@@ -43,7 +44,7 @@
                                  (query-all node selector)
                                  (mapcat #(query-all % selector) node)))))]
     (cond->> matches
-      (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
+             (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
 
 (defn query-one [tree selector]
   (first (query-all tree selector)))
@@ -60,7 +61,7 @@
 
 (defn simulate-event
   ([tree event]
-   (simulate-event tree event (js/Event. (name event))))
+   (simulate-event tree event #?(:clj (Object.) :cljs (js/Event. (name event)))))
   ([tree event event-data]
    (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
      (f event-data))))

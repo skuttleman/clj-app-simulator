@@ -11,11 +11,11 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
-(def header
-  (partial views/header nav/path-for))
+(defn header [state]
+  [views/header nav/path-for state])
 
-(def not-found
-  (partial views/not-found nav/path-for))
+(defn not-found [state]
+  [views/not-found nav/path-for state])
 
 (defn root [{:keys [simulators uploads home-welcome?]}]
   [views/root

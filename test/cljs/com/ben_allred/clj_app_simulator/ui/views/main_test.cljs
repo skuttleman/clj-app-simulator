@@ -17,31 +17,15 @@
 
 (deftest ^:unit header-test
   (testing "(header)"
-    (let [path-for-spy (spies/create identity)]
-      (with-redefs [nav/path-for path-for-spy]
-        (let [header (test.dom/render (main/header {:handler :home}))]
-          (testing "has link to home page"
-            (let [link (test.dom/query-one header :a.home-link)]
-              (is (= :home (:href (test.dom/attrs link))))
-              (is (test.dom/query-one link :.logo))))
+    (testing "renders the shared header"
+      (let [component (main/header ::state)]
+        (is (= [views/header nav/path-for ::state] component))))))
 
-          (testing "has tabs"
-            (let [tabs (test.dom/query-all header :.tab)
-                  [_ attrs :as link] (test.dom/query-one (second tabs) :a.tab)
-                  home (test.dom/query-one (first tabs) :span.tab)]
-              (is (= :resources (:href attrs)))
-              (is (test.dom/contains? link "resources"))
-              (is (test.dom/contains? home "simulators")))))
-
-        (testing "when on resources page"
-          (let [header (test.dom/render (main/header {:handler :resources}))]
-            (testing "has resources tabs"
-              (let [tabs (test.dom/query-all header :.tab)
-                    [_ attrs :as link] (test.dom/query-one (first tabs) :a.tab)
-                    resources (test.dom/query-one (second tabs) :span.tab)]
-                (is (= :home (:href attrs)))
-                (is (test.dom/contains? link "simulators"))
-                (is (test.dom/contains? resources "resources"))))))))))
+(deftest ^:unit not-found-test
+  (testing "(not-found)"
+    (testing "renders the shared not-found"
+      (let [component (main/not-found ::state)]
+        (is (= [views/not-found nav/path-for ::state] component))))))
 
 (deftest ^:unit root-test
   (let [path-for-spy (spies/constantly ::nav)
@@ -51,15 +35,15 @@
                   store/dispatch dispatch-spy
                   actions/upload action-spy]
       (testing "(root)"
-        (let [root (main/root {:simulators {:status ::status :data ::data}
-                               :home-welcome? ::home-welcome?})]
-          (testing "has a header"
-            (is (= "Simulators" (second (test.dom/query-one root :h2)))))
-
+        (let [root (-> {:simulators    {:status ::status :data ::data}
+                        :home-welcome? ::home-welcome?}
+                       (main/root)
+                       (test.dom/query-one views/root))]
           (testing "has a create menu"
-            (let [[_ {:keys [items]} element] (test.dom/query-one root components/menu)]
-              (is (= [{:href ::nav :label "HTTP Simulator"} {:href ::nav :label "WS Simulator"}]
-                     items))
+            (let [[_ attrs element] (test.dom/query-one root components/menu)
+                  items (set (:items attrs))]
+              (is (contains? items {:href ::nav :label "HTTP Simulator"}))
+              (is (contains? items {:href ::nav :label "WS Simulator"}))
               (is (spies/called-with? path-for-spy :new {:query-params {:type :http}}))
               (is (spies/called-with? path-for-spy :new {:query-params {:type :ws}}))
               (is (-> element
@@ -67,8 +51,25 @@
                       (test.dom/contains? "Create")))))
 
           (testing "displays simulators"
-            (is (= [components/with-status [sims/simulators ::home-welcome?] {:status ::status :data ::data}]
-                   (test.dom/query-one root components/with-status)))))))))
+            (is (-> root
+                    (test.dom/query-one components/with-status)
+                    (= [components/with-status [sims/simulators ::home-welcome?] {:status ::status :data ::data}])))))
+
+        (testing "when there are uploads"
+          (spies/reset! path-for-spy)
+          (let [root (-> {:simulators    {:status ::status :data ::data}
+                          :home-welcome? ::home-welcome?
+                          :uploads       {:data [::file-1 ::file-2]}}
+                         (main/root)
+                         (test.dom/query-one views/root))]
+            (testing "has file option in the create menu"
+              (let [items (-> root
+                              (test.dom/query-one components/menu)
+                              (test.dom/attrs)
+                              (:items)
+                              (set))]
+                (is (contains? items {:href ::nav :label "File Server"}))
+                (is (spies/called-with? path-for-spy :new {:query-params {:type :file}}))))))))))
 
 (deftest ^:unit details-test
   (testing "(details)"
@@ -77,25 +78,30 @@
                               :data   {id {:config {:method :http/post :path "/path"}
                                            ::and   ::things}}}
                  :page       {:route-params {:id (str id)}}}]
-      (testing "has a header"
-        (is (test.dom/contains? (main/details state) "Simulator Details")))
-
       (testing "when given an :http simulator"
-        (let [root (main/details state)
+        (let [root (-> state
+                       (main/details)
+                       (test.dom/query-one views/details))
               [_ & args] (test.dom/query-one root components/with-status)]
           (testing "renders the component"
             (is (= [http.views/sim {:status ::status :data {:config {:method :http/post :path "/path"} ::and ::things}}]
                    args)))))
 
       (testing "when given a :ws simulator"
-        (let [root (main/details (assoc-in state [:simulators :data id :config :method] :ws))
+        (let [root (-> state
+                       (assoc-in [:simulators :data id :config :method] :ws)
+                       (main/details)
+                       (test.dom/query-one views/details))
               [_ & args] (test.dom/query-one root components/with-status)]
           (testing "renders the component"
             (is (= [ws.views/sim {:status ::status :data {:config {:method :ws :path "/path"} ::and ::things}}]
                    args)))))
 
       (testing "when the simulator has an unknown method"
-        (let [root (main/details (update-in state [:simulators :data id :config] assoc :method :unknown))
+        (let [root (-> state
+                       (update-in [:simulators :data id :config] assoc :method :unknown)
+                       (main/details)
+                       (test.dom/query-one views/details))
               [_ component] (test.dom/query-one root components/with-status)]
           (testing "renders a spinner"
             (is (= component views/spinner))))))))
@@ -105,36 +111,27 @@
     (testing "when type is :ws"
       (let [state {:page       {:query-params {:type "ws"}}
                    :simulators {:status ::status :data ::data}}
-            root (main/new state)]
-        (testing "renders a header"
-          (is (-> root
-                  (test.dom/query-one :h2)
-                  (test.dom/contains? "New WS Simulator"))))
-
+            root (-> state
+                     (main/new)
+                     (test.dom/query-one views/new))]
         (testing "renders the ws create form"
           (is (test.dom/query-one root ws.views/sim-create-form)))))
 
     (testing "when type is :http"
       (let [state {:page       {:query-params {:type "http"}}
                    :simulators {:status ::status :data ::data}}
-            root (main/new state)]
-        (testing "renders a header"
-          (is (-> root
-                  (test.dom/query-one :h2)
-                  (test.dom/contains? "New HTTP Simulator"))))
-
+            root (-> state
+                     (main/new)
+                     (test.dom/query-one views/new))]
         (testing "renders the http create form"
           (is (test.dom/query-one root http.views/sim-create-form)))))
 
     (testing "when type is :file"
       (let [state {:page       {:query-params {:type "file"}}
                    :simulators {:status ::status :data ::data}}
-            root (main/new state)]
-        (testing "renders a header"
-          (is (-> root
-                  (test.dom/query-one :h2)
-                  (test.dom/contains? "New FILE Simulator"))))
-
+            root (-> state
+                     (main/new)
+                     (test.dom/query-one views/new))]
         (testing "renders the file create form"
           (is (test.dom/query-one root file.views/sim-create-form)))))
 
@@ -149,11 +146,10 @@
 
 (deftest ^:unit resources-test
   (testing "(resources)"
-    (let [root (main/resources {:uploads-welcome? ::uploads-welcome?
-                                :uploads          ::uploads})]
-      (testing "has a header"
-        (is (test.dom/contains? root "Resources")))
-
+    (let [root (-> {:uploads-welcome? ::uploads-welcome?
+                    :uploads          ::uploads}
+                   (main/resources)
+                   (test.dom/query-one views/resources))]
       (testing "renders the root component with status"
         (let [[_ component uploads] (test.dom/query-one root components/with-status)]
           (is (= [resources/root ::uploads-welcome?]

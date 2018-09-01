@@ -240,7 +240,10 @@
                     (is (= (-> data
                                (:config)
                                (update :method keyword))
-                           (maps/deep-merge (first start-configs) new-config)))))
+                           (-> start-configs
+                               (first)
+                               (update :response merge (:response new-config))
+                               (assoc :delay 1000))))))
                 (testing "and when sending request to the simulator"
                   (let [now (.getTime (Date.))
                         response (test.http/get "/simulators/some/param" content-type)

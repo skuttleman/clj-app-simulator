@@ -16,9 +16,9 @@
              (reducers/simulator-config {:initial ::initial :current ::current} [:simulators/reset]))))
 
     (testing "responds to :simulators/change"
-      (is (= {:current {:a 1 :b {:d 3} :e 4}}
-             (reducers/simulator-config {:current {:a 1 :b {:c 2}}}
-                                        [:simulators/change {:e 4 :b {:d 3}}]))))
+      (is (= {:current {:a 1 :b 2 :response {:c 3 :d 4}}}
+             (reducers/simulator-config {:current {:a 1 :response {:c 3}}}
+                                        [:simulators/change {:b 2 :response {:d 4}}]))))
 
     (testing "returns state for all other types"
       (is (= ::state (reducers/simulator-config ::state [(keyword (rand-int 1000))]))))))
@@ -81,9 +81,9 @@
         (is (= expected actual))))
 
     (testing "responds to :simulators/change"
-      (let [expected {:current {:a {:b [4 5 6]}}}
-            actual (reducers/http-config {:current {:a {:b [1 2 3] :c {:d :e}}}}
-                                         [:simulators/change {:a {:b [4 5 6]}}])]
+      (let [expected {:current {:a 1 :b 2 :response {:c 3 :d 4}}}
+            actual (reducers/http-config {:current {:a 1 :response {:d 4}}}
+                                         [:simulators/change {:b 2 :response {:c 3}}])]
         (is (= expected actual))))
 
     (testing "responds to :simulators.http/reset-response"
