@@ -39,11 +39,11 @@
         (http/post {:body {:simulator simulator}})
         (request* dispatch :simulators.create/succeed :simulators.create/fail))))
 
-(defn clear-requests [id]
+(defn clear-requests [action id]
   (fn [[dispatch]]
     (dispatch [:simulators.clear-requests/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :simulators/reset-requests}})
+        (http/patch {:body {:action action}})
         (request* dispatch :simulators.clear-requests/succeed :simulators.clear-requests/fail))))
 
 (defn reset-simulator [id]
@@ -64,14 +64,14 @@
   (fn [[dispatch]]
     (dispatch [:simulators.disconnect/request])
     (-> (str "/api/simulators/" simulator-id)
-        (http/patch {:body {:action :ws/disconnect :socket-id socket-id}})
+        (http/patch {:body {:action :simulators.ws/disconnect :socket-id socket-id}})
         (request* dispatch :simulators.disconnect/succeed :simulators.disconnect/fail))))
 
 (defn disconnect-all [id]
   (fn [[dispatch]]
     (dispatch [:simulators.disconnect-all/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :ws/disconnect-all}})
+        (http/patch {:body {:action :simulators.ws/disconnect-all}})
         (request* dispatch :simulators.disconnect-all/succeed :simulators.disconnect-all/fail))))
 
 (defn send-message [simulator-id socket-id message]

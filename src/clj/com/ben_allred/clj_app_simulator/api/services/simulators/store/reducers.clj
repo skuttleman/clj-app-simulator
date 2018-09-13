@@ -7,15 +7,15 @@
   ([] nil)
   ([state [type]]
    (case type
-     :http/reset-response (assoc state :current (:initial state))
+     :simulators.http/reset-response (assoc state :current (:initial state))
      state)))
 
 (defn ^:private ws-sockets*
   ([] nil)
   ([state [type _ ws]]
    (case type
-     :ws/connect ws
-     :ws/remove nil
+     :simulators.ws/connect ws
+     :simulators.ws/remove nil
      state)))
 
 (defn simulator-config
@@ -27,22 +27,39 @@
      :simulators/change (update state :current maps/deep-merge config)
      state)))
 
-(defn simulator-requests
+(defn ^:private simulator-requests
   ([] [])
   ([state [type request]]
    (case type
      :simulators/init []
      :simulators/reset []
-     :simulators/reset-requests []
      :simulators/receive (conj state request)
      state)))
+
+(def http-requests
+  (collaj.reducers/comp simulator-requests
+                        (fn
+                          ([] [])
+                          ([state [type]]
+                           (case type
+                             :simulators.http/reset-requests []
+                             state)))))
+
+(def ws-requests
+  (collaj.reducers/comp simulator-requests
+                        (fn
+                          ([] [])
+                          ([state [type]]
+                           (case type
+                             :simulators.ws/reset-messages []
+                             state)))))
 
 (def http-config
   (collaj.reducers/comp http-config* simulator-config))
 
 (def ws-sockets
   (collaj.reducers/comp
-    (collaj.reducers/map-of #(when (#{:ws/connect :ws/remove} (first %))
+    (collaj.reducers/map-of #(when (#{:simulators.ws/connect :simulators.ws/remove} (first %))
                                (second %))
                             ws-sockets*)
     (fn
@@ -55,10 +72,10 @@
 (def http
   (collaj.reducers/combine
     {:config   http-config
-     :requests simulator-requests}))
+     :requests http-requests}))
 
 (def ws
   (collaj.reducers/combine
     {:config   simulator-config
-     :requests simulator-requests
+     :requests ws-requests
      :sockets  ws-sockets}))

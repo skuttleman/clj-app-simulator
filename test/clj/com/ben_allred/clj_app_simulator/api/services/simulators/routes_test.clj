@@ -173,7 +173,7 @@
 
           (testing "when resetting the requests"
             (spies/reset! reset-requests-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/reset-requests}})]
+            (let [result (handler {:body {:action :simulators.http/reset-requests}})]
               (testing "takes the requested action"
                 (is (spies/called-with? reset-requests-spy ::simulator)))
 
@@ -181,14 +181,14 @@
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :simulators/reset-requests ::details)))
+                (is (spies/called-with? publish-spy :simulators.http/reset-requests ::details)))
 
               (testing "responds with the details"
                 (is (= [:ok ::details] result)))))
 
           (testing "when resetting the response"
             (spies/reset! reset-response-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :http/reset-response}})]
+            (let [result (handler {:body {:action :simulators.http/reset-response}})]
               (testing "takes the requested action"
                 (is (spies/called-with? reset-response-spy ::simulator)))
 
@@ -196,7 +196,7 @@
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :http/reset-response ::details)))
+                (is (spies/called-with? publish-spy :simulators.http/reset-response ::details)))
 
               (testing "responds with the details"
                 (is (= [:ok ::details] result)))))
@@ -217,13 +217,13 @@
 (deftest ^:unit patch-ws-test
   (testing "(patch-ws)"
     (let [reset-spy (spies/create)
-          reset-requests-spy (spies/create)
+          reset-messages-spy (spies/create)
           change-spy (spies/create)
           disconnect-spy (spies/create)
           details-spy (spies/constantly {::some ::details})
           publish-spy (spies/create)]
       (with-redefs [common/reset reset-spy
-                    common/reset-requests reset-requests-spy
+                    common/reset-messages reset-messages-spy
                     common/change change-spy
                     common/disconnect disconnect-spy
                     common/details details-spy
@@ -260,23 +260,23 @@
                 (is (= [:ok {::some ::details}] result)))))
 
           (testing "when resetting the messages"
-            (spies/reset! reset-requests-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/reset-requests}})]
+            (spies/reset! reset-messages-spy details-spy publish-spy)
+            (let [result (handler {:body {:action :simulators.ws/reset-messages}})]
               (testing "takes the requested action"
-                (is (spies/called-with? reset-requests-spy ::simulator)))
+                (is (spies/called-with? reset-messages-spy ::simulator)))
 
               (testing "gets the details"
                 (is (spies/called-with? details-spy ::simulator)))
 
               (testing "publishes the event"
-                (is (spies/called-with? publish-spy :simulators/reset-requests {::some ::details})))
+                (is (spies/called-with? publish-spy :simulators.ws/reset-messages {::some ::details})))
 
               (testing "responds with the details"
                 (is (= [:ok {::some ::details}] result)))))
 
           (testing "when disconnecting all sockets"
             (spies/reset! disconnect-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :ws/disconnect-all}})]
+            (let [result (handler {:body {:action :simulators.ws/disconnect-all}})]
               (testing "takes the requested action"
                 (is (spies/called-with? disconnect-spy ::simulator)))
 
@@ -292,7 +292,7 @@
           (testing "when disconnecting one socket"
             (spies/reset! disconnect-spy details-spy publish-spy)
             (let [socket-id (uuids/random)
-                  result (handler {:body {:action :ws/disconnect :socket-id socket-id}})]
+                  result (handler {:body {:action :simulators.ws/disconnect :socket-id socket-id}})]
               (testing "takes the requested action"
                 (is (spies/called-with? disconnect-spy ::simulator socket-id)))
 
@@ -321,7 +321,7 @@
           (testing "when the socket-id is a string"
             (spies/reset! disconnect-spy publish-spy)
             (let [socket-id (uuids/random)]
-              (handler {:body {:action :ws/disconnect :socket-id (str socket-id)}})
+              (handler {:body {:action :simulators.ws/disconnect :socket-id (str socket-id)}})
               (testing "converts the socket-id to a UUID"
                 (is (spies/called-with? disconnect-spy ::simulator socket-id))))))))))
 

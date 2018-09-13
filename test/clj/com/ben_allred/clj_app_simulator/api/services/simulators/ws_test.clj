@@ -62,7 +62,7 @@
 
           (testing "publishes an event"
             (is (spies/called-with? details-spy ::simulator))
-            (is (spies/called-with? publish-spy :ws/connect {::some ::details :socket-id uuid}))))))))
+            (is (spies/called-with? publish-spy :simulators.ws/connect {::some ::details :socket-id uuid}))))))))
 
 (deftest ^:unit on-message-test
   (testing "(on-message)"
@@ -123,7 +123,7 @@
           (testing "publishes an event"
             (is (spies/called-with? details-spy ::simulator))
             (is (spies/called-with? publish-spy
-                                    :ws/disconnect
+                                    :simulators.ws/disconnect
                                     {::some ::details :socket-id ::socket-id}))))
 
         (testing "when the socket-id is not found"
@@ -243,11 +243,11 @@
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))))))
 
-(deftest ^:unit ->WsSimulator.reset-requests-test
-  (testing "(->WsSimulator.reset-requests)"
+(deftest ^:unit ->WsSimulator.reset-messages-test
+  (testing "(->WsSimulator.reset-messages)"
     (let [[sim _ _ dispatch] (simulator)]
-      (common/reset-requests sim)
-      (is (spies/called-with? dispatch actions/reset-requests)))))
+      (common/reset-messages sim)
+      (is (spies/called-with? dispatch actions/reset-messages)))))
 
 (deftest ^:unit ->WsSimulator.connect-test
   (testing "(->WsSimulator.connect)"

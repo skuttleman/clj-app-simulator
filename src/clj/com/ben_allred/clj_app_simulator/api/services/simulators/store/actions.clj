@@ -40,19 +40,21 @@
 (defn change [config]
   [:simulators/change config])
 
-(def reset-requests [:simulators/reset-requests])
-
 ;; http
 
-(def reset-response [:http/reset-response])
+(def reset-requests [:simulators.http/reset-requests])
+
+(def reset-response [:simulators.http/reset-response])
 
 ;; ws
 
+(def reset-messages [:simulators.ws/reset-messages])
+
 (defn connect [socket-id ws]
-  [:ws/connect socket-id ws])
+  [:simulators.ws/connect socket-id ws])
 
 (defn remove-socket [socket-id]
-  [:ws/remove socket-id])
+  [:simulators.ws/remove socket-id])
 
 (defn send-one [socket-id message]
   (fn [[_ get-state]]

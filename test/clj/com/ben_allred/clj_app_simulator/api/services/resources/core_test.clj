@@ -25,13 +25,13 @@
                 state @uploads]
 
             (testing "publishes an event for file-2"
-              (is (= :files.upload/receive event-1))
+              (is (= :resources/add event-1))
               (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
                      (dissoc data-1 :timestamp)))
               (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-1))))))
 
             (testing "publishes an event for file-3"
-              (is (= :files.upload/receive event-2))
+              (is (= :resources/add event-2))
               (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
                      (dissoc data-2 :timestamp)))
               (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-2))))))
@@ -64,7 +64,7 @@
                 state @uploads]
 
             (testing "publishes an event for file-3"
-              (is (= :files.upload/replace event))
+              (is (= :resources/put event))
               (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 111}
                      (dissoc data :timestamp)))
               (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data))))))
@@ -95,7 +95,7 @@
           (is (empty? @uploads)))
 
         (testing "publishes an event"
-          (is (spies/called-with? publish-spy :files/clear nil)))))))
+          (is (spies/called-with? publish-spy :resources/clear nil)))))))
 
 (deftest ^:unit remove!-test
   (testing "(remove!)"
@@ -122,7 +122,7 @@
 
         (testing "publishes an event"
           (let [[event data] (first (spies/calls publish-spy))]
-            (is (= :files/remove event))
+            (is (= :resources/remove event))
             (is (-> upload-data
                     (get 222)
                     (dissoc :file)

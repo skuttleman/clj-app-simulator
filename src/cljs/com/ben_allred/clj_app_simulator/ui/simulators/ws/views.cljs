@@ -91,7 +91,7 @@
        "Broadcast Message"]
       [:button.button.button-error.pure-button.clear-button
        {:disabled (empty? requests)
-        :on-click (shared.interactions/clear-requests id)}
+        :on-click (shared.interactions/clear-requests :ws id)}
        "Clear Messages"]
       [:button.button.button-error.pure-button.disconnect-button
        {:disabled (empty? sockets)

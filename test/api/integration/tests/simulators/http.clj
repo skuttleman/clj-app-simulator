@@ -263,10 +263,10 @@
                 (testing "and when resetting the requests"
                   (test.http/patch "/api/simulators/get/some/:url-param"
                                    content-type
-                                   {:body {:action :simulators/reset-requests}})
+                                   {:body {:action :simulators.http/reset-requests}})
                   (testing "publishes event on activity feed"
                     (let [{:keys [event data]} (async/<!! chan)]
-                      (is (= :simulators/reset-requests (keyword event)))
+                      (is (= :simulators.http/reset-requests (keyword event)))
                       (is (= {:method :http/get :path "/some/:url-param"}
                              (-> data
                                  (:config)
@@ -288,10 +288,10 @@
                     (testing "and when resetting the response"
                       (test.http/patch "/api/simulators/get/some/:url-param"
                                        content-type
-                                       {:body {:action :http/reset-response}})
+                                       {:body {:action :simulators.http/reset-response}})
                       (testing "publishes event on activity feed"
                         (let [event (:event (async/<!! chan))]
-                          (is (= :http/reset-response (keyword event)))))
+                          (is (= :simulators.http/reset-response (keyword event)))))
                       (testing "and when getting the simulator's details"
                         (let [[_ {{:keys [config requests]} :simulator}]
                               (test.http/get "/api/simulators/get/some/:url-param"

@@ -49,13 +49,13 @@
   (testing "(connect)"
     (testing "wraps config in a tuple"
       (is (= (actions/connect ::socket-id ::ws)
-             [:ws/connect ::socket-id ::ws])))))
+             [:simulators.ws/connect ::socket-id ::ws])))))
 
 (deftest ^:unit remove-socket-test
   (testing "(remove-socket)"
     (testing "wraps config in a tuple"
       (is (= (actions/remove-socket ::socket-id)
-             [:ws/remove ::socket-id])))))
+             [:simulators.ws/remove ::socket-id])))))
 
 (deftest ^:unit send-one-test
   (testing "(send-one)"

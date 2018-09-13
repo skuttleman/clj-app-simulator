@@ -30,9 +30,13 @@
                          (store/dispatch))
                     (fn [_] (forms/reset! form current-model)))))))
 
-(defn clear-requests [id]
+(defn clear-requests [type id]
   (fn [_]
-    (do-request (store/dispatch (actions/clear-requests id)))))
+    (let [action (case type
+                   :http :simulators.http/reset-requests
+                   :ws :simulators.ws/reset-messages
+                   nil)]
+      (do-request (store/dispatch (actions/clear-requests action id))))))
 
 (defn delete-sim
   ([id]

@@ -31,8 +31,8 @@
   (let [{:keys [dispatch]} store
         socket-id (uuids/random)]
     (dispatch (actions/connect socket-id ws))
-    (activity/publish :ws/connect (assoc (common/details simulator)
-                                         :socket-id socket-id))))
+    (activity/publish :simulators.ws/connect (assoc (common/details simulator)
+                                                    :socket-id socket-id))))
 
 (defn on-message [simulator request store ws message]
   (let [{:keys [get-state]} store
@@ -48,8 +48,8 @@
   (let [{:keys [dispatch get-state]} store]
     (when-let [socket-id (actions/find-socket-id (get-state) ws)]
       (dispatch (actions/remove-socket socket-id))
-      (activity/publish :ws/disconnect (assoc (common/details simulator)
-                                              :socket-id socket-id)))))
+      (activity/publish :simulators.ws/disconnect (assoc (common/details simulator)
+                                                         :socket-id socket-id)))))
 
 (defn ->WsSimulator [id config]
   (when-let [{:keys [path method] :as config} (conform-to :ws/ws-simulator config)]
@@ -66,8 +66,6 @@
           (routes.sim/receive this (select-keys request #{:socket-id})))
         (requests [_]
           (store/requests (get-state)))
-        (reset-requests [_]
-          (dispatch actions/reset-requests))
         (details [_]
           (-> (get-state)
               (store/details)
@@ -83,6 +81,8 @@
           (dispatch (actions/change (dissoc config :path :method))))
 
         common/IWSSimulator
+        (reset-messages [this]
+          (dispatch actions/reset-messages))
         (connect [this {:keys [websocket?] :as request}]
           (when websocket?
             (web.async/as-channel

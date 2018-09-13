@@ -215,7 +215,7 @@
 
           (testing "has a button to clear messages"
             (let [button (test.dom/query-one root :.clear-button)]
-              (is (spies/called-with? clear-spy ::id))
+              (is (spies/called-with? clear-spy :ws ::id))
               (is (-> button
                       (test.dom/attrs)
                       (:disabled)
@@ -251,7 +251,7 @@
 
           (testing "has a button to delete the simulator"
             (let [button (test.dom/query-one root :.delete-button)]
-              (is (spies/called-with? clear-spy ::id))
+              (is (spies/called-with? clear-spy :ws ::id))
               (is (-> button
                       (test.dom/attrs)
                       (:disabled)

@@ -94,13 +94,21 @@
       (with-redefs [actions/clear-requests action-spy
                     store/dispatch dispatch-spy
                     shared.interactions/do-request request-spy]
-        (testing "when making the request"
+        (testing "when making the request with type :http"
           (spies/reset! action-spy dispatch-spy)
-          ((shared.interactions/clear-requests ::id) ::event)
+          ((shared.interactions/clear-requests :http ::id) ::event)
           (let [[request] (first (spies/calls request-spy))]
             (testing "dispatches an action"
-              (is (spies/called-with? action-spy ::id))
+              (is (spies/called-with? action-spy :simulators.http/reset-requests ::id))
+              (is (spies/called-with? dispatch-spy ::action))
+              (is (= ::dispatch request)))))
 
+        (testing "when making the request with type :ws"
+          (spies/reset! action-spy dispatch-spy)
+          ((shared.interactions/clear-requests :ws ::id) ::event)
+          (let [[request] (first (spies/calls request-spy))]
+            (testing "dispatches an action"
+              (is (spies/called-with? action-spy :simulators.ws/reset-messages ::id))
               (is (spies/called-with? dispatch-spy ::action))
               (is (= ::dispatch request)))))))))
 

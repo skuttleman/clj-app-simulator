@@ -272,7 +272,7 @@
           (testing "has a button to clear requests"
             (let [button (test.dom/query-one root :.button.clear-button)]
               (is (= ::clear (:on-click (test.dom/attrs button))))
-              (is (spies/called-with? clear-spy ::simulator-id))
+              (is (spies/called-with? clear-spy :http ::simulator-id))
 
               (testing "when there are no requests"
                 (testing "is not disabled"

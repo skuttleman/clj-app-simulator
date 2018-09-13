@@ -136,12 +136,12 @@
 
                           (testing "publishes an event for ws-1"
                             (let [{:keys [event data]} (async/<!! chan)]
-                              (is (= :ws/disconnect (keyword event)))
+                              (is (= :simulators.ws/disconnect (keyword event)))
                               (is (not (contains? (set (:sockets data)) (:socket-id data))))))
 
                           (testing "publishes an event for ws-2"
                             (let [{:keys [event data]} (async/<!! chan)]
-                              (is (= :ws/disconnect (keyword event)))
+                              (is (= :simulators.ws/disconnect (keyword event)))
                               (is (not (contains? (set (:sockets data)) (:socket-id data)))))))
 
                         (testing "and when getting a list of simulators"
@@ -177,7 +177,7 @@
                   {:keys [event data]} (async/<!! chan)
                   socket-id-1 (:socket-id data)]
               (testing "publishes an event"
-                (is (= :ws/connect (keyword event)))
+                (is (= :simulators.ws/connect (keyword event)))
                 (is socket-id-1))
 
               (testing "and when connecting a second socket"
@@ -188,7 +188,7 @@
                       {:keys [event data]} (async/<!! chan)
                       socket-id-2 (:socket-id data)]
                   (testing "publishes and event"
-                    (is (= :ws/connect (keyword event)))
+                    (is (= :simulators.ws/connect (keyword event)))
                     (is socket-id-2))
 
                   (testing "and when getting the simulator's details"
@@ -248,19 +248,19 @@
                     (test.ws/close! ws-1)
                     (testing "publishes an event"
                       (let [{:keys [event data]} (async/<!! chan)]
-                        (is (= :ws/disconnect (keyword event)))
+                        (is (= :simulators.ws/disconnect (keyword event)))
                         (is (not (contains? (set (:sockets data)) socket-id-1)))))
 
                     (testing "and when sending a request to disconnect the second socket"
                       (let [response (test.http/patch (str "/api/simulators/ws/some/:url-param")
                                                       content-type
-                                                      {:body {:action :ws/disconnect :socket-id socket-id-2}})]
+                                                      {:body {:action :simulators.ws/disconnect :socket-id socket-id-2}})]
                         (testing "returns a success"
                           (is (test.http/success? response)))
 
                         (testing "publishes an event"
                           (let [{:keys [event data]} (async/<!! chan)]
-                            (is (= :ws/disconnect (keyword event)))
+                            (is (= :simulators.ws/disconnect (keyword event)))
                             (is (not (contains? (set (:sockets data)) socket-id-2)))))
 
                         (testing "disconnects the socket"
@@ -294,10 +294,10 @@
                   {event-2 :event data-2 :data} (async/<!! chan)
                   socket-id-2 (:socket-id data-2)]
               (testing "publishes an event for the first socket"
-                (is (= :ws/connect (keyword event-1))))
+                (is (= :simulators.ws/connect (keyword event-1))))
 
               (testing "publishes an event for the second socket"
-                (is (= :ws/connect (keyword event-2))))
+                (is (= :simulators.ws/connect (keyword event-2))))
 
               (testing "and when sending a message from a socket"
                 (test.ws/send! ws-1 "a message")
@@ -308,13 +308,13 @@
                 (testing "and when resetting the simulator's messages"
                   (let [response (test.http/patch "/api/simulators/ws/some/:url-param"
                                                   content-type
-                                                  {:body {:action :simulators/reset-requests}})]
+                                                  {:body {:action :simulators.ws/reset-messages}})]
                     (testing "returns a success"
                       (is (test.http/success? response)))
 
                     (testing "publishes an event"
                       (let [{:keys [event data]} (async/<!! chan)]
-                        (is (= :simulators/reset-requests (keyword event)))
+                        (is (= :simulators.ws/reset-messages (keyword event)))
                         (is (empty? (:requests data)))))
 
                     (testing "and when getting the simulator's details"
@@ -328,20 +328,20 @@
                 (testing "and when disconnecting all sockets"
                   (let [response (test.http/patch "/api/simulators/ws/some/:url-param"
                                                   content-type
-                                                  {:body {:action :ws/disconnect-all}})]
+                                                  {:body {:action :simulators.ws/disconnect-all}})]
                     (testing "returns a success"
                       (is (test.http/success? response)))
 
-                    (testing "publishes an event for the first socket"
-                      (let [{event-1 :event data-1 :data} (async/<!! chan)
-                            {event-2 :event data-2 :data} (async/<!! chan)
-                            sockets #{(:socket-id data-1) (:socket-id data-2)}]
-                        (is (= :ws/disconnect (keyword event-1)))
-                        (is (contains? sockets socket-id-1))
+                    (let [{event-1 :event data-1 :data} (async/<!! chan)
+                          {event-2 :event data-2 :data} (async/<!! chan)
+                          sockets #{(:socket-id data-1) (:socket-id data-2)}]
+                      (testing "publishes an event for the first socket"
+                        (is (= :simulators.ws/disconnect (keyword event-1)))
+                        (is (contains? sockets socket-id-1)))
 
-                        (testing "publishes an event for the second socket"
-                          (is (= :ws/disconnect (keyword event-2)))
-                          (is (contains? sockets socket-id-2)))))
+                      (testing "publishes an event for the second socket"
+                        (is (= :simulators.ws/disconnect (keyword event-2)))
+                        (is (contains? sockets socket-id-2))))
 
                     (testing "and when getting the simulator's details"
                       (let [sockets (-> (test.http/get "/api/simulators/ws/some/:url-param" content-type)
@@ -371,10 +371,10 @@
                   {event-2 :event data-2 :data} (async/<!! chan)
                   socket-id-2 (:socket-id data-2)]
               (testing "publishes an event for the first socket"
-                (is (= :ws/connect (keyword event-1))))
+                (is (= :simulators.ws/connect (keyword event-1))))
 
               (testing "publishes an event for the second socket"
-                (is (= :ws/connect (keyword event-2))))
+                (is (= :simulators.ws/connect (keyword event-2))))
 
               (testing "and when resetting the simulator"
                 (let [response (test.http/patch (str "/api/simulators/ws/some/:url-param")
@@ -387,8 +387,8 @@
                     (let [{event-1 :event data-1 :data} (async/<!! chan)
                           {event-2 :event data-2 :data} (async/<!! chan)
                           sockets #{(:socket-id data-1) (:socket-id data-2)}]
-                      (is (= :ws/disconnect (keyword event-1)))
-                      (is (= :ws/disconnect (keyword event-2)))
+                      (is (= :simulators.ws/disconnect (keyword event-1)))
+                      (is (= :simulators.ws/disconnect (keyword event-2)))
                       (is (contains? sockets socket-id-1))
                       (is (contains? sockets socket-id-2))))
 

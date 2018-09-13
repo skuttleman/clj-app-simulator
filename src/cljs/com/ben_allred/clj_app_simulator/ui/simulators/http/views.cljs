@@ -95,7 +95,7 @@
    [:div.button-row
     [:button.button.button-error.pure-button.clear-button
      {:disabled (empty? requests)
-      :on-click (shared.interactions/clear-requests id)}
+      :on-click (shared.interactions/clear-requests :http id)}
      "Clear Requests"]
     [:button.button.button-error.pure-button.delete-button
      {:on-click (shared.interactions/show-delete-modal id)}

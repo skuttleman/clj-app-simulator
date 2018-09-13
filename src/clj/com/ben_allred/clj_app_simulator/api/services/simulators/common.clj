@@ -7,7 +7,6 @@
   (stop [this])
   (receive [this request])
   (requests [this])
-  (reset-requests [this])
   (details [this])
   (identifier [this])
   (change [this config])
@@ -15,9 +14,11 @@
   (routes [this]))
 
 (defprotocol IHTTPSimulator
+  (reset-requests [this])
   (reset-response [this]))
 
 (defprotocol IWSSimulator
+  (reset-messages [this])
   (connect [this request])
   (disconnect [this] [this socket-id])
   (send [this message] [this socket-id message]))

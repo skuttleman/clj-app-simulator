@@ -130,7 +130,7 @@
     (let [dispatch (spies/create)]
       (with-redefs [http/patch (spies/constantly (async/chan))]
         (testing "calls dispatch with request action"
-          ((actions/clear-requests ::simulator) [dispatch])
+          ((actions/clear-requests ::action ::simulator) [dispatch])
           (is (spies/called-with? dispatch [:simulators.clear-requests/request])))))))
 
 (deftest ^:unit clear-requests-success-test
@@ -143,10 +143,10 @@
                                        (async/go
                                          [:success {:some :result}])))]
             (let [dispatch (spies/create)
-                  f (actions/clear-requests 123)]
+                  f (actions/clear-requests ::action 123)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.clear-requests/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators/reset-requests}}))
+              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action ::action}}))
               (done))))))))
 
 (deftest ^:unit clear-requests-failure-test
@@ -159,7 +159,7 @@
                                        (async/go
                                          [:error {:some :error}])))]
             (let [dispatch (spies/create)
-                  f (actions/clear-requests 123)]
+                  f (actions/clear-requests ::action 123)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.clear-requests/fail {:some :error}]))
               (done))))))))
@@ -264,7 +264,7 @@
                   f (actions/disconnect 123 456)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.disconnect/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action    :ws/disconnect
+              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action    :simulators.ws/disconnect
                                                                                :socket-id 456}}))
               (done))))))))
 
@@ -304,7 +304,7 @@
                   f (actions/disconnect-all 123)]
               (async/<! (f [dispatch]))
               (is (spies/called-with? dispatch [:simulators.disconnect-all/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :ws/disconnect-all}}))
+              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators.ws/disconnect-all}}))
               (done))))))))
 
 (deftest ^:unit disconnect-all-failure-test

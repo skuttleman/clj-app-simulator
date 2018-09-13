@@ -24,23 +24,23 @@
 (defn upload!
   ([resource-id file]
    (let [result (upload* (uuids/->uuid resource-id) file)]
-     (activity/publish :files.upload/replace result)
+     (activity/publish :resources/put result)
      result))
   ([files]
    (let [result (map (fn [file] (upload* (uuids/random) file)) files)]
      (doseq [file result]
-       (activity/publish :files.upload/receive file))
+       (activity/publish :resources/add file))
      result)))
 
 (defn clear! []
   (reset! uploads {})
-  (activity/publish :files/clear nil))
+  (activity/publish :resources/clear nil))
 
 (defn remove! [id]
   (let [id (uuids/->uuid id)]
     (when-let [resource (clojure.core/get @uploads id)]
       (swap! uploads dissoc id)
-      (activity/publish :files/remove (file->data [id resource])))))
+      (activity/publish :resources/remove (file->data [id resource])))))
 
 (defn list-files []
   (->> @uploads

@@ -31,7 +31,7 @@
 
           (let [{:keys [event] {id-1 :id filename-1 :filename} :data} (async/<!! chan)]
             (testing "publishes an event"
-              (is (= :files.upload/receive (keyword event)))
+              (is (= :resources/add (keyword event)))
               (is (= "sample.txt" filename-1)))
 
             (testing "and when getting a list of resources"
@@ -46,7 +46,7 @@
 
                   (let [{:keys [event] {id-2 :id filename-2 :filename} :data} (async/<!! chan)]
                     (testing "publishes an event"
-                      (is (= :files.upload/receive (keyword event)))
+                      (is (= :resources/add (keyword event)))
                       (is (= "sample2.txt" filename-2)))
 
                     (testing "and when getting a list of resources"
@@ -62,7 +62,7 @@
 
                           (let [{:keys [event]} (async/<!! chan)]
                             (testing "publishes an event"
-                              (is (= :files/clear (keyword event)))))
+                              (is (= :resources/clear (keyword event)))))
 
                           (testing "and when getting a list of resources"
                             (let [[_ body :as response] (test.http/get "/api/resources" content-type)]
@@ -79,8 +79,8 @@
                 id-2 (:id (first (filter (comp #{"sample2.txt"} :filename) [data-1 data-2])))]
 
             (testing "publishes an event for each file"
-              (is (= :files.upload/receive (keyword event-1)))
-              (is (= :files.upload/receive (keyword event-2)))
+              (is (= :resources/add (keyword event-1)))
+              (is (= :resources/add (keyword event-2)))
               (is (and id-1 id-2)))
 
             (testing "and when getting a list of resources"
@@ -96,7 +96,7 @@
 
                   (let [{:keys [event data]} (async/<!! chan)]
                     (testing "publishes an event"
-                      (is (= :files/remove (keyword event)))
+                      (is (= :resources/remove (keyword event)))
                       (is (= {:filename "sample.txt" :id id-1} (select-keys data #{:filename :id}))))
 
                     (testing "and when getting a list of resources"
@@ -185,7 +185,7 @@
                           (let [{{:keys [id filename]} :data event :event} (async/<!! chan)]
                             (is (= id id-2))
                             (is (= "sample3.txt" filename))
-                            (is (= :files.upload/replace (keyword event))))
+                            (is (= :resources/put (keyword event))))
 
                           (testing "and when making a request to the file simulator"
                             (let [[_ body :as response] (test.http/get "/simulators/some/file" "text/plain")]
@@ -203,7 +203,7 @@
 
                         (let [{:keys [event data]} (async/<!! chan)]
                           (testing "publishes an event"
-                            (is (= :files/remove (keyword event)))
+                            (is (= :resources/remove (keyword event)))
                             (is (= {:filename "sample3.txt" :id id-2} (select-keys data #{:filename :id}))))
 
                           (testing "and when making a request to the file simulator"

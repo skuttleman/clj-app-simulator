@@ -11,10 +11,11 @@
     :simulators/add (dispatch [:simulators.activity/add {:simulator data}])
     :simulators/delete (dispatch [:simulators.activity/delete data])
     :simulators/reset (dispatch [:simulators.activity/reset {:simulator data}])
-    :simulators/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
+    :simulators.http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
+    :simulators.ws/reset-messages (dispatch [:simulators.activity/reset-requests {:simulator data}])
     :simulators/change (dispatch [:simulators.activity/change {:simulator data}])
-    :ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
-    :ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
+    :simulators.ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
+    :simulators.ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
     (js/console.log [:UNKNOWN-WS event data])))
 
 (defn ^:private reconnect [dispatch]

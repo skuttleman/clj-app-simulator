@@ -69,8 +69,6 @@
             (store/file-response state)))
         (requests [_]
           (store/requests (get-state)))
-        (reset-requests [_]
-          (dispatch actions/reset-requests))
         (details [_]
           (-> (get-state)
               (store/details)
@@ -87,5 +85,7 @@
             (throw (ex-info "config does not conform to spec" {:problems (why-not-update? config)}))))
 
         common/IHTTPSimulator
+        (reset-requests [_]
+          (dispatch actions/reset-requests))
         (reset-response [_]
           (dispatch actions/reset-response))))))
