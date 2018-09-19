@@ -2,7 +2,7 @@
   (:require [cljs.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
             [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.simulators.file.transformations :as tr]
+            [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]))
 
 (deftest ^:unit update-simulator

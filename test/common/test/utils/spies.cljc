@@ -108,3 +108,15 @@
                             (let [response (first @values)]
                               (swap! values rest)
                               response)))))
+
+(defn with-order [spy & args]
+  (vary-meta spy update ::ordered (fnil conj []) args))
+
+(defn ordered-calls? [spy]
+  (loop [[args :as ordered] (::ordered (meta spy))
+         [call :as calls] (calls spy)]
+    (cond
+      (empty? ordered) true
+      (empty? calls) false
+      (matches? args call) (recur (rest ordered) (rest calls))
+      :else (recur ordered (rest calls)))))

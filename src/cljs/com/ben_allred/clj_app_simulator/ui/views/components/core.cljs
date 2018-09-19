@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core
   (:require [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.ui.utils.core :as utils]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
             [com.ben-allred.clj-app-simulator.utils.colls :as colls]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [com.ben-allred.clj-app-simulator.templates.core :as templates]))
 
 (defn with-height [attrs open? item-count]
   (assoc-in attrs [:style :height] (if open?
@@ -38,8 +38,8 @@
    [:div.dropdown-menu
     (-> {}
         (with-height open? (count items))
-        (utils/classes {:open   open?
-                        :closed (not open?)}))
+        (templates/classes {:open   open?
+                            :closed (not open?)}))
     [:ul.menu
      (for [[idx {:keys [href label]}] (map-indexed vector items)]
        [:li.menu-item

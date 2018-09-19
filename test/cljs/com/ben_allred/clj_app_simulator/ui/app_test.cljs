@@ -19,19 +19,13 @@
   (testing "(app-test)"
     (let [get-state-spy (spies/constantly ::state)
           dispatch-spy (spies/create)
-          header-spy (spies/constantly ::header)
           toast-spy (spies/constantly ::toast)
           modal-spy (spies/constantly ::modal)]
       (with-redefs [store/get-state get-state-spy
                     store/dispatch dispatch-spy
-                    main/header header-spy
                     toast/toast toast-spy
                     modal/modal modal-spy]
         (let [app (app/app)]
-          (testing "dispatches on mount"
-            (is (spies/called-with? dispatch-spy actions/get-uploads))
-            (is (spies/called-with? dispatch-spy actions/request-simulators)))
-
           (testing "when rendering the tree"
             (spies/reset! get-state-spy)
             (let [[component attrs state] (app)]
@@ -45,14 +39,6 @@
                 (is (= main/new (get-in attrs [:components :new])))
                 (is (= main/details (get-in attrs [:components :details])))
                 (is (= main/resources (get-in attrs [:components :resources]))))
-
-              (testing "has a header"
-                (let [header ((:header attrs) {:page ::page})]
-                  (is (= header ::header))
-                  (is (spies/called-with? header-spy ::page))))
-
-              (testing "has a not-found component"
-                (is (= (:not-found attrs) main/not-found)))
 
               (testing "has a toast"
                 (let [toast ((:toast attrs) {:toasts ::toasts})]

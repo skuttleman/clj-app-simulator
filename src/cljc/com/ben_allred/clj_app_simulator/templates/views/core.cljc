@@ -1,52 +1,51 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.core
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
 
-(defn ^:private header-tab [path-for handler page display]
+(defn ^:private header-tab [handler page display]
   (let [tag (if (= handler page) :span :a)]
     [tag
      (cond-> {:class-name "tab"}
-       (= tag :a) (assoc :href (path-for page)))
+       (= tag :a) (assoc :href (nav*/path-for page)))
      display]))
 
 (defn spinner []
   [:div.loader])
 
-(defn not-found [path-for _]
+(defn not-found [_]
   [:div
    [:h2 "Page not found"]
    [:div
     "Try going "
-    [:a.home {:href (path-for :home)} "home"]]])
+    [:a.home {:href (nav*/path-for :home)} "home"]]])
 
-(defn header [path-for {:keys [handler]}]
+(defn header [{:keys [handler]}]
   [:header.header
    [:a.home-link
-    {:href (path-for :home)}
+    {:href (nav*/path-for :home)}
     [:span.logo]]
-   [header-tab path-for handler :home "simulators"]
-   [header-tab path-for handler :resources "resources"]])
+   [header-tab handler :home "simulators"]
+   [header-tab handler :resources "resources"]])
 
-(defn root [children]
+(defn root [& children]
   (into [:div [:h2 "Simulators"]] children))
 
-(defn details [child]
-  [:div
-   [:h2 "Simulator Details"]
-   child])
+(defn details [& children]
+  (into [:div [:h2 "Simulator Details"]] children))
 
-(defn new [child state]
+(defn new [state & children]
   (let [type (get-in state [:page :query-params :type] "http")]
-    [:div
-     [:h2 (str "New " (string/upper-case type) " Simulator")]
-     child]))
+    (into [:div
+           [:h2 (str "New " (string/upper-case type) " Simulator")]]
+          children)))
 
 (defn resources [child]
   [:div
    [:h2 "Resources"]
    child])
 
-(defn app* [{:keys [header toast modal not-found components]} state]
+(defn app* [{:keys [toast modal components]} state]
   (let [page (:page state)
         component (components (:handler page) not-found)]
     [:div.app

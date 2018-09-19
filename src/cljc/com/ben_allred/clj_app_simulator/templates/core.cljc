@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.core
   (:require [clojure.set :as set]
+            [clojure.string :as string]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [clojure.string :as string]))
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (declare render)
 
@@ -25,6 +26,16 @@
     (or (seq? arg) (list? arg)) (map render arg)
     (map? arg) (clean-attrs arg)
     :else arg))
+
+(defn classes
+  ([rules] (classes nil rules))
+  ([attrs rules]
+   (let [classes (->> rules
+                      (filter val)
+                      (map (comp name key))
+                      (string/join " "))]
+     (cond-> attrs
+       (seq classes) (update :class-name (comp strings/trim-to-nil str) " " classes)))))
 
 (defn render [[node & args :as tree]]
   (when tree

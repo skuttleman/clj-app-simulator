@@ -1,8 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.modals-test
   (:require [cljs.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.fields :as fields]
+            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.views :as shared.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]))
 

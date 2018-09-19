@@ -21,4 +21,5 @@
         (testing "passes action through to next"
           (is (spies/called-with? dispatch-spy [:any-random-type ::value])))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

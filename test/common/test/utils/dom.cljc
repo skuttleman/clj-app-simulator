@@ -1,7 +1,7 @@
 (ns test.utils.dom
   (:refer-clojure :exclude [contains?])
-  (:require [clojure.string :as string]
-            [clojure.set :as set]
+  (:require [clojure.set :as set]
+            [clojure.string :as string]
             [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
@@ -10,8 +10,9 @@
     {:component tag
      :args      args}
     (let [[_ tag id classes] (re-find #"([^\#\.]+)?(\#[^\.]+)?(\..*)?" (name tag))
-          class-name (->> [(:class attrs) (:class-name attrs)]
-                          (mapcat #(string/split (str (keywords/safe-name %)) #"\s"))
+          class-name (->> (string/split (string/join " " (map keywords/safe-name [(:class-name attrs)
+                                                                                  (:class attrs)]))
+                                        #"\s")
                           (string/join "."))
           classes (->> (string/split (str classes "." class-name) #"\.")
                        (map string/trim)
@@ -44,7 +45,7 @@
                                  (query-all node selector)
                                  (mapcat #(query-all % selector) node)))))]
     (cond->> matches
-             (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
+      (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
 
 (defn query-one [tree selector]
   (first (query-all tree selector)))
@@ -61,10 +62,11 @@
 
 (defn simulate-event
   ([tree event]
-   (simulate-event tree event #?(:clj (Object.) :cljs (js/Event. (name event)))))
+   (simulate-event tree event #?(:clj nil :cljs (js/Event. (name event)))))
   ([tree event event-data]
-   (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
-     (f event-data))))
+   #?(:clj  (throw (UnsupportedOperationException.))
+      :cljs (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
+              (f event-data)))))
 
 (defn contains? [tree item]
   (if (vector? item)
@@ -75,3 +77,10 @@
          (seq)
          (boolean))
     (clojure.core/contains? (set (flatten tree)) item)))
+
+(defn re-contains? [tree re]
+  (->> tree
+       (flatten)
+       (filter string?)
+       (string/join)
+       (re-find re)))
