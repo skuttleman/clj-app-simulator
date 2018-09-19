@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.core-test
-  (:require [clojure.test :refer [deftest testing are]]
+  (:require [clojure.test :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.core :as templates]))
 
 (defn ^:private ul [value]
@@ -10,12 +10,32 @@
 (defn with-child [child]
   [:div.with-child child])
 
-(defn component [x]
+(defn ^:private component [x]
   (let [a (inc x)]
     (fn [y]
       (let [b (dec y)]
         (fn [z]
           [:div a b x y z [with-child [ul x]]])))))
+
+(deftest ^:unit classes-test
+  (testing "(classes)"
+    (testing "generates classes based on rules"
+      (let [result (templates/classes {"class-1" true "class-2" false})]
+        (is (= {:class-name "class-1"} result))))
+    (testing "appends to existing class-name"
+      (let [result (templates/classes {:class-name "existing-class"}
+                                      {"class-1" true "class-2" false})]
+        (is (= {:class-name "existing-class class-1"} result))))
+    (testing "preserves other attributes"
+      (let [result (templates/classes {::other ::attrs}
+                                      {"class-1" true "class-2" false})]
+        (is (= {::other ::attrs :class-name "class-1"}
+               result))))
+    (testing "does not add :class-name when no classess are added"
+      (let [result (templates/classes {::other ::attrs}
+                                      {"class-1" false "class-2" false})]
+        (is (= {::other ::attrs}
+               result))))))
 
 (deftest ^:unit render-test
   (testing "(render)"

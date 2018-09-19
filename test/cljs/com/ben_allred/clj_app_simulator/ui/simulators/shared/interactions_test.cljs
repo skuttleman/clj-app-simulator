@@ -253,10 +253,10 @@
       (with-redefs [actions/show-modal action-spy
                     store/dispatch dispatch-spy]
         (testing "when making the request"
-          ((shared.interactions/show-request-modal ::sim {::some ::request} ::dt) ::event)
+          ((shared.interactions/show-request-modal ::sim {::some ::request :timestamp ::dt}) ::event)
           (testing "dispatches an action"
             (is (spies/called-with? action-spy
-                                    [modals/request-modal ::sim {::some ::request :dt ::dt}]
+                                    [modals/request-modal ::sim {::some ::request :timestamp ::dt}]
                                     "Request Details"))
             (is (spies/called-with? dispatch-spy ::action))))))))
 

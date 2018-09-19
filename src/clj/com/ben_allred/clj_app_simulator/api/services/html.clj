@@ -1,9 +1,19 @@
 (ns com.ben-allred.clj-app-simulator.api.services.html
-  (:require [com.ben-allred.clj-app-simulator.templates.core :as templates]
-            [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+  (:require [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+            [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
             [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
-            [hiccup.core :as hiccup]))
+            [com.ben-allred.clj-app-simulator.templates.core :as templates]
+            [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
+            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.collaj.core :as collaj]
+            [hiccup.core :as hiccup]
+            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]))
 
 (defn ^:private hiccup [tree]
   (hiccup/html tree))
@@ -11,22 +21,68 @@
 (def ^:private path-for
   (constantly "#"))
 
-(def ^:private app-attrs
-  {:header     (partial views/header path-for)
-   :components {:home      (constantly [views/root
-                                        [[:div.button-row
-                                          [:button.button.button-success.pure-button
-                                           "Create"]]
-                                         [views/spinner]]])
-                :new       (partial views/new [views/spinner])
-                :details   (constantly [views/details [views/spinner]])
-                :resources (constantly [views/resources [views/spinner]])}
-   :not-found  (partial views/not-found path-for)
-   :toast      (constantly [:div.toast-container])
-   :modal      (constantly [:div.modal-wrapper])})
+(defn ^:private home [state]
+  [views/root
+   [:div.button-row
+    [:button.button.button-success.pure-button
+     {:disabled true}
+     "Create"]]
+   [views.sim/simulators true (get-in state [:simulators :data])]
+   [views/spinner]])
 
-(defn app [state]
-  [views/app* app-attrs state])
+(defn ^:private new [state]
+  (let [type (get-in state [:page :query-params :type])
+        [component input] (case (keyword type)
+                            :ws [ws.views/sim-create-form]
+                            :file [file.views/sim-create-form (:uploads state)]
+                            [http.views/sim-create-form])]
+    [views/new
+     state
+     (if input
+       [component (:data input)]
+       [component])
+     [views/spinner]]))
+
+(defn ^:private details [{:keys [page simulators uploads]}]
+  (let [id (uuids/->uuid (get-in page [:route-params :id]))
+        data (:data simulators)]
+    [views/details
+     (if-let [{:keys [config] :as simulator} (get data id)]
+       (let [[component input] (-> config
+                                   (utils.sims/config->section)
+                                   (keyword)
+                                   (case
+                                     :http [http.views/sim]
+                                     :ws [ws.views/sim]
+                                     :file [file.views/sim uploads]
+                                     (constantly nil)))]
+         (cond-> [component simulator]
+           input (conj input)))
+       [:p "This simulator could not be found."])
+     [views/spinner]]))
+
+(defn ^:private resource [upload]
+  [views.res/resource
+   {:disabled true}
+   upload
+   [:button.button.button-warning.pure-button {:disabled true}]])
+
+(defn ^:private resources [state]
+  [views/resources
+   [views.res/resources
+    {:disabled true}
+    [:button.button.button-success.pure-button {:disabled true}]
+    resource
+    (get-in state [:uploads :data])
+    [views/spinner]]])
+
+(def ^:private app-attrs
+  {:components {:home      home
+                :new       new
+                :details   details
+                :resources resources}
+   :toast      (constantly [:div.toast-container])
+   :modal      (constantly [:div.modal-wrapper.unmounted])})
 
 (defn ^:private template [content]
   [:html
@@ -52,6 +108,9 @@
      {:type "text/javascript"}
      "com.ben_allred.clj_app_simulator.ui.app.mount_BANG_();"]]])
 
+(defn app [state]
+  [views/app* app-attrs state])
+
 (defn tree->html [tree]
   (->> tree
        (hiccup)
@@ -63,10 +122,18 @@
       (template)))
 
 (defn hydrate [page]
-  (->> (assoc (ui-reducers/root) :page page)
-       (conj [app])
-       (build-tree)
-       (tree->html)))
+  (let [{:keys [dispatch get-state]} (collaj/create-store ui-reducers/root)
+        uploads (resources/list-files)
+        [_ {:keys [simulators]}] (simulators/details)]
+    (dispatch [:files.fetch-all/succeed {:uploads uploads}])
+    (dispatch [:simulators/clear])
+    (doseq [simulator simulators]
+      (dispatch [:simulators.fetch-one/succeed {:simulator simulator}]))
+    (-> (get-state)
+        (assoc :page page)
+        (app)
+        (build-tree)
+        (tree->html))))
 
 (defn render [{:keys [uri params]}]
   (-> (condp re-matches uri

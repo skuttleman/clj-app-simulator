@@ -5,11 +5,15 @@
 (defn ^:private namify [[k v]]
   [(str (keywords/safe-name k)) (str (keywords/safe-name v))])
 
+(defn ^:private parsify [[k v]]
+  [(keyword k) (or v true)])
+
 (defn parse [s]
-  (->> (string/split s #"&")
+  (->> (string/split (str s) #"&")
        (map #(string/split % #"="))
        (filter (comp seq first))
-       (reduce (fn [qp [k v]] (assoc qp (keyword k) (or v true))) {})))
+       (map parsify)
+       (into {})))
 
 (defn stringify [qp]
   (->> qp

@@ -4,28 +4,16 @@
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.file.views :as file.views]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.views :as http.views]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.views :as ws.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [com.ben-allred.clj-app-simulator.ui.views.main :as main]
             [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
-            [com.ben-allred.clj-app-simulator.ui.views.simulators :as sims]
+            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]))
-
-(deftest ^:unit header-test
-  (testing "(header)"
-    (testing "renders the shared header"
-      (let [component (main/header ::state)]
-        (is (= [views/header nav/path-for ::state] component))))))
-
-(deftest ^:unit not-found-test
-  (testing "(not-found)"
-    (testing "renders the shared not-found"
-      (let [component (main/not-found ::state)]
-        (is (= [views/not-found nav/path-for ::state] component))))))
 
 (deftest ^:unit root-test
   (let [path-for-spy (spies/constantly ::nav)
@@ -35,8 +23,7 @@
                   store/dispatch dispatch-spy
                   actions/upload action-spy]
       (testing "(root)"
-        (let [root (-> {:simulators    {:status ::status :data ::data}
-                        :home-welcome? ::home-welcome?}
+        (let [root (-> {:simulators {:status ::status :data ::data}}
                        (main/root)
                        (test.dom/query-one views/root))]
           (testing "has a create menu"
@@ -52,14 +39,13 @@
 
           (testing "displays simulators"
             (is (-> root
-                    (test.dom/query-one components/with-status)
-                    (= [components/with-status [sims/simulators ::home-welcome?] {:status ::status :data ::data}])))))
+                    (test.dom/query-one views.sim/simulators)
+                    (= [views.sim/simulators ::data])))))
 
         (testing "when there are uploads"
           (spies/reset! path-for-spy)
-          (let [root (-> {:simulators    {:status ::status :data ::data}
-                          :home-welcome? ::home-welcome?
-                          :uploads       {:data [::file-1 ::file-2]}}
+          (let [root (-> {:simulators {:status ::status :data ::data}
+                          :uploads    {:data [::file-1 ::file-2]}}
                          (main/root)
                          (test.dom/query-one views/root))]
             (testing "has file option in the create menu"
@@ -146,13 +132,12 @@
 
 (deftest ^:unit resources-test
   (testing "(resources)"
-    (let [root (-> {:uploads-welcome? ::uploads-welcome?
-                    :uploads          ::uploads}
+    (let [root (-> {:uploads ::uploads}
                    (main/resources)
                    (test.dom/query-one views/resources))]
       (testing "renders the root component with status"
         (let [[_ component uploads] (test.dom/query-one root components/with-status)]
-          (is (= [resources/root ::uploads-welcome?]
+          (is (= resources/root
                  component))
           (is (= ::uploads uploads)))))))
 

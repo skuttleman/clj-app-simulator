@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.simulators
   (:require [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns]))
 
 (defonce ^:private sims (atom {}))
 

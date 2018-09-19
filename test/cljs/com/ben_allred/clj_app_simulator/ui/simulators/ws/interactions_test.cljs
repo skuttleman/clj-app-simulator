@@ -3,12 +3,12 @@
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.transformations :as tr]
+            [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.resources :as resources]
+            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
             [test.utils.dom :as test.dom]))
 

@@ -31,8 +31,8 @@
                              :name   "Rooty"}])
 
 (defn ^:private sims-match? [sims configs]
-  (= (map (comp #(update % :method keyword) :config) sims)
-     configs))
+  (= (set (map (comp #(update % :method keyword) :config) sims))
+     (set configs)))
 
 (defn ^:private has-sim? [sims config]
   (some (fn [sim] (sims-match? [sim] [config])) sims))

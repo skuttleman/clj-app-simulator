@@ -76,9 +76,9 @@
         [:button.button.button-secondary.pure-button.cancel-button
          "Cancel"]))))
 
-(defn show-request-modal [sim request dt]
+(defn show-request-modal [sim request]
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/request-modal sim (assoc request :dt dt)]
+        [modals/request-modal sim request]
         "Request Details"))))

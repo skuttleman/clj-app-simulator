@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test
   (:require [cljs.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
+            [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
             [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.utils.moment :as mo]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit sim-iterate-test
   (testing "(sim-iterate)"
@@ -49,12 +49,12 @@
 (deftest ^:unit request-modal-test
   (testing "(request-modal)"
     (let [format-spy (spies/constantly ::formatted)]
-      (with-redefs [mo/format format-spy]
+      (with-redefs [dates/format format-spy]
         (let [qp {:a 1 :b 2}
               rp {:id 123}
               headers {:header-1 "val-1" :header-2 "val-2"}
               root (modals/request-modal {:method ::method :path "/some/path"}
-                                         {:dt           ::moment
+                                         {:timestamp    ::moment
                                           :query-params qp
                                           :route-params rp
                                           :headers      headers
