@@ -25,4 +25,7 @@
     (swap! sims dissoc key)))
 
 (defn simulators []
-  (vals @sims))
+  (->> @sims
+       (sort-by (fns/=>> (first) (mapv name) (apply str)))
+       (reverse)
+       (map second)))
