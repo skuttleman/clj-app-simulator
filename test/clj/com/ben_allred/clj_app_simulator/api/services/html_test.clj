@@ -36,8 +36,8 @@
                       (:disabled)))
               (is (-> tree
                       (test.dom/query-one views.sim/simulators)
-                      (rest)
-                      (= [true ::simulators])))
+                      (second)
+                      (= ::simulators)))
               (is (test.dom/contains? tree [views/spinner]))))
 
           (testing "when rendering a new component"
@@ -231,17 +231,17 @@
                     collaj/create-store create-store-spy
                     resources/list-files list-files-spy
                     simulators/details details-spy]
-        (let [html (html/hydrate ::page)
+        (let [html (html/hydrate ::page ::env)
               state (ffirst (spies/calls app-spy))]
           (testing "gets the default state"
             (is (spies/called-with? create-store-spy ui-reducers/root))
             (is (spies/called-with? get-state-spy)))
 
           (testing "gets current resources"
-            (is (spies/called-with? list-files-spy)))
+            (is (spies/called-with? list-files-spy ::env)))
 
           (testing "gets current simulators"
-            (is (spies/called-with? details-spy)))
+            (is (spies/called-with? details-spy ::env)))
 
           (testing "calls dispatch to setup state"
             (is (spies/called-with? dispatch-spy [:files.fetch-all/succeed {:uploads ::uploads}]))
@@ -275,35 +275,35 @@
     (let [hydrate-spy (spies/constantly ::html)]
       (with-redefs [html/hydrate hydrate-spy]
         (testing "returns html"
-          (is (= ::html (html/render {:uri ""}))))
+          (is (= ::html (html/render {:uri ""} ::env))))
 
         (testing "when requesting /details"
           (spies/reset! hydrate-spy)
           (let [id (str (uuids/random))]
-            (html/render {:uri (str "/details/" id)})
+            (html/render {:uri (str "/details/" id)} ::env)
 
-            (is (spies/called-with? hydrate-spy {:handler :details :route-params {:id id}}))))
+            (is (spies/called-with? hydrate-spy {:handler :details :route-params {:id id}} ::env))))
 
         (testing "when requesting /resources"
           (spies/reset! hydrate-spy)
-          (html/render {:uri "/resources"})
+          (html/render {:uri "/resources"} ::env)
 
-          (is (spies/called-with? hydrate-spy {:handler :resources})))
+          (is (spies/called-with? hydrate-spy {:handler :resources} ::env)))
 
         (testing "when requesting /create"
           (spies/reset! hydrate-spy)
-          (html/render {:uri "/create" :params {:type ::some-type}})
+          (html/render {:uri "/create" :params {:type ::some-type}} ::env)
 
-          (is (spies/called-with? hydrate-spy {:handler :new :query-params {:type ::some-type}})))
+          (is (spies/called-with? hydrate-spy {:handler :new :query-params {:type ::some-type}} ::env)))
 
         (testing "when requesting /"
           (spies/reset! hydrate-spy)
-          (html/render {:uri "/"})
+          (html/render {:uri "/"} ::env)
 
-          (is (spies/called-with? hydrate-spy {:handler :home})))
+          (is (spies/called-with? hydrate-spy {:handler :home} ::env)))
 
         (testing "when requesting any other path"
           (spies/reset! hydrate-spy)
-          (html/render {:uri "/any/old/path"})
+          (html/render {:uri "/any/old/path"} ::env)
 
-          (is (spies/called-with? hydrate-spy {:handler :not-found})))))))
+          (is (spies/called-with? hydrate-spy {:handler :not-found} ::env)))))))

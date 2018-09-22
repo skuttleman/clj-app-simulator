@@ -51,7 +51,7 @@
 (defn why-not-update? [config]
   (s/explain-data :file.partial/file-simulator config))
 
-(defn ->FileSimulator [id config]
+(defn ->FileSimulator [env id config]
   (when-let [{:keys [method path] :as config} (conform-to :file/file-simulator config)]
     (let [{:keys [dispatch get-state]} (store/file-store)
           id-path (string/replace path #":[^/]+" "*")]
@@ -66,7 +66,7 @@
                 delay (store/delay state)]
             (when (pos-int? delay)
               (sleep delay))
-            (store/file-response state)))
+            (store/file-response env state)))
         (requests [_]
           (store/requests (get-state)))
         (details [_]
@@ -78,7 +78,7 @@
         (reset [_]
           (dispatch actions/reset))
         (routes [this]
-          (routes.sim/file-sim->routes this))
+          (routes.sim/file-sim->routes env this))
         (change [_ config]
           (if-let [config (conform-to :file.partial/file-simulator config)]
             (dispatch (actions/change (dissoc config :method :path)))

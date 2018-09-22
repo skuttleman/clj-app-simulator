@@ -77,7 +77,7 @@
                     actions/upload upload-spy
                     resources/show-delete-modal show-spy]
         (let [[_ attrs upload-btn res uploads] (-> (resources/root [::upload])
-                                                       (test.dom/query-one views.res/resources))]
+                                                   (test.dom/query-one views.res/resources))]
           (testing "has an :on-click attr"
             (is (spies/called-with? show-spy "Delete All Resources" "all resources" actions/delete-uploads))
             (is (= ::on-click (:on-click attrs)))

@@ -27,11 +27,11 @@
     (catch Throwable _
       false)))
 
-(defn on-open [simulator _ store ws]
+(defn on-open [env simulator _ store ws]
   (let [{:keys [dispatch]} store
         socket-id (uuids/random)]
     (dispatch (actions/connect socket-id ws))
-    (activity/publish :simulators.ws/connect (assoc (common/details simulator)
+    (activity/publish env :simulators.ws/connect (assoc (common/details simulator)
                                                     :socket-id socket-id))))
 
 (defn on-message [simulator request store ws message]
@@ -44,14 +44,14 @@
                                  :socket-id    socket-id
                                  :body         message}))))
 
-(defn on-close [simulator _ store ws _]
+(defn on-close [env simulator _ store ws _]
   (let [{:keys [dispatch get-state]} store]
     (when-let [socket-id (actions/find-socket-id (get-state) ws)]
       (dispatch (actions/remove-socket socket-id))
-      (activity/publish :simulators.ws/disconnect (assoc (common/details simulator)
+      (activity/publish env :simulators.ws/disconnect (assoc (common/details simulator)
                                                          :socket-id socket-id)))))
 
-(defn ->WsSimulator [id config]
+(defn ->WsSimulator [env id config]
   (when-let [{:keys [path method] :as config} (conform-to :ws/ws-simulator config)]
     (let [{:keys [dispatch get-state] :as store} (store/ws-store)
           id-path (string/replace path #":[^/]+" "*")]
@@ -63,7 +63,7 @@
           (dispatch actions/disconnect-all))
         (receive [this request]
           (dispatch (actions/receive request))
-          (routes.sim/receive this (select-keys request #{:socket-id})))
+          (routes.sim/receive env this (select-keys request #{:socket-id})))
         (requests [_]
           (store/requests (get-state)))
         (details [_]
@@ -76,7 +76,7 @@
           (dispatch actions/disconnect-all)
           (dispatch actions/reset))
         (routes [this]
-          (routes.sim/ws-sim->routes this))
+          (routes.sim/ws-sim->routes env this))
         (change [_ config]
           (dispatch (actions/change (dissoc config :path :method))))
 
@@ -87,9 +87,9 @@
           (when websocket?
             (web.async/as-channel
               request
-              {:on-open    (partial on-open this request store)
+              {:on-open    (partial on-open env this request store)
                :on-message (partial on-message this request store)
-               :on-close   (partial on-close this request store)})))
+               :on-close   (partial on-close env this request store)})))
         (disconnect [_]
           (dispatch actions/disconnect-all))
         (disconnect [_ socket-id]

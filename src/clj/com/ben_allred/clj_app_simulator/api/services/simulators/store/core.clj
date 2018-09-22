@@ -8,8 +8,8 @@
             [com.ben-allred.collaj.core :as collaj]
             [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
 
-(defn ^:private with-file [response]
-  (if-let [resource (resources/get (:file response))]
+(defn ^:private with-file [response env]
+  (if-let [resource (resources/get env (:file response))]
     (-> response
         (dissoc :file)
         (update :headers assoc
@@ -37,13 +37,13 @@
       (:response)
       (maps/update-maybe :headers (partial maps/map-keys name))))
 
-(defn file-response [state]
+(defn file-response [env state]
   (-> state
       (:config)
       (:current)
       (:response)
       (update :headers (partial maps/map-keys name))
-      (with-file)))
+      (with-file env)))
 
 (def requests :requests)
 

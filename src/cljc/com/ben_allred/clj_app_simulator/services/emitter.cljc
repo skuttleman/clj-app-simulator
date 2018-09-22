@@ -7,20 +7,21 @@
                        [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defprotocol IEmitter
-  (on [this chan] [this event chan])
-  (publish [this event data]))
+  (on [this env chan] [this env event chan])
+  (publish [this env event data]))
 
 (defn new []
   (let [listeners (atom {})]
     (reify IEmitter
-      (on [this chan]
-        (on this ::all chan))
-      (on [this event chan]
-        (swap! listeners update event conj chan)
+      (on [this env chan]
+        (on this env ::all chan))
+      (on [this env event chan]
+        (swap! listeners update-in [env event] conj chan)
         this)
-      (publish [this event data]
+      (publish [this env event data]
         (when-let [chans (-> listeners
-                             (swap! update event (partial remove impl/closed?))
+                             (swap! update-in [env event] (partial remove impl/closed?))
+                             (env)
                              (select-keys [::all event])
                              (#(mapcat val %))
                              (seq))]

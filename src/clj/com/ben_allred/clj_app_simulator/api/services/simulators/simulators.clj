@@ -5,27 +5,29 @@
 
 (defonce ^:private sims (atom {}))
 
-(defn clear! []
+(defn clear! [env]
   (->> @sims
+       (env)
        (vals)
        (map common/stop)
        (dorun))
-  (reset! sims {}))
+  (swap! sims dissoc env))
 
-(defn add! [simulator]
+(defn add! [env simulator]
   (let [key (common/identifier simulator)]
-    (when-not (contains? @sims key)
-      (swap! sims assoc key simulator)
+    (when-not (contains? (env @sims) key)
+      (swap! sims assoc-in [env key] simulator)
       (common/start simulator)
       simulator)))
 
-(defn remove! [key]
-  (when-let [simulator (get @sims key)]
+(defn remove! [env key]
+  (when-let [simulator (get-in @sims [env key])]
     (common/stop simulator)
-    (swap! sims dissoc key)))
+    (swap! sims update env dissoc key)))
 
-(defn simulators []
+(defn simulators [env]
   (->> @sims
+       (env)
        (sort-by (fns/=>> (first) (mapv name) (apply str)))
        (reverse)
        (map second)))

@@ -61,10 +61,11 @@
                             "Content-Type" ::content-type
                             "Content-Length" 12345
                             "Content-Disposition" "inline; filename=\"filename.ext\""}}
-                 (store/file-response {:config {:current {:response {:headers {:a-header "value"}
-                                                                     :file ::123
-                                                                     :status ::status}}}})))
-          (is (spies/called-with? resources-spy ::123))
+                 (store/file-response ::env
+                                      {:config {:current {:response {:headers {:a-header "value"}
+                                                                     :file    ::123
+                                                                     :status  ::status}}}})))
+          (is (spies/called-with? resources-spy ::env ::123))
           (is (spies/called-with? stream-spy ::file)))))))
 
 (deftest ^:unit requests-test

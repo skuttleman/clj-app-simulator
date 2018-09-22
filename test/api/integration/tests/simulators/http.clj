@@ -1,15 +1,15 @@
 (ns integration.tests.simulators.http
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [integration.utils.fixtures :as fixtures]
-            [integration.utils.http :as test.http]
-            [integration.utils.ws :as test.ws]
+  (:require [clojure.core.async :as async]
             [clojure.edn :as edn]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [clojure.spec.alpha :as s]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [com.ben-allred.clj-app-simulator.utils.json :as json]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.core.async :as async]
-            [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps])
+            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [integration.utils.chans :as chans]
+            [integration.utils.fixtures :as fixtures]
+            [integration.utils.http :as test.http]
+            [integration.utils.ws :as test.ws])
   (:import [java.util Date]))
 
 (use-fixtures :once fixtures/run-server)
@@ -82,8 +82,9 @@
                 (is (= 2 (count ids)))
                 (is (re-matches uuid-re (str (first ids))))
                 (is (re-matches uuid-re (str (second ids)))))))
+
           (testing "publishes event on activity feed"
-            (let [{:keys [event data]} (async/<!! chan)]
+            (let [{:keys [event data]} (chans/timeout-take! chan)]
               (is (= :simulators/init (keyword event)))
               (is (sims-match? start-configs data))))
           (testing "and when getting a list of simulators"
@@ -100,7 +101,7 @@
                 (let [id (:id (:simulator (second response)))]
                   (is (re-matches uuid-re (str id)))))
               (testing "publishes event on activity feed"
-                (let [{:keys [event data]} (async/<!! chan)]
+                (let [{:keys [event data]} (chans/timeout-take! chan)]
                   (is (= :simulators/add (keyword event)))
                   (is (sims-match? [new-sim] [data]))))
               (testing "and when getting a list of simulators"
@@ -140,7 +141,7 @@
                 (testing "returns a success response"
                   (is (test.http/success? response)))
                 (testing "publishes event on activity feed"
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (is (= :simulators/init (keyword event)))
                     (is (sims-match? second-sims data))))
                 (testing "and when getting a list of simulators"
@@ -188,7 +189,7 @@
                 (is (= "application/json" (get-in response [3 :headers :content-type])))
                 (is (= "some value" (get-in response [3 :headers :x-custom-header])))))
             (testing "publishes event on activity feed"
-              (let [{:keys [event data]} (async/<!! chan)
+              (let [{:keys [event data]} (chans/timeout-take! chan)
                     {:keys [query-params route-params]} (:request data)]
                 (is (= :simulators/receive (keyword event)))
                 (is (= {:with "some" :qps "included"} query-params))
@@ -214,7 +215,7 @@
                 (testing "responds as configured"
                   (is (= {:some "json"} (second response))))
                 (testing "publishes event on activity feed"
-                  (let [{:keys [query-params route-params]} (get-in (async/<!! chan)
+                  (let [{:keys [query-params route-params]} (get-in (chans/timeout-take! chan)
                                                                     [:data :request])]
                     (is (= {:filter "things"} query-params))
                     (is (= {:url-param "other-param"} route-params))))
@@ -235,7 +236,7 @@
                                  {:body {:action :simulators/change
                                          :config new-config}})
                 (testing "publishes event on activity feed"
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (is (= :simulators/change (keyword event)))
                     (is (= (-> data
                                (:config)
@@ -253,7 +254,7 @@
                       (is (>= elapsed 1000))
                       (is (= {:new "body"} (second response))))
                     (testing "publishes event on activity feed"
-                      (let [event (:event (async/<!! chan))]
+                      (let [event (:event (chans/timeout-take! chan))]
                         (is (= :simulators/receive (keyword event)))))
                     (testing "and when getting the simulator's details"
                       (let [[_ {{:keys [config requests]} :simulator}]
@@ -268,7 +269,7 @@
                                    content-type
                                    {:body {:action :simulators.http/reset-requests}})
                   (testing "publishes event on activity feed"
-                    (let [{:keys [event data]} (async/<!! chan)]
+                    (let [{:keys [event data]} (chans/timeout-take! chan)]
                       (is (= :simulators.http/reset-requests (keyword event)))
                       (is (= {:method :http/get :path "/some/:url-param"}
                              (-> data
@@ -286,14 +287,14 @@
                   (testing "and when sending a request"
                     (test.http/get "/simulators/some/final-request" content-type)
                     (testing "publishes event on activity feed"
-                      (let [event (:event (async/<!! chan))]
+                      (let [event (:event (chans/timeout-take! chan))]
                         (is (= :simulators/receive (keyword event)))))
                     (testing "and when resetting the response"
                       (test.http/patch "/api/simulators/get/some/:url-param"
                                        content-type
                                        {:body {:action :simulators.http/reset-response}})
                       (testing "publishes event on activity feed"
-                        (let [event (:event (async/<!! chan))]
+                        (let [event (:event (chans/timeout-take! chan))]
                           (is (= :simulators.http/reset-response (keyword event)))))
                       (testing "and when getting the simulator's details"
                         (let [[_ {{:keys [config requests]} :simulator}]
@@ -316,7 +317,7 @@
                                      :config {:body    (transit/stringify {:update :again})
                                               :headers {:content-type "application/transit"}}}})
             (testing "publishes event on activity feed"
-              (let [event (:event (async/<!! chan))]
+              (let [event (:event (chans/timeout-take! chan))]
                 (is (= :simulators/change (keyword event)))))
             (testing "and when updating a different simulator"
               (test.http/patch "/api/simulators/post/some/path"
@@ -325,7 +326,7 @@
                                        :config {:response {:status 403
                                                            :body   (pr-str {:message "not authorized"})}}}})
               (testing "publishes event on activity feed"
-                (let [{:keys [event data]} (async/<!! chan)]
+                (let [{:keys [event data]} (chans/timeout-take! chan)]
                   (is (= :simulators/change (keyword event)))
                   (is (= :http/post (keyword (get-in data [:config :method]))))
                   (is (= "/some/path" (get-in data [:config :path])))
@@ -335,21 +336,21 @@
                                   "application/edn"
                                   {:body (pr-str [:new :edn :body])})
                   (testing "publishes event on activity feed"
-                    (let [{:keys [event data]} (async/<!! chan)]
+                    (let [{:keys [event data]} (chans/timeout-take! chan)]
                       (is (= :simulators/receive (keyword event)))
                       (is (= :http/post (keyword (get-in data [:simulator :config :method]))))
                       (is (= "/some/path" (get-in data [:simulator :config :path])))))
                   (testing "and when sending a request to original simulator"
                     (test.http/get "/simulators/some/things" content-type)
                     (testing "publishes event on activity feed"
-                      (let [event (:event (async/<!! chan))]
+                      (let [event (:event (chans/timeout-take! chan))]
                         (is (= :simulators/receive (keyword event)))))
                     (testing "and when resetting the simulator"
                       (test.http/patch "/api/simulators/get/some/:url-param"
                                        content-type
                                        {:body {:action :simulators/reset}})
                       (testing "publishes event on activity feed"
-                        (let [event (:event (async/<!! chan))]
+                        (let [event (:event (chans/timeout-take! chan))]
                           (is (= :simulators/reset (keyword event)))))
                       (testing "and when getting the simulator's details"
                         (let [[_ {{:keys [requests config]} :simulator}]
@@ -388,10 +389,10 @@
               (test.http/get "/simulators/some/id-for-things" content-type)
               (test.http/post "/simulators/some/path" content-type {:body [:new "thing"]})
               (testing "publishes events on activity feed"
-                (let [update-get (async/<!! chan)
-                      update-post (async/<!! chan)
-                      get-request (async/<!! chan)
-                      post-request (async/<!! chan)]
+                (let [update-get (chans/timeout-take! chan)
+                      update-post (chans/timeout-take! chan)
+                      get-request (chans/timeout-take! chan)
+                      post-request (chans/timeout-take! chan)]
                   (is (= (json/stringify [:GET "some" "things"])
                          (get-in update-get [:data :config :response :body])))
                   (is (= (pr-str [:POST "some" "things"])
@@ -402,7 +403,7 @@
               (testing "and when resetting all simulators"
                 (test.http/delete "/api/simulators/reset" content-type)
                 (testing "publishes event on activity feed"
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (is (= :simulators/reset-all (keyword event)))
                     (is (= (set start-configs)
                            (set (map (comp #(update % :method keyword) :config) data))))))
@@ -418,7 +419,7 @@
           (testing "when deleting a simulator"
             (test.http/delete "/api/simulators/get/some/:url-param" content-type)
             (testing "publishes event on activity feed"
-              (let [{:keys [event data]} (async/<!! chan)]
+              (let [{:keys [event data]} (chans/timeout-take! chan)]
                 (is (= :simulators/delete (keyword event)))
                 (is (= (-> data
                            (:config)
@@ -440,6 +441,6 @@
                           (is (test.http/client-error? response)))
                         (testing "does not publish event on activity feed"
                           (async/put! chan ::nothing)
-                          (is (= ::nothing (async/<!! chan)))))))))))
+                          (is (= ::nothing (chans/timeout-take! chan)))))))))))
           (test.ws/close! ws)
           (async/close! chan))))))

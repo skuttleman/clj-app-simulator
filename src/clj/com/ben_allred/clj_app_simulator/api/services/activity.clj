@@ -13,14 +13,14 @@
         {"application/edn"     pr-str
          "application/transit" transit/stringify}))
 
-(defn sub [{:keys [query-params websocket?] :as request}]
+(defn sub [env {:keys [query-params websocket?] :as request}]
   (when websocket?
     (let [stringify (accept->stringify (get query-params "accept"))
           chan (async/chan 100)]
       (web.async/as-channel
         request
         {:on-open  (fn [websocket]
-                     (emitter/on emitter chan)
+                     (emitter/on emitter env chan)
                      (async/go-loop [data (async/<! chan)]
                        (when-let [[event data] data]
                          (web.async/send! websocket (stringify {:event event :data data}))
@@ -28,5 +28,5 @@
          :on-close (fn [_ _]
                      (async/close! chan))}))))
 
-(defn publish [event data]
-  (emitter/publish emitter event data))
+(defn publish [env event data]
+  (emitter/publish emitter env event data))

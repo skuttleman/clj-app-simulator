@@ -13,42 +13,47 @@
       (select-keys [:filename :content-type :timestamp])
       (assoc :id id)))
 
-(defn ^:private upload* [id file]
+(defn ^:private upload* [env id file]
   (let [file' (-> file
                   (set/rename-keys {:tempfile :file})
                   (assoc :timestamp (Date.)))
         result (file->data [id file'])]
-    (swap! uploads assoc id file')
+    (swap! uploads assoc-in [env id] file')
     result))
 
 (defn upload!
-  ([resource-id file]
-   (let [result (upload* (uuids/->uuid resource-id) file)]
-     (activity/publish :resources/put result)
+  ([env resource-id file]
+   (let [result (upload* env (uuids/->uuid resource-id) file)]
+     (activity/publish env :resources/put result)
      result))
-  ([files]
-   (let [result (map (fn [file] (upload* (uuids/random) file)) files)]
+  ([env files]
+   (let [result (map (fn [file] (upload* env (uuids/random) file)) files)]
      (doseq [file result]
-       (activity/publish :resources/add file))
+       (activity/publish env :resources/add file))
      result)))
 
-(defn clear! []
-  (reset! uploads {})
-  (activity/publish :resources/clear nil))
+(defn clear! [env]
+  (swap! uploads dissoc env)
+  (activity/publish env :resources/clear nil))
 
-(defn remove! [id]
+(defn remove! [env id]
   (let [id (uuids/->uuid id)]
-    (when-let [resource (clojure.core/get @uploads id)]
-      (swap! uploads dissoc id)
-      (activity/publish :resources/remove (file->data [id resource])))))
+    (when-let [resource (get-in @uploads [env id])]
+      (swap! uploads update env dissoc id)
+      (activity/publish env :resources/remove (file->data [id resource])))))
 
-(defn list-files []
+(defn list-files [env]
   (->> @uploads
+       (env)
        (map file->data)
        (sort-by :timestamp)))
 
-(defn get [id]
-  (clojure.core/get @uploads (uuids/->uuid id)))
+(defn get [env id]
+  (get-in @uploads [env (uuids/->uuid id)]))
 
 (defn has-upload? [id]
-  (boolean (get id)))
+  (let [id (uuids/->uuid id)]
+    (->> @uploads
+         (vals)
+         (some #(clojure.core/get % id))
+         (boolean))))

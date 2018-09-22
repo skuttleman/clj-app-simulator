@@ -9,23 +9,24 @@
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids])
   (:import [java.io InputStream]))
 
-(defn ^:privage sim->routes [f simulator]
-  (->> (f simulator)
+(defn ^:privage sim->routes [env f simulator]
+  (->> (f env simulator)
        (map (partial apply c/make-route))))
 
-(defn receive [simulator request]
-  (activity/publish :simulators/receive
+(defn receive [env simulator request]
+  (activity/publish env
+                    :simulators/receive
                     (merge {:simulator (select-keys (common/details simulator) #{:id :config})
                             :request   (peek (common/requests simulator))}
                            request)))
 
-(defn http-sim-route [simulator]
+(defn http-sim-route [env simulator]
   (fn [request]
     (let [response (->> (update request :body #(if (instance? InputStream %)
                                                  (strings/trim-to-nil (slurp %))
                                                  %))
                         (common/receive simulator))]
-      (receive simulator {})
+      (receive env simulator {})
       response)))
 
 (defn ws-sim-route [simulator]
@@ -36,14 +37,15 @@
   (fn [_]
     [:ok {:simulator (common/details simulator)}]))
 
-(defn delete-sim [simulator delete-sim!]
+(defn delete-sim [env simulator delete-sim!]
   (fn [_]
-    (activity/publish :simulators/delete
+    (activity/publish env
+                      :simulators/delete
                       (select-keys (common/details simulator) #{:id :config}))
     (delete-sim! (common/identifier simulator))
     [:no-content]))
 
-(defn patch-sim [simulator]
+(defn patch-sim [env simulator]
   (fn [{{:keys [action config]} :body}]
     (try (let [action (keyword action)]
            (case action
@@ -54,12 +56,12 @@
              nil)
            (let [details (common/details simulator)]
              (when (#{:simulators/reset :simulators/change :simulators.http/reset-requests :simulators.http/reset-response} action)
-               (activity/publish action details))
+               (activity/publish env action details))
              [:ok details]))
          (catch Throwable ex
            [:bad-request (:problems (ex-data ex))]))))
 
-(defn patch-ws [simulator]
+(defn patch-ws [env simulator]
   (fn [{{:keys [action socket-id config]} :body}]
     (let [action (keyword action)
           socket-id (uuids/->uuid socket-id)]
@@ -73,7 +75,7 @@
       (let [details (cond-> (common/details simulator)
                       socket-id (assoc :socket-id socket-id))]
         (when (#{:simulators/reset :simulators.ws/reset-messages :simulators/change} action)
-          (activity/publish action details))
+          (activity/publish env action details))
         [:ok details]))))
 
 (defn send-ws [simulator]
@@ -90,16 +92,16 @@
     (common/disconnect simulator)
     [:no-content]))
 
-(defn http-routes [simulator]
+(defn http-routes [env simulator]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)
         method-str (name method)
         get (get-sim simulator)
-        delete (delete-sim simulator sims/remove!)
-        patch (patch-sim simulator)
+        delete (delete-sim env simulator (partial sims/remove! env))
+        patch (patch-sim env simulator)
         path (when (not= path "/") path)
         uri (str "/api/simulators/" method-str path)
         uuid-uri (str "/api/simulators/" id)]
-    [[(keyword method-str) (str "/simulators" path) (http-sim-route simulator)]
+    [[(keyword method-str) (str "/simulators" path) (http-sim-route env simulator)]
      [:get uri get]
      [:get uuid-uri get]
      [:delete uri delete]
@@ -107,9 +109,9 @@
      [:patch uri patch]
      [:patch uuid-uri patch]]))
 
-(defn ws-routes [simulator]
+(defn ws-routes [env simulator]
   (let [{{:keys [path]} :config id :id} (common/details simulator)
-        delete (delete-sim simulator sims/remove!)
+        delete (delete-sim env simulator (partial sims/remove! env))
         path (if (= path "/") "" path)
         sim-path (str "/simulators" path)
         uri (str "/api/simulators/ws" path)
@@ -118,7 +120,7 @@
         socket-uuid-uri (str uuid-uri "/:socket-id")
         get (get-sim simulator)
         send (send-ws simulator)
-        patch (patch-ws simulator)
+        patch (patch-ws env simulator)
         disconnect (disconnect-ws simulator)]
     [[:get sim-path (ws-sim-route simulator)]
      [:get uri get]
@@ -134,11 +136,11 @@
      [:patch uri patch]
      [:patch uuid-uri patch]]))
 
-(defn http-sim->routes [simulator]
-  (sim->routes http-routes simulator))
+(defn http-sim->routes [env simulator]
+  (sim->routes env http-routes simulator))
 
-(defn ws-sim->routes [simulator]
-  (sim->routes ws-routes simulator))
+(defn ws-sim->routes [env simulator]
+  (sim->routes env ws-routes simulator))
 
-(defn file-sim->routes [simulator]
-  (sim->routes http-routes simulator))
+(defn file-sim->routes [env simulator]
+  (sim->routes env http-routes simulator))

@@ -27,7 +27,7 @@
     [:button.button.button-success.pure-button
      {:disabled true}
      "Create"]]
-   [views.sim/simulators true (get-in state [:simulators :data])]
+   [views.sim/simulators (get-in state [:simulators :data])]
    [views/spinner]])
 
 (defn ^:private new [state]
@@ -121,10 +121,10 @@
       (templates/render)
       (template)))
 
-(defn hydrate [page]
+(defn hydrate [page env]
   (let [{:keys [dispatch get-state]} (collaj/create-store ui-reducers/root)
-        uploads (resources/list-files)
-        [_ {:keys [simulators]}] (simulators/details)]
+        uploads (resources/list-files env)
+        [_ {:keys [simulators]}] (simulators/details env)]
     (dispatch [:files.fetch-all/succeed {:uploads uploads}])
     (dispatch [:simulators/clear])
     (doseq [simulator simulators]
@@ -135,7 +135,7 @@
         (build-tree)
         (tree->html))))
 
-(defn render [{:keys [uri params]}]
+(defn render [{:keys [uri params]} env]
   (-> (condp re-matches uri
         #"/details/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
         :>> (fn [[_ id]]
@@ -151,4 +151,4 @@
         {:handler :home}
 
         {:handler :not-found})
-      (hydrate)))
+      (hydrate env)))

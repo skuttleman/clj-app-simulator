@@ -20,7 +20,7 @@
          spy (spies/constantly {:dispatch  dispatch
                                          :get-state get-state})]
      (with-redefs [store/http-store spy]
-       [(http.sim/->HttpSimulator ::id config) spy config dispatch get-state]))))
+       [(http.sim/->HttpSimulator ::env ::id config) spy config dispatch get-state]))))
 
 (deftest ^:unit ->HttpSimulator-test
   (testing "(->HttpSimulator)"
@@ -130,7 +130,7 @@
       (with-redefs [routes.sim/http-sim->routes config-spy]
         (testing "converts simulator to routes"
           (let [result (common/routes sim)]
-            (is (spies/called-with? config-spy sim))
+            (is (spies/called-with? config-spy ::env sim))
             (is (= ::routes result))))))))
 
 (deftest ^:unit ->HttpSimulator.reset-requests-test

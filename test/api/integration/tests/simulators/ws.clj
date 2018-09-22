@@ -1,13 +1,13 @@
 (ns integration.tests.simulators.ws
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [integration.utils.fixtures :as fixtures]
+  (:require [clojure.core.async :as async]
             [clojure.edn :as edn]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [com.ben-allred.clj-app-simulator.utils.json :as json]
-            [clojure.core.async :as async]
-            [integration.utils.ws :as test.ws]
+            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [integration.utils.chans :as chans]
+            [integration.utils.fixtures :as fixtures]
             [integration.utils.http :as test.http]
-            [integration.utils.chans :as chans]))
+            [integration.utils.ws :as test.ws]))
 
 (use-fixtures :once fixtures/run-server)
 
@@ -51,7 +51,7 @@
               (is (test.http/success? response)))
 
             (testing "publishes an event"
-              (let [{:keys [event data]} (async/<!! chan)]
+              (let [{:keys [event data]} (chans/timeout-take! chan)]
                 (is (= :simulators/init (keyword event)))
                 (is (sims-match? data start-configs))))
 
@@ -69,7 +69,7 @@
                   (is (test.http/success? response)))
 
                 (testing "publishes an event"
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (is (= :simulators/add (keyword event)))
                     (is (sims-match? [data] [simulator]))))
 
@@ -99,7 +99,7 @@
                   (is (test.http/success? response)))
 
                 (testing "publishes an event"
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (is (= :simulators/init (keyword event)))
                     (is (sims-match? data new-configs))))
 
@@ -112,12 +112,9 @@
 
                 (testing "and when connecting sockets to a simulator"
                   (let [ws-1 (test.ws/connect "/simulators")
-                        _ (async/<!! chan)
                         ws-2 (test.ws/connect "/simulators")
-                        _ (async/<!! chan)
-                        ws-3 (test.ws/connect "/simulators/something/new")
-                        _ (async/<!! chan)]
-
+                        ws-3 (test.ws/connect "/simulators/something/new")]
+                    (chans/flush! chan)
                     (testing "and when deleting a simulator"
                       (let [simulator {:method :ws :path "/" :name "Rooty"}
                             response (test.http/delete "/api/simulators/ws" content-type)]
@@ -125,7 +122,7 @@
                           (is (test.http/success? response)))
 
                         (testing "publishes an event"
-                          (let [{:keys [event data]} (async/<!! chan)]
+                          (let [{:keys [event data]} (chans/timeout-take! chan)]
                             (is (= :simulators/delete (keyword event)))
                             (is (sims-match? [data] [simulator]))))
 
@@ -135,12 +132,12 @@
                           (test.ws/send! ws-3 "message")
 
                           (testing "publishes an event for ws-1"
-                            (let [{:keys [event data]} (async/<!! chan)]
+                            (let [{:keys [event data]} (chans/timeout-take! chan)]
                               (is (= :simulators.ws/disconnect (keyword event)))
                               (is (not (contains? (set (:sockets data)) (:socket-id data))))))
 
                           (testing "publishes an event for ws-2"
-                            (let [{:keys [event data]} (async/<!! chan)]
+                            (let [{:keys [event data]} (chans/timeout-take! chan)]
                               (is (= :simulators.ws/disconnect (keyword event)))
                               (is (not (contains? (set (:sockets data)) (:socket-id data)))))))
 
@@ -174,7 +171,7 @@
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
                                         :on-msg (partial async/put! chan-1)
                                         :to-clj edn/read-string)
-                  {:keys [event data]} (async/<!! chan)
+                  {:keys [event data]} (chans/timeout-take! chan)
                   socket-id-1 (:socket-id data)]
               (testing "publishes an event"
                 (is (= :simulators.ws/connect (keyword event)))
@@ -185,7 +182,7 @@
                       ws-2 (test.ws/connect "/simulators/some/:url-param"
                                             :on-msg (partial async/put! chan-2)
                                             :to-clj edn/read-string)
-                      {:keys [event data]} (async/<!! chan)
+                      {:keys [event data]} (chans/timeout-take! chan)
                       socket-id-2 (:socket-id data)]
                   (testing "publishes and event"
                     (is (= :simulators.ws/connect (keyword event)))
@@ -203,7 +200,7 @@
                   (testing "and when when sending a message via socket"
                     (test.ws/send! ws-1 "this is a message")
                     (testing "publishes an event"
-                      (let [{:keys [event data]} (async/<!! chan)]
+                      (let [{:keys [event data]} (chans/timeout-take! chan)]
                         (is (= socket-id-1 (:socket-id data)))
                         (is (= "this is a message") (:body data))
                         (is (= :simulators/receive (keyword event)))))
@@ -247,7 +244,7 @@
                   (testing "and when disconnecting the first socket"
                     (test.ws/close! ws-1)
                     (testing "publishes an event"
-                      (let [{:keys [event data]} (async/<!! chan)]
+                      (let [{:keys [event data]} (chans/timeout-take! chan)]
                         (is (= :simulators.ws/disconnect (keyword event)))
                         (is (not (contains? (set (:sockets data)) socket-id-1)))))
 
@@ -259,7 +256,7 @@
                           (is (test.http/success? response)))
 
                         (testing "publishes an event"
-                          (let [{:keys [event data]} (async/<!! chan)]
+                          (let [{:keys [event data]} (chans/timeout-take! chan)]
                             (is (= :simulators.ws/disconnect (keyword event)))
                             (is (not (contains? (set (:sockets data)) socket-id-2)))))
 
@@ -285,13 +282,13 @@
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
                                         :on-msg (partial async/put! chan-1)
                                         :to-clj edn/read-string)
-                  {event-1 :event data-1 :data} (async/<!! chan)
+                  {event-1 :event data-1 :data} (chans/timeout-take! chan)
                   socket-id-1 (:socket-id data-1)
                   chan-2 (async/chan 64)
                   ws-2 (test.ws/connect "/simulators/some/:url-param"
                                         :on-msg (partial async/put! chan-2)
                                         :to-clj edn/read-string)
-                  {event-2 :event data-2 :data} (async/<!! chan)
+                  {event-2 :event data-2 :data} (chans/timeout-take! chan)
                   socket-id-2 (:socket-id data-2)]
               (testing "publishes an event for the first socket"
                 (is (= :simulators.ws/connect (keyword event-1))))
@@ -302,7 +299,7 @@
               (testing "and when sending a message from a socket"
                 (test.ws/send! ws-1 "a message")
                 (testing "publishes an event"
-                  (let [{:keys [event]} (async/<!! chan)]
+                  (let [{:keys [event]} (chans/timeout-take! chan)]
                     (is (= :simulators/receive (keyword event)))))
 
                 (testing "and when resetting the simulator's messages"
@@ -313,7 +310,7 @@
                       (is (test.http/success? response)))
 
                     (testing "publishes an event"
-                      (let [{:keys [event data]} (async/<!! chan)]
+                      (let [{:keys [event data]} (chans/timeout-take! chan)]
                         (is (= :simulators.ws/reset-messages (keyword event)))
                         (is (empty? (:requests data)))))
 
@@ -332,8 +329,8 @@
                     (testing "returns a success"
                       (is (test.http/success? response)))
 
-                    (let [{event-1 :event data-1 :data} (async/<!! chan)
-                          {event-2 :event data-2 :data} (async/<!! chan)
+                    (let [{event-1 :event data-1 :data} (chans/timeout-take! chan)
+                          {event-2 :event data-2 :data} (chans/timeout-take! chan)
                           sockets #{(:socket-id data-1) (:socket-id data-2)}]
                       (testing "publishes an event for the first socket"
                         (is (= :simulators.ws/disconnect (keyword event-1)))
@@ -362,13 +359,13 @@
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
                                         :on-msg (partial async/put! chan-1)
                                         :to-clj edn/read-string)
-                  {event-1 :event data-1 :data} (async/<!! chan)
+                  {event-1 :event data-1 :data} (chans/timeout-take! chan)
                   socket-id-1 (:socket-id data-1)
                   chan-2 (async/chan 64)
                   ws-2 (test.ws/connect "/simulators/some/:url-param"
                                         :on-msg (partial async/put! chan-2)
                                         :to-clj edn/read-string)
-                  {event-2 :event data-2 :data} (async/<!! chan)
+                  {event-2 :event data-2 :data} (chans/timeout-take! chan)
                   socket-id-2 (:socket-id data-2)]
               (testing "publishes an event for the first socket"
                 (is (= :simulators.ws/connect (keyword event-1))))
@@ -384,8 +381,8 @@
                     (is (test.http/success? response)))
 
                   (testing "publishes an event for each socket that was disconnected"
-                    (let [{event-1 :event data-1 :data} (async/<!! chan)
-                          {event-2 :event data-2 :data} (async/<!! chan)
+                    (let [{event-1 :event data-1 :data} (chans/timeout-take! chan)
+                          {event-2 :event data-2 :data} (chans/timeout-take! chan)
                           sockets #{(:socket-id data-1) (:socket-id data-2)}]
                       (is (= :simulators.ws/disconnect (keyword event-1)))
                       (is (= :simulators.ws/disconnect (keyword event-2)))
@@ -393,7 +390,7 @@
                       (is (contains? sockets socket-id-2))))
 
                   (testing "publishes an event"
-                    (let [{:keys [event data]} (async/<!! chan)]
+                    (let [{:keys [event data]} (chans/timeout-take! chan)]
                       (is (= :simulators/reset (keyword event)))
                       (is (sims-match? [data] [{:path "/some/:url-param" :method :ws :name "Paramy"}]))))
 

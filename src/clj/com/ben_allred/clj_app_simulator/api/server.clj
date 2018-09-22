@@ -23,35 +23,38 @@
   (render [this _]
     (respond/with this)))
 
+(defn ^:private env* []
+  (keyword (env/get :ring-env :app)))
+
 (defroutes ^:private base
   (context "/api" []
     (context "/simulators" []
-      (GET "/" [] (simulators/details))
-      (POST "/" request (simulators/add (get-in request [:body :simulator])))
-      (POST "/init" request (simulators/set! (get-in request [:body :simulators])))
-      (DELETE "/reset" [] (simulators/reset-all!))
-      (GET "/activity" request (activity/sub request)))
+      (GET "/" [] (simulators/details (env*)))
+      (POST "/" request (simulators/add (env*) (get-in request [:body :simulator])))
+      (POST "/init" request (simulators/set! (env*) (get-in request [:body :simulators])))
+      (DELETE "/reset" [] (simulators/reset-all! (env*)))
+      (GET "/activity" request (activity/sub (env*) request)))
     (context "/resources" []
       (POST "/" request
         (->> (get-in request [:params :files])
              (colls/force-sequential)
-             (resources/upload!)
+             (resources/upload! (env*))
              (conj [:created])))
       (PUT "/:resource-id" request
         (let [{:keys [resource-id file]} (:params request)]
           (->> file
-               (resources/upload! resource-id)
+               (resources/upload! (env*) resource-id)
                (conj [:ok]))))
       (GET "/" []
-        [:ok {:uploads (resources/list-files)}])
+        [:ok {:uploads (resources/list-files (env*))}])
       (DELETE "/" []
-        (resources/clear!)
+        (resources/clear! (env*))
         [:no-content])
       (DELETE "/:resource-id" [resource-id]
-        (resources/remove! (uuids/->uuid resource-id))
+        (resources/remove! (env*) resource-id)
         [:no-content])))
   (context "/" []
-    (simulators/routes)
+    (simulators/routes (env*))
     (context "/simulators" []
       (ANY "/" [] [:not-found {:message "simulator not found"}])
       (ANY "/*" [] [:not-found {:message "simulator not found"}]))
@@ -61,7 +64,7 @@
     (GET "/*" req [:ok
                    (-> req
                        (select-keys #{:uri :params})
-                       (html/render))
+                       (html/render (env*)))
                    {"content-type" "text/html"}])
     (ANY "/*" [] [:not-found])))
 

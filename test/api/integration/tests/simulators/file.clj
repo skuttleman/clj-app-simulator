@@ -1,13 +1,14 @@
 (ns integration.tests.simulators.file
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [integration.utils.fixtures :as fixtures]
-            [integration.utils.http :as test.http]
-            [integration.utils.ws :as test.ws]
+  (:require [clojure.core.async :as async]
             [clojure.edn :as edn]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [com.ben-allred.clj-app-simulator.utils.json :as json]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.core.async :as async]))
+            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+            [integration.utils.chans :as chans]
+            [integration.utils.fixtures :as fixtures]
+            [integration.utils.http :as test.http]
+            [integration.utils.ws :as test.ws]))
 
 (use-fixtures :once fixtures/run-server)
 
@@ -29,7 +30,7 @@
           (let [response (test.http/upload "/api/resources" content-type "sample.txt")]
             (is (test.http/success? response)))
 
-          (let [{:keys [event] {id-1 :id filename-1 :filename} :data} (async/<!! chan)]
+          (let [{:keys [event] {id-1 :id filename-1 :filename} :data} (chans/timeout-take! chan)]
             (testing "publishes an event"
               (is (= :resources/add (keyword event)))
               (is (= "sample.txt" filename-1)))
@@ -44,7 +45,7 @@
                 (testing "and when uploading a second resource"
                   (test.http/upload "/api/resources" content-type "sample2.txt")
 
-                  (let [{:keys [event] {id-2 :id filename-2 :filename} :data} (async/<!! chan)]
+                  (let [{:keys [event] {id-2 :id filename-2 :filename} :data} (chans/timeout-take! chan)]
                     (testing "publishes an event"
                       (is (= :resources/add (keyword event)))
                       (is (= "sample2.txt" filename-2)))
@@ -60,7 +61,7 @@
                         (testing "and when deleting all resources"
                           (is (test.http/success? (test.http/delete "/api/resources" content-type)))
 
-                          (let [{:keys [event]} (async/<!! chan)]
+                          (let [{:keys [event]} (chans/timeout-take! chan)]
                             (testing "publishes an event"
                               (is (= :resources/clear (keyword event)))))
 
@@ -73,8 +74,8 @@
         (testing "when uploading two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
 
-          (let [{event-1 :event data-1 :data} (async/<!! chan)
-                {event-2 :event data-2 :data} (async/<!! chan)
+          (let [{event-1 :event data-1 :data} (chans/timeout-take! chan)
+                {event-2 :event data-2 :data} (chans/timeout-take! chan)
                 id-1 (:id (first (filter (comp #{"sample.txt"} :filename) [data-1 data-2])))
                 id-2 (:id (first (filter (comp #{"sample2.txt"} :filename) [data-1 data-2])))]
 
@@ -94,7 +95,7 @@
                 (testing "and when deleting one resource"
                   (test.http/delete (str "/api/resources/" id-1) content-type)
 
-                  (let [{:keys [event data]} (async/<!! chan)]
+                  (let [{:keys [event data]} (chans/timeout-take! chan)]
                     (testing "publishes an event"
                       (is (= :resources/remove (keyword event)))
                       (is (= {:filename "sample.txt" :id id-1} (select-keys data #{:filename :id}))))
@@ -124,8 +125,8 @@
                                 :to-clj (content-type->parser content-type))]
         (testing "when saving two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
-          (let [{data-1 :data} (async/<!! chan)
-                {data-2 :data} (async/<!! chan)
+          (let [{data-1 :data} (chans/timeout-take! chan)
+                {data-2 :data} (chans/timeout-take! chan)
                 id-1 (:id (first (filter (comp #{"sample.txt"} :filename) [data-1 data-2])))
                 id-2 (:id (first (filter (comp #{"sample2.txt"} :filename) [data-1 data-2])))]
             (testing "publishes an event for each file"
@@ -137,7 +138,7 @@
                                                                                 :path     "/some/file"
                                                                                 :response {:status 202 :file id-1}}]}})]
                 (testing "publishes an event"
-                  (let [{:keys [event]} (async/<!! chan)]
+                  (let [{:keys [event]} (chans/timeout-take! chan)]
                     (is (= :simulators/init (keyword event)))))
 
                 (testing "returns a success response"
@@ -151,7 +152,7 @@
                       (is (= body (slurp "test/fixtures/sample.txt")))))
 
                   (testing "publishes an event"
-                    (let [{:keys [event data]} (async/<!! chan)]
+                    (let [{:keys [event data]} (chans/timeout-take! chan)]
                       (is (= :simulators/receive (keyword event)))
                       (is (= {:some "qp"} (get-in data [:request :query-params])))))
 
@@ -163,7 +164,7 @@
                       (is (test.http/success? response)))
 
                     (testing "publishes an event"
-                      (let [{:keys [event data]} (async/<!! chan)]
+                      (let [{:keys [event data]} (chans/timeout-take! chan)]
                         (is (= :simulators/change (keyword event)))
                         (is (= id-2 (get-in data [:config :response :file])))))
 
@@ -174,7 +175,7 @@
                           (is (= body (slurp "test/fixtures/sample2.txt")))))
 
                       (testing "publishes an event"
-                        (let [{:keys [event data]} (async/<!! chan)]
+                        (let [{:keys [event data]} (chans/timeout-take! chan)]
                           (is (= :simulators/receive (keyword event)))
                           (is (= {:some "new-qp"} (get-in data [:request :query-params])))))
 
@@ -182,7 +183,7 @@
                         (test.http/upload-put (str "/api/resources/" id-2) content-type "sample3.txt")
 
                         (testing "publishes an event"
-                          (let [{{:keys [id filename]} :data event :event} (async/<!! chan)]
+                          (let [{{:keys [id filename]} :data event :event} (chans/timeout-take! chan)]
                             (is (= id id-2))
                             (is (= "sample3.txt" filename))
                             (is (= :resources/put (keyword event))))
@@ -194,14 +195,14 @@
                                 (is (= body (slurp "test/fixtures/sample3.txt"))))
 
                               (testing "publishes an event"
-                                (let [{:keys [event data]} (async/<!! chan)]
+                                (let [{:keys [event data]} (chans/timeout-take! chan)]
                                   (is (= :simulators/receive (keyword event)))
                                   (is (empty? (get-in data [:request :query-params])))))))))
 
                       (testing "and when deleting the resource"
                         (test.http/delete (str "/api/resources/" id-2) content-type)
 
-                        (let [{:keys [event data]} (async/<!! chan)]
+                        (let [{:keys [event data]} (chans/timeout-take! chan)]
                           (testing "publishes an event"
                             (is (= :resources/remove (keyword event)))
                             (is (= {:filename "sample3.txt" :id id-2} (select-keys data #{:filename :id}))))
@@ -210,7 +211,7 @@
                             (let [[_ _ status] (test.http/get "/simulators/some/file" "text/plain")]
 
                               (testing "publishes an event"
-                                (let [{:keys [event]} (async/<!! chan)]
+                                (let [{:keys [event]} (chans/timeout-take! chan)]
                                   (is (= :simulators/receive (keyword event)))))
 
                               (testing "returns :not-found"

@@ -50,7 +50,7 @@
 (defn why-not-update? [config]
   (s/explain-data :http.partial/http-simulator config))
 
-(defn ->HttpSimulator [id config]
+(defn ->HttpSimulator [env id config]
   (when-let [{:keys [method path] :as config} (conform-to :http/http-simulator config)]
     (let [{:keys [dispatch get-state]} (store/http-store)
           id-path (string/replace path #":[^/]+" "*")]
@@ -77,7 +77,7 @@
         (reset [_]
           (dispatch actions/reset))
         (routes [this]
-          (routes.sim/http-sim->routes this))
+          (routes.sim/http-sim->routes env this))
         (change [_ config]
           (if-let [config (conform-to :http.partial/http-simulator config)]
             (dispatch (actions/change (dissoc config :method :path)))

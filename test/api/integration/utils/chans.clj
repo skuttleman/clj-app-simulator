@@ -14,3 +14,14 @@
        (when (not= v ::done)
          (recur (async/<! chan)))))
    nil))
+
+(defn timeout-take!
+  ([chan]
+    (timeout-take! chan 100))
+  ([chan ms]
+   (let [[value] (async/alts!! [chan (async/go
+                                       (async/<! (async/timeout ms))
+                                       ::timed-out)])]
+     (when (= ::timed-out value)
+       (throw (ex-info "The channel did not produce a value within the expected time." {:chan chan :ms ms})))
+     value)))

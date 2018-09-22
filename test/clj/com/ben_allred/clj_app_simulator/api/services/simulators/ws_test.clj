@@ -19,7 +19,7 @@
          spy (spies/constantly {:dispatch  dispatch
                                          :get-state get-state})]
      (with-redefs [store/ws-store spy]
-       [(ws.sim/->WsSimulator ::id config) spy config dispatch get-state]))))
+       [(ws.sim/->WsSimulator ::env ::id config) spy config dispatch get-state]))))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
@@ -55,14 +55,14 @@
                     common/details details-spy
                     uuids/random (constantly uuid)]
         (testing "when the connection is opened"
-          (ws.sim/on-open ::simulator ::request {:dispatch dispatch-spy} ::ws)
+          (ws.sim/on-open ::env ::simulator ::request {:dispatch dispatch-spy} ::ws)
           (testing "dispatches an action"
             (is (spies/called-with? actions-spy uuid ::ws))
             (is (spies/called-with? dispatch-spy ::action)))
 
           (testing "publishes an event"
             (is (spies/called-with? details-spy ::simulator))
-            (is (spies/called-with? publish-spy :simulators.ws/connect {::some ::details :socket-id uuid}))))))))
+            (is (spies/called-with? publish-spy ::env :simulators.ws/connect {::some ::details :socket-id uuid}))))))))
 
 (deftest ^:unit on-message-test
   (testing "(on-message)"
@@ -109,7 +109,8 @@
                     common/details details-spy]
         (testing "when the socket-id is found"
           (spies/reset! find-socket-spy get-state-spy action-spy dispatch-spy publish-spy details-spy)
-          (ws.sim/on-close ::simulator
+          (ws.sim/on-close ::env
+                           ::simulator
                            ::request
                            {:dispatch dispatch-spy :get-state get-state-spy}
                            ::ws
@@ -123,6 +124,7 @@
           (testing "publishes an event"
             (is (spies/called-with? details-spy ::simulator))
             (is (spies/called-with? publish-spy
+                                    ::env
                                     :simulators.ws/disconnect
                                     {::some ::details :socket-id ::socket-id}))))
 
@@ -182,7 +184,7 @@
             (common/receive sim request)
             (is (spies/called-with? action-spy request))
             (is (spies/called-with? dispatch ::action))
-            (is (spies/called-with? receive-spy sim {:socket-id ::socket-id}))))))))
+            (is (spies/called-with? receive-spy ::env sim {:socket-id ::socket-id}))))))))
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"
@@ -229,7 +231,7 @@
         (testing "returns routes"
           (let [[sim] (simulator)
                 result (common/routes sim)]
-            (is (spies/called-with? routes-spy sim))
+            (is (spies/called-with? routes-spy ::env sim))
             (is (= ::routes result))))))))
 
 (deftest ^:unit ->WsSimulator.change-test
@@ -270,7 +272,7 @@
 
               (testing "handles :on-open"
                 (on-open ::ws)
-                (is (spies/called-with? open-spy sim request store ::ws)))
+                (is (spies/called-with? open-spy ::env sim request store ::ws)))
 
               (testing "handles :on-message"
                 (on-message ::ws ::message)
@@ -278,7 +280,7 @@
 
               (testing "handles :on-close"
                 (on-close ::ws ::reason)
-                (is (spies/called-with? close-spy sim request store ::ws ::reason)))
+                (is (spies/called-with? close-spy ::env sim request store ::ws ::reason)))
 
               (testing "returns the channel"
                 (is (= ::chan result)))))

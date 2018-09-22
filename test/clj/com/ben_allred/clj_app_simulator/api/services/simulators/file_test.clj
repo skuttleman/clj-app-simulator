@@ -24,7 +24,7 @@
                                 :get-state get-state})]
      (with-redefs [store/file-store spy
                    resources/has-upload? resources-spy]
-       [(file.sim/->FileSimulator ::id config) spy config dispatch get-state]))))
+       [(file.sim/->FileSimulator ::env ::id config) spy config dispatch get-state]))))
 
 (deftest ^:unit ->FileSimulator-test
   (testing "(->FileSimulator)"
@@ -79,7 +79,7 @@
               (is (spies/called-with? delay-spy ::state))
               (is (spies/called-with? sleep-spy 100))))
           (testing "returns response"
-            (is (spies/called-with? response-spy ::state))
+            (is (spies/called-with? response-spy ::env ::state))
             (is (= ::response result))))
         (testing "when delay is zero"
           (testing "does not sleep"
@@ -135,7 +135,7 @@
       (with-redefs [routes.sim/file-sim->routes config-spy]
         (testing "converts simulator to routes"
           (let [result (common/routes sim)]
-            (is (spies/called-with? config-spy sim))
+            (is (spies/called-with? config-spy ::env sim))
             (is (= ::routes result))))))))
 
 (deftest ^:unit ->FileSimulator.reset-requests-test

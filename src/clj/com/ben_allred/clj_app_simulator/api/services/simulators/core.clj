@@ -19,55 +19,55 @@
                         #'file.sim/->FileSimulator])
 
 (defn ^:private simulator-configs
-  ([]
-   (sims/simulators))
-  ([f]
-   (map f (sims/simulators))))
+  ([env]
+   (sims/simulators env))
+  ([env f]
+   (map f (sims/simulators env))))
 
 (defn valid? [config]
   (some #(% config) validators))
 
-(defn config->?simulator [config]
+(defn config->?simulator [env config]
   (let [id (uuids/random)]
     (->> sim-fns
-         (keep #(% id config))
+         (keep #(% env id config))
          (first))))
 
-(defn make-simulator! [config]
-  (when-let [simulator (config->?simulator config)]
-    (sims/add! simulator)))
+(defn make-simulator! [env config]
+  (when-let [simulator (config->?simulator env config)]
+    (sims/add! env simulator)))
 
-(defn details []
-  (->> (simulator-configs common/details)
+(defn details [env]
+  (->> (simulator-configs env common/details)
        (assoc {} :simulators)
        (conj [:ok])))
 
-(defn add [config]
-  (if-let [simulator (make-simulator! config)]
+(defn add [env config]
+  (if-let [simulator (make-simulator! env config)]
     (let [sim (common/details simulator)]
-      (activity/publish :simulators/add sim)
+      (activity/publish env :simulators/add sim)
       [:created {:simulator sim}])
     [:bad-request {:message "error creating simulator"}]))
 
-(defn set! [configs]
+(defn set! [env configs]
   (let [invalid-configs (remove valid? configs)]
     (if (empty? invalid-configs)
       (do
-        (sims/clear!)
+        (sims/clear! env)
         (let [sims (->> configs
-                        (map make-simulator!)
+                        (map (partial make-simulator! env))
                         (map common/details))]
-          (activity/publish :simulators/init sims)
+          (activity/publish env :simulators/init sims)
           [:created {:simulators sims}]))
       [:bad-request {:message "one or more invalid simulators"}])))
 
-(defn reset-all! []
-  (let [sims (simulator-configs)]
+(defn reset-all! [env]
+  (let [sims (simulator-configs env)]
     (dorun (map common/reset sims))
-    (activity/publish :simulators/reset-all (map common/details sims)))
+    (activity/publish env :simulators/reset-all (map common/details sims)))
   [:no-content])
 
-(defn routes []
-  (->> (simulator-configs common/routes)
+(defn routes [env]
+  (->> (simulator-configs env common/routes)
        (mapcat identity)
        (apply c/routes)))

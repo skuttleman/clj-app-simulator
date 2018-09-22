@@ -20,7 +20,7 @@
           (spies/reset! socket-spy)
           (let [request {:query-params {"accept" ::accept}
                          :websocket?   true}
-                result (activity/sub request)
+                result (activity/sub ::env request)
                 {:keys [on-open on-close]} (last (first (spies/calls socket-spy)))]
             (is (spies/called-with? yo-dawg-spy ::accept))
             (on-open ::websocket)
@@ -30,7 +30,7 @@
 
             (testing "and when an event is published"
               (spies/reset! send-spy stringify-spy send-spy)
-              (emitter/publish emitter ::event ::data)
+              (emitter/publish emitter ::env ::event ::data)
               (Thread/sleep 50)
               (testing "sends the event data via websocket"
                 (is (spies/called-with? stringify-spy {:event ::event :data ::data}))
@@ -40,12 +40,12 @@
               (on-close nil nil)
               (testing "and when an event is published"
                 (spies/reset! send-spy stringify-spy send-spy)
-                (emitter/publish emitter ::event ::data)
+                (emitter/publish emitter ::env ::event ::data)
                 (testing "does not attempt to send data via websocket"
                   (is (spies/never-called? stringify-spy))
                   (is (spies/never-called? send-spy)))))))
 
         (testing "when not given a websocket request"
-          (let [result (activity/sub {})]
+          (let [result (activity/sub ::env {})]
             (testing "returns nil"
               (is (nil? result)))))))))
