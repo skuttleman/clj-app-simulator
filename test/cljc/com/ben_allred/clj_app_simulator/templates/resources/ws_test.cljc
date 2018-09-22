@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.ws-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
             [com.ben-allred.formation.core :as f]
             [test.utils.spies :as spies]))
@@ -49,3 +49,6 @@
           (is (spies/called-with? pred-spy seq (spies/matcher string?)))
           (is (spies/called-with? validator-spy {:message ::required}))
           (is (= ::validator socket-message)))))))
+
+(defn run-tests []
+  (t/run-tests))

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.utils.dates :as dates]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]

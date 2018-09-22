@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.core-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
             [com.ben-allred.clj-app-simulator.templates.core :as templates]
             [com.ben-allred.clj-app-simulator.templates.views.core :as views]
@@ -167,3 +167,6 @@
                     (test.dom/query-one :#component)
                     (= [:component#component state])))
             (is (spies/called-with? components-spy ::handler views/not-found))))))))
+
+(defn run-tests []
+  (t/run-tests))

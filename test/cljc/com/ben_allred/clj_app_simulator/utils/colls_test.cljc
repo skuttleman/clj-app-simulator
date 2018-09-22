@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.utils.colls-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
 
 (deftest ^:unit force-sequential-test
@@ -31,3 +31,6 @@
 
     (testing "returns coll unchanged"
       (is (= [1 2 3 4 5] (colls/replace-by identity 7 [1 2 3 4 5]))))))
+
+(defn run-tests []
+  (t/run-tests))

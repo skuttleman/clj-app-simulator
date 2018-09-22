@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.core-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.core :as templates]))
 
 (defn ^:private ul [value]
@@ -57,3 +57,6 @@
 
       [component 3]
       [:div 4 2 3 3 3 [:div.with-child [:ul [[:li 0] [:li 1] [:li 2]]]]])))
+
+(defn run-tests []
+  (t/run-tests))

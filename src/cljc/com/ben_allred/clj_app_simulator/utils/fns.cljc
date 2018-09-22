@@ -1,4 +1,5 @@
-(ns com.ben-allred.clj-app-simulator.utils.fns)
+(ns com.ben-allred.clj-app-simulator.utils.fns
+  (:refer-clojure :exclude [and or]))
 
 (defmacro => [& forms]
   `(fn [arg#]
@@ -8,9 +9,14 @@
   `(fn [arg#]
      (->> arg# ~@forms)))
 
-(defn compare-by [& fns]
-  (fn [item-1 item-2]
-    (loop [result 0 [[idx f] :as fns] (map-indexed vector fns)]
-      (if (or (empty? fns) (not (zero? result)))
-        result
-        (recur ((comparator f) (nth item-1 idx nil) (nth item-2 idx nil)) (rest fns))))))
+(defn and [& values]
+  (loop [[val & more] values]
+    (if (empty? more)
+      val
+      (clojure.core/and val (recur more)))))
+
+(defn or [& values]
+  (loop [[val & more] values]
+    (if (empty? more)
+      val
+      (clojure.core/or val (recur more)))))

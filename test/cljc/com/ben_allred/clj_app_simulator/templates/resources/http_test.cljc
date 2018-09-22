@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.http-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.resources.http :as resources]
             [com.ben-allred.formation.core :as f]
             [test.utils.spies :as spies]))
@@ -84,3 +84,6 @@
             (is (spies/called-with? tuple-spy ::header-key ::header-value))
             (is (spies/called-with? coll-spy ::tuple))
             (is (= ::coll (get-in validator-map [:response :headers])))))))))
+
+(defn run-tests []
+  (t/run-tests))

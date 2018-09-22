@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.ws-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
@@ -36,3 +36,5 @@
                                     :name ::name
                                     :other ::values}})))))
 
+(defn run-tests []
+  (t/run-tests))

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.utils.query-params-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
 
 (deftest ^:unit parse-test
@@ -19,3 +19,6 @@
 
     (testing "handles nil"
       (is (= "" (qp/stringify nil))))))
+
+(defn run-tests []
+  (t/run-tests))

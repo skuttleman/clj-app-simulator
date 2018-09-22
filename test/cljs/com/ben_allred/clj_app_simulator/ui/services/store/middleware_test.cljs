@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.middleware-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
             [test.utils.spies :as spies]))
 

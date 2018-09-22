@@ -7,6 +7,7 @@
             [com.ben-allred.clj-app-simulator.ui.services.navigation-test :as navigation-test]
             [com.ben-allred.clj-app-simulator.ui.services.store.activity-test :as activity-test]
             [com.ben-allred.clj-app-simulator.ui.services.store.middleware-test :as middleware-test]
+            [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions-test :as file.interactions-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions-test :as http.interactions-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.modals-test :as http.modals-test]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions-test :as shared.interactions-test]
@@ -32,6 +33,7 @@
   (navigation-test/run-tests)
   (activity-test/run-tests)
   (middleware-test/run-tests)
+  (file.interactions-test/run-tests)
   (http.interactions-test/run-tests)
   (http.modals-test/run-tests)
   (shared.interactions-test/run-tests)

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions-test
-  (:require [cljs.test :as t :refer [deftest testing is async]]
+  (:require [clojure.test :as t :refer [deftest testing is async]]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [test.utils.spies :as spies]
             [cljs.core.async :as async]

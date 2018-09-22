@@ -7,8 +7,8 @@
      :cljs (:require [cljsjs.moment])))
 
 (def ^:private default-format
-  #?(:clj  "EEE MMM d, YYYY 'at' h:mm:ss a"
-     :cljs "ddd MMM D, YYYY [at] h:mm:ss a"))
+  #?(:clj  "EEE MMM d, YYYY 'at' h:mm:ss a z"
+     :cljs "ddd MMM D, YYYY [at] h:mm:ss a z"))
 
 (defn ^:private inst->dt [inst]
   #?(:clj  (if (instance? Instant inst)

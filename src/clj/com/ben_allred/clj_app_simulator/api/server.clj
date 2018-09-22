@@ -63,7 +63,7 @@
     (GET "/health" [] [:ok {:a :ok}])
     (GET "/*" req [:ok
                    (-> req
-                       (select-keys #{:uri :params})
+                       (select-keys #{:uri :query-string})
                        (html/render (env*)))
                    {"content-type" "text/html"}])
     (ANY "/*" [] [:not-found])))

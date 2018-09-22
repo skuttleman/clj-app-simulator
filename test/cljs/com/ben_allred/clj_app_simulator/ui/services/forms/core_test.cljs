@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.forms.core-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [test.utils.spies :as spies]))
 

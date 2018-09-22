@@ -2,7 +2,7 @@
   (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
                        [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
                        [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
             [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
             [com.ben-allred.clj-app-simulator.templates.fields :as fields]
@@ -422,3 +422,6 @@
                (is (spies/called-with? form-spy model resources/validate-new)))
             (let [root (component)]
               (is (test.dom/contains? root [http.views/sim-create-form* #?(:clj model :cljs ::form)])))))))))
+
+(defn run-tests []
+  (t/run-tests))

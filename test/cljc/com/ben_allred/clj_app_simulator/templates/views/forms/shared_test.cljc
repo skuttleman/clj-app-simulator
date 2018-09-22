@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.shared-test
   (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
                        [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as interactions]])
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.fields :as fields]
             [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
             [com.ben-allred.clj-app-simulator.utils.dates :as dates]
@@ -116,3 +116,6 @@
                        (:on-click)
                        (= ::click)))
                (is (spies/called-with? interaction-spy ::sim request)))))))))
+
+(defn run-tests []
+  (t/run-tests))

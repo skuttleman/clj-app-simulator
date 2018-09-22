@@ -2,7 +2,7 @@
   (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
                        [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                        [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]])
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
             [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
             [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
@@ -378,3 +378,6 @@
               (is (-> root
                       (test.dom/query-one ws.views/sim-create-form*)
                       (= [ws.views/sim-create-form* #?(:clj model :cljs ::form)]))))))))))
+
+(defn run-tests []
+  (t/run-tests))

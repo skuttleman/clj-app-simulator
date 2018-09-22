@@ -5,7 +5,7 @@
                        [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
                        [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                        [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]])
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
             [com.ben-allred.clj-app-simulator.templates.fields :as fields]
             [com.ben-allred.clj-app-simulator.templates.resources.file :as resources]
@@ -221,7 +221,7 @@
                                                       :header-b ["double" "things"]}}}
                      :id     ::id}]
       (with-redefs [#?@(:cljs [forms/create form-spy])]
-        (let [root (file.views/sim-edit-form simulator ::uploads)
+        (let [root (file.views/sim-edit-form simulator [{:id 1 :data ::data-1} {:id 2 :data ::data-2}])
               expected {:group       ::group
                         :name        ::name
                         :description ::description
@@ -237,8 +237,11 @@
                (is (spies/called-with? form-spy expected resources/validate-existing))))
 
           (testing "returns a function that renders the form"
-            (is (= [file.views/sim-edit-form* ::id #?(:clj expected :cljs ::form) ::uploads]
-                   (root simulator ::uploads)))))))))
+            (is (= [file.views/sim-edit-form*
+                    ::id
+                    #?(:clj expected :cljs ::form)
+                    [{:id 1 :data ::data-1} {:id 2 :data ::data-2}]]
+                   (root simulator [{:id 1 :data ::data-1} {:id 2 :data ::data-2}])))))))))
 
 (deftest ^:unit sim-test
   (testing "(sim)"
@@ -354,9 +357,8 @@
     (let [form-spy (spies/constantly ::form)]
       (with-redefs [#?@(:cljs [forms/create form-spy])]
         (testing "renders the form"
-          (let [component (file.views/sim-create-form [{:id ::file}])
-                model {:response {:status 200
-                                  :file   ::file}
+          (let [component (file.views/sim-create-form ::uploads)
+                model {:response {:status 200}
                        :method   :file/get
                        :path     "/"
                        :delay    0}]
@@ -364,3 +366,6 @@
                (is (spies/called-with? form-spy model resources/validate-new)))
             (let [root (component ::uploads)]
               (is (test.dom/contains? root [file.views/sim-create-form* #?(:clj model :cljs ::form) ::uploads])))))))))
+
+(defn run-tests []
+  (t/run-tests))

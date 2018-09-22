@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.utils.keywords-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
 
 (deftest ^:unit safe-name-test
@@ -27,3 +27,6 @@
     (testing "works on non-keywords"
       (is (= :join-every-1
              (keywords/join "-" ["join" :every 1]))))))
+
+(defn run-tests []
+  (t/run-tests))

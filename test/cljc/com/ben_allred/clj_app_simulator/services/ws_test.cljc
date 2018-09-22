@@ -1,8 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.services.ws-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require #?(:clj [gniazdo.core :as gniazdo])
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.ws :as ws]
-            [test.utils.spies :as spies]
-            [gniazdo.core :as gniazdo]))
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit connect-test
   (testing "(connect)"
@@ -68,3 +68,6 @@
 
           (testing "sends the message via socket"
             (is (spies/called-with? gniazdo-spy ::ws ":a-message"))))))))
+
+(defn run-tests []
+  (t/run-tests))

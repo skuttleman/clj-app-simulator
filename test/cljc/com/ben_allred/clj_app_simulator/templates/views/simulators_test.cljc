@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.simulators-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [test.utils.dom :as test.dom]
@@ -175,3 +175,6 @@
         (is (= [views.sim/sim-section "thing" [(get sims 111) (get sims 222) (get sims 444)]]
                section-2))
         (is (= "thing" (:key (meta section-2))))))))
+
+(defn run-tests []
+  (t/run-tests))

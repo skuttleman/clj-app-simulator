@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.utils.strings-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (deftest ^:unit trim-to-nil-test
@@ -27,3 +27,6 @@
         "something-is-rotten" "Something-Is-Rotten"
         "WEIRD-NEVER-BOTHERS ME" "Weird-Never-Bothers me"
         "--This--Is--Fine--" "--This--Is--Fine--"))))
+
+(defn run-tests []
+  (t/run-tests))

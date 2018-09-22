@@ -15,7 +15,8 @@
             [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
             [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
             [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
-            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]))
+            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
 
 (deftest ^:unit app-test
   (testing "(app)"
@@ -80,7 +81,7 @@
                 (let [simulator {:config ::config :data ::data}
                       state {:page       {:route-params {:id ::id}}
                              :simulators {:data {::uuid simulator}}
-                             :uploads    ::uploads}]
+                             :uploads    {:data ::uploads}}]
                   (testing "and when the simulator is type :http"
                     (spies/respond-with! config-spy (constantly "http"))
                     (testing "renders the view"
@@ -272,38 +273,18 @@
 
 (deftest ^:unit render-test
   (testing "(render)"
-    (let [hydrate-spy (spies/constantly ::html)]
-      (with-redefs [html/hydrate hydrate-spy]
+    (let [match-spy (spies/constantly ::page)
+          hydrate-spy (spies/constantly ::html)]
+      (with-redefs [nav*/match-route match-spy
+                    html/hydrate hydrate-spy]
         (testing "returns html"
-          (is (= ::html (html/render {:uri ""} ::env))))
+          (let [result (html/render {:uri "/any/ole/route"} ::env)]
+            (is (spies/called-with? match-spy "/any/ole/route"))
+            (is (spies/called-with? hydrate-spy ::page ::env))
+            (is (= ::html result))))
 
-        (testing "when requesting /details"
-          (spies/reset! hydrate-spy)
-          (let [id (str (uuids/random))]
-            (html/render {:uri (str "/details/" id)} ::env)
+        (testing "when the request has a query-string"
+          (spies/reset! match-spy)
+          (html/render {:uri "/any/ole/route" :query-string "a=b"} ::env)
 
-            (is (spies/called-with? hydrate-spy {:handler :details :route-params {:id id}} ::env))))
-
-        (testing "when requesting /resources"
-          (spies/reset! hydrate-spy)
-          (html/render {:uri "/resources"} ::env)
-
-          (is (spies/called-with? hydrate-spy {:handler :resources} ::env)))
-
-        (testing "when requesting /create"
-          (spies/reset! hydrate-spy)
-          (html/render {:uri "/create" :params {:type ::some-type}} ::env)
-
-          (is (spies/called-with? hydrate-spy {:handler :new :query-params {:type ::some-type}} ::env)))
-
-        (testing "when requesting /"
-          (spies/reset! hydrate-spy)
-          (html/render {:uri "/"} ::env)
-
-          (is (spies/called-with? hydrate-spy {:handler :home} ::env)))
-
-        (testing "when requesting any other path"
-          (spies/reset! hydrate-spy)
-          (html/render {:uri "/any/old/path"} ::env)
-
-          (is (spies/called-with? hydrate-spy {:handler :not-found} ::env)))))))
+          (is (spies/called-with? match-spy "/any/ole/route?a=b")))))))

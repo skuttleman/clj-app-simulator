@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.utils.maps-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps]
             [clojure.string :as string]))
 
@@ -53,3 +53,6 @@
     (testing "dissoc's all keys where value matches predicate"
       (is (= {:a 1 :b :keyword :d nil :f 'symbol}
              (maps/dissocp {:a 1 :b :keyword :c identity :d nil :e map :f 'symbol} fn?))))))
+
+(defn run-tests []
+  (t/run-tests))

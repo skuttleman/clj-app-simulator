@@ -6,7 +6,7 @@
 
 (def source->model
   (f/make-transformer
-    [#(update % :delay (fn [delay] (or delay 0)))
+    [(fns/=> (update :delay fns/or 0))
      {:response {:headers (fns/=>> (mapcat (fn [[k v]]
                                              (if (coll? v)
                                                (->> v

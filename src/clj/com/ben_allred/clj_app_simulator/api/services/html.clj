@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.api.services.html
   (:require [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
+            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
             [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
             [com.ben-allred.clj-app-simulator.templates.core :as templates]
             [com.ben-allred.clj-app-simulator.templates.views.core :as views]
@@ -10,10 +11,10 @@
             [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
             [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.collaj.core :as collaj]
-            [hiccup.core :as hiccup]
+            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]))
+            [com.ben-allred.collaj.core :as collaj]
+            [hiccup.core :as hiccup]))
 
 (defn ^:private hiccup [tree]
   (hiccup/html tree))
@@ -54,7 +55,7 @@
                                    (case
                                      :http [http.views/sim]
                                      :ws [ws.views/sim]
-                                     :file [file.views/sim uploads]
+                                     :file [file.views/sim (:data uploads)]
                                      (constantly nil)))]
          (cond-> [component simulator]
            input (conj input)))
@@ -135,20 +136,9 @@
         (build-tree)
         (tree->html))))
 
-(defn render [{:keys [uri params]} env]
-  (-> (condp re-matches uri
-        #"/details/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
-        :>> (fn [[_ id]]
-              {:handler :details :route-params {:id id}})
-
-        #"/resources"
-        {:handler :resources}
-
-        #"/create"
-        {:handler :new :query-params (select-keys params #{:type})}
-
-        #"/"
-        {:handler :home}
-
-        {:handler :not-found})
+(defn render [{:keys [uri query-string]} env]
+  (-> uri
+      (cond->
+        query-string (str "?" query-string))
+      (nav*/match-route)
       (hydrate env)))

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.http-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
             [test.utils.spies :as spies]))
 
@@ -88,4 +88,5 @@
                                          :description ::description}))
             (is (= ::model result))))))))
 
-
+(defn run-tests []
+  (t/run-tests))

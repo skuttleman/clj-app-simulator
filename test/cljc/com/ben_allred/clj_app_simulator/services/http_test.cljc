@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.services.http-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.http :as http]
             [test.utils.spies :as spies]
             [kvlt.chan :as kvlt]
@@ -101,3 +101,6 @@
         (testing "sends a :delete request"
           (http/delete ::some-url ::some-request)
           (is (spies/called-with? spy :delete ::some-url ::some-request)))))))
+
+(defn run-tests []
+  (t/run-tests))

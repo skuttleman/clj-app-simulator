@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.toast-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is]]
             [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
             [test.utils.dom :as test.dom]
             [test.utils.spies :as spies]

@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.shared-test
-  (:require [clojure.test :refer [deftest testing is are]]
+  (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.templates.transformations.shared :as tr]))
 
 (deftest ^:unit model->view-test
@@ -52,3 +52,5 @@
         :group "\t" nil
         :description "" nil))))
 
+(defn run-tests []
+  (t/run-tests))

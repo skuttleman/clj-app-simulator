@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core-test
-  (:require [cljs.test :as t :refer-macros [deftest testing is are]]
+  (:require [clojure.test :as t :refer-macros [deftest testing is are]]
             [test.utils.dom :as test.dom]
             [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
             [test.utils.spies :as spies]

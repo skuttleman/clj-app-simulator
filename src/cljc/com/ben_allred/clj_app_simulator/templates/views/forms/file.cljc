@@ -81,10 +81,13 @@
             :cljs [:on-click (interactions/reset-simulator form id)])}
        "Reset"]]]))
 
-(defn sim-edit-form [{:keys [id] :as sim} _uploads]
+(defn sim-edit-form [{:keys [id] :as sim} uploads]
   (let [model (tr/sim->model sim)
-        form #?(:clj  model
-                :cljs (forms/create model resources/validate-existing))]
+        model' (cond-> model
+                 (not (contains? (set (map :id uploads)) (get-in model [:response :file])))
+                 (update :response dissoc :file))
+        form #?(:clj  model'
+                :cljs (forms/create model' resources/validate-existing))]
     (fn [_simulator uploads]
       [sim-edit-form* id form uploads])))
 
@@ -129,12 +132,11 @@
        {:href (nav*/path-for :home)}
        "Cancel"]]]))
 
-(defn sim-create-form [uploads]
+(defn sim-create-form [_uploads]
   (let [model {:path     "/"
                :delay    0
                :method   :file/get
-               :response {:status 200
-                          :file   (:id (first uploads))}}
+               :response {:status 200}}
         form #?(:clj  model
                 :cljs (forms/create model resources/validate-new))]
     (fn [uploads]

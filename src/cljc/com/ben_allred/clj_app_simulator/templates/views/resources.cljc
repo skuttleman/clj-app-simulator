@@ -1,6 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.resources
   (:require [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns]))
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn resource [delete-attrs {:keys [filename timestamp]} replace-btn]
   [:li.resource
@@ -28,7 +28,11 @@
          (if (seq uploads)
            [:ul.resources
             (for [upload (sort-by (juxt :timestamp :filename)
-                                  (fns/compare-by > <)
+                                  (fn [[ts1 f1] [ts2 f2]]
+                                    (let [ts (compare ts1 ts2)]
+                                      (if (zero? ts)
+                                        (compare f1 f2)
+                                        (* -1 ts))))
                                   uploads)]
               ^{:key (str (:id upload))}
               [resource upload])]

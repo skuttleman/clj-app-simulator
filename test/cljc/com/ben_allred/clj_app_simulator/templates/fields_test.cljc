@@ -1,6 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.templates.fields-test
   (:require #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
-            [clojure.test :refer [deftest testing is]]
+            [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.fields :as fields]
             [test.utils.spies :as spies]
             [test.utils.dom :as test.dom]))
@@ -23,7 +23,7 @@
                 attrs {:to-view    to-view
                        :to-model   to-model
                        :on-change  on-change
-                       :value      {:some ::value}
+                       :value      {:a 1}
                        :class-name ::class-name
                        :label      ::label
                        :errors     {:has :errors}}
@@ -43,8 +43,8 @@
             (let [select (test.dom/query-one form-field :select)
                   attrs (test.dom/attrs select)]
               (testing "renders a :select element"
-                (is (spies/called-with? to-view {:some ::value}))
-                (is (= {:some ::value :to-view true} (:value attrs)))
+                (is (spies/called-with? to-view {:a 1}))
+                (is (= {:a 1 :to-view true} (:value attrs)))
                 (is (= ::class-name (:class-name attrs))))
 
               #?(:clj
@@ -86,7 +86,7 @@
                     form-field (test.dom/query-one root :.form-field)
                     select (test.dom/query-one form-field :select)]
                 (testing "has the unchanged :value"
-                  (is (= {:some ::value} (:value (test.dom/attrs select)))))))
+                  (is (= {:a 1} (:value (test.dom/attrs select)))))))
 
             #?(:cljs
                (testing "and when :to-model is nil"
@@ -436,3 +436,6 @@
                      (is (spies/called-with? new-spy 3))
                      (is (vector? result))
                      (is (= result (conj values ::new-value)))))))))))))
+
+(defn run-tests []
+  (t/run-tests))

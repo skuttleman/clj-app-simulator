@@ -3,6 +3,14 @@
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]))
 
+(def ^:private empty-value (str ::empty))
+
+(defn ^:private sans-empty [to-model]
+  (fn [value]
+    (to-model
+      (when-not (= value empty-value)
+        value))))
+
 (defn ^:private update-by-idx [idx v]
   (fns/=>> (map-indexed #(if (= idx %1) v %2))))
 
@@ -30,17 +38,23 @@
 
 (defn select [{:keys [on-change value class-name to-view to-model] :as attrs} options]
   (let [to-view (or to-view identity)
-        to-model (or to-model identity)]
+        to-model (or to-model identity)
+        available? (set (map first options))]
     [form-field
      attrs
      [:select
-      {:value      (to-view value)
-       :class-name class-name
+      {:class-name class-name
+       :value      (if (available? value)
+                     (to-view value)
+                     empty-value)
        #?@(:clj  [:disabled true]
-           :cljs [:on-change (comp on-change to-model dom/target-value)])}
-      (for [[option label] options
+           :cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
+      (for [[option label attrs] (cond->> options
+                                   (not (available? value)) (cons [empty-value "Choose…" {:disabled true}]))
             :let [option (to-view option)]]
-        [:option {:key (str option) :value option} label])]]))
+        [:option
+         (assoc attrs :value option :key (str option))
+         label])]]))
 
 (defn textarea [{:keys [on-change value class-name to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)

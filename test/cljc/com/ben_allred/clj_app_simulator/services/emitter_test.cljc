@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.services.emitter-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
             [clojure.core.async :as async]))
 
@@ -42,3 +42,6 @@
       (testing "continues to place events on open channels"
         (emitter/publish emitter ::env :event {:some :data})
         (is (= [:event {:some :data}] (async/<!! chan-2)))))))
+
+(defn run-tests []
+  (t/run-tests))

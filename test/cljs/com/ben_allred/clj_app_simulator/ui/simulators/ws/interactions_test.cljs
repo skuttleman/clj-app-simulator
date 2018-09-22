@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
@@ -43,43 +43,60 @@
   (testing "(disconnect-all)"
     (let [action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
+          toaster-spy (spies/create (fn [level _] level))
           request-spy (spies/create)]
       (with-redefs [actions/disconnect-all action-spy
                     store/dispatch dispatch-spy
+                    shared.interactions/toaster toaster-spy
                     shared.interactions/do-request request-spy]
         (testing "disconnects all sockets"
           ((interactions/disconnect-all ::id) ::event)
           (is (spies/called-with? action-spy ::id))
           (is (spies/called-with? dispatch-spy ::action))
-          (is (spies/called-with? request-spy ::dispatch)))))))
+          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (is (spies/called-with? toaster-spy :error (spies/matcher string?)))
+          (is (spies/called-with? request-spy ::dispatch :success :error)))))))
 
 (deftest ^:unit disconnect-test
   (testing "(disconnect)"
     (let [action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
+          toaster-spy (spies/create (fn [level _] level))
           request-spy (spies/create)]
       (with-redefs [actions/disconnect action-spy
                     store/dispatch dispatch-spy
+                    shared.interactions/toaster toaster-spy
                     shared.interactions/do-request request-spy]
-        (testing "disconnects all sockets"
+        (testing "disconnects the specified sockets"
           ((interactions/disconnect ::simulator-id ::socket-id) ::event)
           (is (spies/called-with? action-spy ::simulator-id ::socket-id))
           (is (spies/called-with? dispatch-spy ::action))
-          (is (spies/called-with? request-spy ::dispatch)))))))
+          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (is (spies/called-with? toaster-spy :error (spies/matcher string?)))
+          (is (spies/called-with? request-spy ::dispatch :success :error)))))))
 
 (deftest ^:unit send-message-test
   (testing "(send-message)"
     (let [do-request-spy (spies/constantly ::request)
           dispatch-spy (spies/constantly ::dispatch)
+          toaster-spy (spies/create (fn [level _] (constantly level)))
+          hide-spy (spies/create)
           action-spy (spies/constantly ::action)]
       (with-redefs [shared.interactions/do-request do-request-spy
                     store/dispatch dispatch-spy
+                    shared.interactions/toaster toaster-spy
                     actions/send-message action-spy]
         (testing "handles the request"
-          ((interactions/send-message ::simulator-id ::socket-id ::message ::hide) ::event)
+          ((interactions/send-message ::simulator-id ::socket-id ::message hide-spy) ::event)
           (is (spies/called-with? action-spy ::simulator-id ::socket-id ::message))
           (is (spies/called-with? dispatch-spy ::action))
-          (is (spies/called-with? do-request-spy ::dispatch ::hide)))))))
+          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (is (spies/called-with? toaster-spy :error (spies/matcher string?)))
+          (let [[dispatch on-success on-error] (first (spies/calls do-request-spy))]
+            (is (= dispatch ::dispatch))
+            (on-success ::result)
+            (is (spies/called? hide-spy))
+            (is (= :error (on-error ::result)))))))))
 
 (deftest ^:unit send-message-button-test
   (testing "(send-message-button)"
@@ -141,4 +158,5 @@
                 (is (spies/called-with? send-spy ::simulator-id ::socket-id ::message ::hide))
                 (is (= ::send result))))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

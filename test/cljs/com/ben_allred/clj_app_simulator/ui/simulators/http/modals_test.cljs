@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.modals-test
-  (:require [cljs.test :as t :refer [deftest testing is]]
+  (:require [clojure.test :as t :refer [deftest testing is]]
             [com.ben-allred.clj-app-simulator.templates.fields :as fields]
             [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
             [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
