@@ -16,9 +16,9 @@
     (testing "returns strings unchanged"
       (is (= "a string" (strings/maybe-pr-str "a string"))))
     (testing "resturns pr-str'ed values"
-      (are [v s] (is (= s (strings/maybe-pr-str v)))
+      (are [v s] (= s (strings/maybe-pr-str v))
         {:a #{1}} "{:a #{1}}"
-        ["a" \b 'c] "[\"a\" \\b c]"))))
+        ["a" \b 'c] #?(:clj "[\"a\" \\b c]" :cljs "[\"a\" \"b\" c]")))))
 
 (deftest ^:unit titlize-test
   (testing "(titlize)"

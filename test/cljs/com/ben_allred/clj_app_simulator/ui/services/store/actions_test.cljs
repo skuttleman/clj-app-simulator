@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.actions-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is async]]
+  (:require [clojure.test :as t :refer-macros [are async deftest is testing]]
             [cljs.core.async :as async]
             [com.ben-allred.clj-app-simulator.services.http :as http]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
@@ -7,565 +7,303 @@
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.services.files :as files]))
 
+(deftest ^:unit request*-test
+  (testing "(request*)"
+    (async done
+      (async/go
+        (let [dispatch (spies/create)]
+          (testing "handles success responses"
+            (are [input event call] (let [response [:success input]
+                                          result (async/<! (actions/request*
+                                                             (async/go response)
+                                                             dispatch
+                                                             event
+                                                             nil))]
+                                      (is (spies/called-with? dispatch call))
+                                      (= response result))
+              ::value ::success [::success ::value]
+              ::value [::success] [::success ::value]
+              ::value [::success ::details] [::success ::details ::value]))
+
+          (testing "handles failure responses"
+            (are [input event call] (let [response [:error input]
+                                          result (async/<! (actions/request*
+                                                             (async/go response)
+                                                             dispatch
+                                                             nil
+                                                             event))]
+                                      (is (spies/called-with? dispatch call))
+                                      (= response result))
+              ::value ::error [::error ::value]
+              ::value [::error] [::error ::value]
+              ::value [::error ::details] [::error ::details ::value]))
+
+          (done))))))
+
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/get (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          (actions/request-simulators [dispatch])
-          (is (spies/called-with? dispatch [:simulators.fetch-all/request])))))))
-
-(deftest ^:unit request-simulators-success-test
-  (testing "(request-simulators)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/get (spies/create
-                                   (fn [_]
-                                     (async/go
-                                       [:success {:some :result}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/request-simulators [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.fetch-all/succeed {:some :result}]))
-              (is (spies/called-with? http/get "/api/simulators"))
-              (done))))))))
-
-(deftest ^:unit request-simulators-failure-test
-  (testing "(request-simulators)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/get
-                        (spies/create (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/request-simulators [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.fetch-all/fail {:some :reason}]))
-              (is (spies/called-with? http/get "/api/simulators"))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/get http-spy
+                    actions/request* request-spy]
+        (testing "requests the simulators"
+          (let [result (actions/request-simulators [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.fetch-all/request]))
+            (is (spies/called-with? http-spy "/api/simulators"))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.fetch-all/succeed
+                                    :simulators.fetch-all/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit delete-simulator-test
   (testing "(delete-simulator)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/delete (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/delete-simulator ::id) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.delete/request])))))))
-
-(deftest ^:unit delete-simulator-success-test
-  (testing "(delete-simulator)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/delete (spies/create
-                                      (fn [_]
-                                        (async/go
-                                          [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/delete-simulator 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.delete/succeed {:some :result}]))
-              (is (spies/called-with? http/delete "/api/simulators/123"))
-              (done))))))))
-
-(deftest ^:unit delete-simulator-failure-test
-  (testing "(delete-simulator)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/delete
-                        (spies/create (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)
-                  f (actions/delete-simulator 999)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.delete/fail {:some :reason}]))
-              (is (spies/called-with? http/delete "/api/simulators/999"))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/delete http-spy
+                    actions/request* request-spy]
+        (testing "deletes the simulator"
+          (let [result ((actions/delete-simulator 12345) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.delete/request]))
+            (is (spies/called-with? http-spy "/api/simulators/12345"))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.delete/succeed
+                                    :simulators.delete/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/post (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/create-simulator ::simulator) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.create/request])))))))
-
-(deftest ^:unit create-simulator-success-test
-  (testing "(create-simulator)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/post (spies/create
-                                    (fn [_]
-                                      (async/go
-                                        [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/create-simulator ::simulator)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.create/succeed {:some :result}]))
-              (is (spies/called-with? http/post "/api/simulators" {:body {:simulator ::simulator}}))
-              (done))))))))
-
-(deftest ^:unit create-simulator-failure-test
-  (testing "(create-simulator)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/post
-                        (spies/create (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)
-                  f (actions/create-simulator ::simulator)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.create/fail {:some :reason}]))
-              (is (spies/called-with? http/post "/api/simulators" {:body {:simulator ::simulator}}))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/post http-spy
+                    actions/request* request-spy]
+        (testing "creates the simulator"
+          (let [result ((actions/create-simulator ::simulator) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.create/request]))
+            (is (spies/called-with? http-spy "/api/simulators" {:body {:simulator ::simulator}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.create/succeed
+                                    :simulators.create/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit clear-requests-test
   (testing "(clear-requests)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/clear-requests ::action ::simulator) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.clear-requests/request])))))))
-
-(deftest ^:unit clear-requests-success-test
-  (testing "(clear-requests)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/clear-requests ::action 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.clear-requests/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action ::action}}))
-              (done))))))))
-
-(deftest ^:unit clear-requests-failure-test
-  (testing "(clear-requests)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:error {:some :error}])))]
-            (let [dispatch (spies/create)
-                  f (actions/clear-requests ::action 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.clear-requests/fail {:some :error}]))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/patch http-spy
+                    actions/request* request-spy]
+        (testing "clears the simulator"
+          (let [result ((actions/clear-requests ::action 12345) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.clear-requests/request]))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action ::action}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.clear-requests/succeed
+                                    :simulators.clear-requests/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/reset-simulator ::id) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.reset/request])))))))
-
-(deftest ^:unit reset-simulator-success-test
-  (testing "(reset-simulator)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/reset-simulator 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.reset/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators/reset}}))
-              (done))))))))
-
-(deftest ^:unit reset-simulator-failure-test
-  (testing "(reset-simulator)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:error {:some :error}])))]
-            (let [dispatch (spies/create)
-                  f (actions/reset-simulator 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.reset/fail {:some :error}]))
-              (done))))))))
-
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/patch http-spy
+                    actions/request* request-spy]
+        (testing "resets the simulator"
+          (let [result ((actions/reset-simulator 12345) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.reset/request]))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators/reset}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.reset/succeed
+                                    :simulators.reset/fail))
+            (is (= result ::result))))))))
+;; TODO HERE
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/update-simulator ::id ::simulator) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.change/request])))))))
-
-(deftest ^:unit update-simulator-success-test
-  (testing "(update-simulator)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/update-simulator 123 {::some ::config})]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.change/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators/change
-                                                                               :config {::some ::config}}}))
-              (done))))))))
-
-(deftest ^:unit update-simulator-failure-test
-  (testing "(update-simulator)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:error {:some :error}])))]
-            (let [dispatch (spies/create)
-                  f (actions/update-simulator 123 {::some ::config})]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.change/fail {:some :error}]))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/patch http-spy
+                    actions/request* request-spy]
+        (testing "updates the simulator"
+          (let [result ((actions/update-simulator 12345 ::config) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.change/request]))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators/change
+                                                                             :config ::config}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.change/succeed
+                                    :simulators.change/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit disconnect-test
   (testing "(disconnect)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/constantly (async/go [:success {}]))]
-        (testing "calls dispatch with request action"
-          ((actions/disconnect ::simulator-id ::socket-id) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.disconnect/request])))))))
-
-(deftest ^:unit disconnect-success-test
-  (testing "(disconnect)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/disconnect 123 456)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.disconnect/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action    :simulators.ws/disconnect
-                                                                               :socket-id 456}}))
-              (done))))))))
-
-(deftest ^:unit disconnect-failure-test
-  (testing "(disconnect)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:error {:some :error}])))]
-            (let [dispatch (spies/create)
-                  f (actions/disconnect 123 456)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.disconnect/fail {:some :error}]))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/patch http-spy
+                    actions/request* request-spy]
+        (testing "disconnects the web socket"
+          (let [result ((actions/disconnect 123 456) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.disconnect/request]))
+            (is (spies/called-with? http-spy "/api/simulators/123" {:body {:action :simulators.ws/disconnect
+                                                                           :socket-id 456}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.disconnect/succeed
+                                    :simulators.disconnect/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit disconnect-all-test
   (testing "(disconnect-all)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/patch (spies/constantly (async/go [:success {}]))]
-        (testing "calls dispatch with request action"
-          ((actions/disconnect-all ::id) [dispatch])
-          (is (spies/called-with? dispatch [:simulators.disconnect-all/request])))))))
-
-(deftest ^:unit disconnect-all-success-test
-  (testing "(disconnect-all)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/disconnect-all 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.disconnect-all/succeed {:some :result}]))
-              (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action :simulators.ws/disconnect-all}}))
-              (done))))))))
-
-(deftest ^:unit disconnect-all-failure-test
-  (testing "(disconnect-all)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/patch (spies/create
-                                     (fn [_]
-                                       (async/go
-                                         [:error {:some :error}])))]
-            (let [dispatch (spies/create)
-                  f (actions/disconnect-all 123)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.disconnect-all/fail {:some :error}]))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/patch http-spy
+                    actions/request* request-spy]
+        (testing "disconnects all web sockets for a simulator"
+          (let [result ((actions/disconnect-all 12345) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.disconnect-all/request]))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators.ws/disconnect-all}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.disconnect-all/succeed
+                                    :simulators.disconnect-all/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit send-message-test
   (testing "(send-message)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/post (spies/constantly (async/go [:success {}]))]
-        (testing "calls dispatch with request action"
-          ((actions/send-message ::simulator-id ::socket-id "a message") [dispatch])
-          (is (spies/called-with? dispatch [:simulators.send-message/request])))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/post http-spy
+                    actions/request* request-spy]
+        (testing "sends a message"
+          (let [result ((actions/send-message 123 456 ::some-message) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.send-message/request]))
+            (is (spies/called-with? http-spy "/api/simulators/123/sockets/456" {:body ::some-message :headers {:content-type "text/plain"}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.send-message/succeed
+                                    :simulators.send-message/fail))
+            (is (= result ::result))))
 
-(deftest ^:unit send-message-success-test
-  (testing "(send-message)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/post (spies/create
-                                    (fn [_]
-                                      (async/go
-                                        [:success {:some :result}])))]
-            (testing "when there is a socket id"
-              (let [dispatch (spies/create)
-                    f (actions/send-message 123 456 "a message")]
-                (async/<! (f [dispatch]))
-                (is (spies/called-with? dispatch [:simulators.send-message/succeed {:some :result}]))
-                (is (spies/called-with? http/post "/api/simulators/123/456" {:body    "a message"
-                                                                             :headers {:content-type "text/plain"}}))))
-
-            (testing "when there is no socket id"
-              (let [dispatch (spies/create)
-                    f (actions/send-message 123 nil "a message")]
-                (async/<! (f [dispatch]))
-                (is (spies/called-with? dispatch [:simulators.send-message/succeed {:some :result}]))
-                (is (spies/called-with? http/post "/api/simulators/123" {:body    "a message"
-                                                                         :headers {:content-type "text/plain"}}))
-                (done)))))))))
-
-(deftest ^:unit send-message-failure-test
-  (testing "(send-message)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/post
-                        (spies/create (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)
-                  f (actions/send-message 123 456 "a message")]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:simulators.send-message/fail {:some :reason}]))
-              (is (spies/called-with? http/post "/api/simulators/123/456" {:body    "a message"
-                                                                           :headers {:content-type "text/plain"}}))
-              (done))))))))
+        (testing "broadcasts a message"
+          (let [result ((actions/send-message 123 nil ::some-message) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:simulators.send-message/request]))
+            (is (spies/called-with? http-spy "/api/simulators/123" {:body ::some-message :headers {:content-type "text/plain"}}))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :simulators.send-message/succeed
+                                    :simulators.send-message/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit upload-test
   (testing "(upload)"
-    (let [dispatch (spies/create)]
-      (with-redefs [files/upload (spies/constantly (async/go [:success {}]))]
-        (testing "calls dispatch with request action"
-          ((actions/upload ::files) [dispatch])
-          (is (spies/called-with? dispatch [:files.upload/request])))))))
-
-(deftest ^:unit upload-success-test
-  (testing "(upload)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [files/upload (spies/create
-                                       (fn [_]
-                                         (async/go
-                                           [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/upload ::files)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:files.upload/succeed {:some :result}]))
-              (is (spies/called-with? files/upload "/api/resources" :post ::files))
-              (done))))))))
-
-(deftest ^:unit upload-failure-test
-  (testing "(upload)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [files/upload (spies/create
-                                       (fn [_]
-                                         (async/go
-                                           [:error {:some :reason}])))]
-            (let [dispatch (spies/create)
-                  f (actions/upload ::files)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:files.upload/fail {:some :reason}]))
-              (is (spies/called-with? files/upload "/api/resources" :post ::files))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          files-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [files/upload files-spy
+                    actions/request* request-spy]
+        (testing "uploads files"
+          (let [result ((actions/upload ::files) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:files.upload/request]))
+            (is (spies/called-with? files-spy "/api/resources" :post ::files))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :files.upload/succeed
+                                    :files.upload/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit upload-replace-test
   (testing "(upload-replace)"
-    (let [dispatch (spies/create)]
-      (with-redefs [files/upload (spies/constantly (async/go [:success {}]))]
-        (testing "calls dispatch with request action"
-          ((actions/upload-replace ::id ::files) [dispatch])
-          (is (spies/called-with? dispatch [:files.replace/request])))))))
-
-(deftest ^:unit upload-replace-success-test
-  (testing "(upload-replace)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [files/upload (spies/create
-                                       (fn [_]
-                                         (async/go
-                                           [:success {:some :result}])))]
-            (let [dispatch (spies/create)
-                  f (actions/upload-replace ::id ::files)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:files.replace/succeed {:some :result}]))
-              (is (spies/called-with? files/upload (str "/api/resources/" ::id) :put ::files))
-              (done))))))))
-
-(deftest ^:unit upload-replace-failure-test
-  (testing "(upload-replace)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [files/upload (spies/create
-                                       (fn [_]
-                                         (async/go
-                                           [:error {:some :reason}])))]
-            (let [dispatch (spies/create)
-                  f (actions/upload-replace ::id ::files)]
-              (async/<! (f [dispatch]))
-              (is (spies/called-with? dispatch [:files.replace/fail {:some :reason}]))
-              (is (spies/called-with? files/upload (str "/api/resources/" ::id) :put ::files))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          files-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [files/upload files-spy
+                    actions/request* request-spy]
+        (testing "uploads files"
+          (let [result ((actions/upload-replace 123 ::files) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:files.replace/request]))
+            (is (spies/called-with? files-spy "/api/resources/123" :put ::files))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :files.replace/succeed
+                                    :files.replace/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit get-uploads-test
   (testing "(get-uploads)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/get (constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          (actions/get-uploads [dispatch])
-          (is (spies/called-with? dispatch [:files.fetch-all/request])))))))
-
-(deftest ^:unit get-uploads-success-test
-  (testing "(get-uploads)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/get (spies/create
-                                   (fn [_]
-                                     (async/go
-                                       [:success {:some :result}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/get-uploads [dispatch]))
-              (is (spies/called-with? dispatch [:files.fetch-all/succeed {:some :result}]))
-              (is (spies/called-with? http/get "/api/resources"))
-              (done))))))))
-
-(deftest ^:unit get-uploads-failure-test
-  (testing "(get-uploads)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/get (spies/create
-                                   (fn [_]
-                                     (async/go
-                                       [:error {:some :reason}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/get-uploads [dispatch]))
-              (is (spies/called-with? dispatch [:files.fetch-all/fail {:some :reason}]))
-              (is (spies/called-with? http/get "/api/resources"))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/get http-spy
+                    actions/request* request-spy]
+        (testing "disconnects all web sockets for a simulator"
+          (let [result (actions/get-uploads [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:files.fetch-all/request]))
+            (is (spies/called-with? http-spy "/api/resources"))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :files.fetch-all/succeed
+                                    :files.fetch-all/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit delete-upload-test
   (testing "(delete-upload)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/delete (constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          ((actions/delete-upload ::id) [dispatch])
-          (is (spies/called-with? dispatch [:files.delete/request])))))))
-
-(deftest ^:unit delete-upload-success-test
-  (testing "(delete-upload)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/delete (spies/create
-                                      (fn [_]
-                                        (async/go
-                                          [:success {:some :result}])))]
-            (let [dispatch (spies/create)]
-              (async/<! ((actions/delete-upload ::id) [dispatch]))
-              (is (spies/called-with? dispatch [:files.delete/succeed {:id ::id} {:some :result}]))
-              (is (spies/called-with? http/delete (str "/api/resources/" ::id)))
-              (done))))))))
-
-(deftest ^:unit delete-upload-failure-test
-  (testing "(delete-upload)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/delete (spies/create
-                                      (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)]
-              (async/<! ((actions/delete-upload ::id) [dispatch]))
-              (is (spies/called-with? dispatch [:files.delete/fail {:some :reason}]))
-              (is (spies/called-with? http/delete (str "/api/resources/" ::id)))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/delete http-spy
+                    actions/request* request-spy]
+        (testing "disconnects all web sockets for a simulator"
+          (let [result ((actions/delete-upload 123) [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:files.delete/request]))
+            (is (spies/called-with? http-spy "/api/resources/123"))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    [:files.delete/succeed {:id 123}]
+                                    :files.delete/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit delete-uploads-test
   (testing "(delete-uploads)"
-    (let [dispatch (spies/create)]
-      (with-redefs [http/delete (constantly (async/chan))]
-        (testing "calls dispatch with request action"
-          (actions/delete-uploads [dispatch])
-          (is (spies/called-with? dispatch [:files.delete-all/request])))))))
-
-(deftest ^:unit delete-uploads-success-test
-  (testing "(delete-uploads)"
-    (testing "calls dispatch when request succeeds"
-      (async done
-        (async/go
-          (with-redefs [http/delete (spies/create
-                                      (fn [_]
-                                        (async/go
-                                          [:success {:some :result}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/delete-uploads [dispatch]))
-              (is (spies/called-with? dispatch [:files.delete-all/succeed {:some :result}]))
-              (is (spies/called-with? http/delete "/api/resources"))
-              (done))))))))
-
-(deftest ^:unit delete-uploads-failure-test
-  (testing "(delete-uploads)"
-    (testing "calls dispatch when request fails"
-      (async done
-        (async/go
-          (with-redefs [http/delete (spies/create
-                                      (fn [_]
-                                        (async/go
-                                          [:error {:some :reason}])))]
-            (let [dispatch (spies/create)]
-              (async/<! (actions/delete-uploads [dispatch]))
-              (is (spies/called-with? dispatch [:files.delete-all/fail {:some :reason}]))
-              (is (spies/called-with? http/delete "/api/resources"))
-              (done))))))))
+    (let [dispatch-spy (spies/create)
+          http-spy (spies/constantly ::request)
+          request-spy (spies/constantly ::result)]
+      (with-redefs [http/delete http-spy
+                    actions/request* request-spy]
+        (testing "disconnects all web sockets for a simulator"
+          (let [result (actions/delete-uploads [dispatch-spy])]
+            (is (spies/called-with? dispatch-spy [:files.delete-all/request]))
+            (is (spies/called-with? http-spy "/api/resources"))
+            (is (spies/called-with? request-spy
+                                    ::request
+                                    dispatch-spy
+                                    :files.delete-all/succeed
+                                    :files.delete-all/fail))
+            (is (= result ::result))))))))
 
 (deftest ^:unit show-modal-test
   (testing "(show-modal)"

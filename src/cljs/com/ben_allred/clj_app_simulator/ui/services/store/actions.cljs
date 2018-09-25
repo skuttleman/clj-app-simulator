@@ -10,7 +10,7 @@
     (conj type value)
     [type value]))
 
-(defn ^:private request* [request dispatch success-type error-type]
+(defn request* [request dispatch success-type error-type]
   (async/go
     (let [[status result :as response] (async/<! request)]
       (dispatch (if (= :success status)
@@ -77,7 +77,7 @@
 (defn send-message [simulator-id socket-id message]
   (fn [[dispatch]]
     (dispatch [:simulators.send-message/request])
-    (let [socket-path (when socket-id (str "/" socket-id))]
+    (let [socket-path (when socket-id (str "/sockets/" socket-id))]
       (-> (str "/api/simulators/" simulator-id socket-path)
           (http/post {:body message :headers {:content-type "text/plain"}})
           (request* dispatch :simulators.send-message/succeed :simulators.send-message/fail)))))

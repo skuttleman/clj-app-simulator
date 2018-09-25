@@ -16,7 +16,8 @@
 
 (defn ^:private maybe-slurp [value]
   (if (input-stream? value)
-    #?(:clj (slurp value))
+    #?(:clj (slurp value)
+       :cljs value)
     value))
 
 (defn ^:private when-not-string [body f]

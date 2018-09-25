@@ -11,7 +11,7 @@
 
 (defn parse [s]
   #?(:clj  (jsonista/read-value s mapper)
-     :cljs (js->clj (.parse js/JSON s) :keywordize true)))
+     :cljs (js->clj (.parse js/JSON s) :keywordize-keys true)))
 
 (defn stringify [o]
   #?(:clj  (jsonista/write-value-as-string o)

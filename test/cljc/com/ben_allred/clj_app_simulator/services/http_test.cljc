@@ -1,38 +1,34 @@
 (ns com.ben-allred.clj-app-simulator.services.http-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
-            [test.utils.spies :as spies]
-            [kvlt.chan :as kvlt]
+  (:require #?@(:clj  [[clojure.test :as t :refer [deftest testing is]]
+                       [test.utils.async :refer [async]]]
+                :cljs [[cljs.test :as t :refer [deftest testing is async]]])
             [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.services.content :as content]))
-
-(defn ^:private request* [method url request response]
-  #?(:clj (let [response-ch (async/chan)
-                kvlt-spy (spies/constantly response-ch)
-                request (update request :headers merge {:content-type "application/edn"
-                                                        :accept       "application/edn"})]
-            (with-redefs [kvlt/request! kvlt-spy]
-              (async/put! response-ch response)
-              [(async/<!! (http/go method url request)) kvlt-spy]))))
+            [com.ben-allred.clj-app-simulator.services.content :as content]
+            [com.ben-allred.clj-app-simulator.services.http :as http]
+            [kvlt.chan :as kvlt]
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit request*-test
   (testing "(request*)"
     (testing "when making a request"
-      (testing "and when the request succeeds"
-        (let [response {:status 200
-                        :headers {:content-type "application/edn"}
-                        :body "{:some (:edn)}"}
-              result (async/<!! (http/request* (async/go response)))]
-          (is (= [:success {:some [:edn]} :ok response]
-                 result))))
+      (async done
+        (async/go
+          (testing "and when the request succeeds"
+            (let [response {:status  200
+                            :headers {:content-type "application/edn"}
+                            :body    "{:some (:edn)}"}
+                  result (async/<! (http/request* (async/go response)))]
+              (is (= [:success {:some [:edn]} :ok response]
+                     result))))
 
-      (testing "and when the request fails"
-        (let [response {:status 500
-                        :headers {:content-type "application/edn"}
-                        :body "{:errors #{:error-1 :error-2}}"}
-              result (async/<!! (http/request* (async/go (ex-info "" response))))]
-          (is (= [:error {:errors #{:error-1 :error-2}} :internal-server-error response]
-                 result)))))))
+          (testing "and when the request fails"
+            (let [response {:status  500
+                            :headers {:content-type "application/edn"}
+                            :body    "{:errors #{:error-1 :error-2}}"}
+                  result (async/<! (http/request* (async/go (ex-info "" response))))]
+              (is (= [:error {:errors #{:error-1 :error-2}} :internal-server-error response]
+                     result))))
+          (done))))))
 
 (deftest ^:unit go-test
   (testing "(go)"

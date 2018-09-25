@@ -1,5 +1,5 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.routes-test
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [are deftest is testing]]
             [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
@@ -481,20 +481,20 @@
             (is (spies/called-with? disconnect-spy ::simulator)))
 
           (testing "returns the simulators"
-            (doseq [sim [[:get "/simulators/some/path" ::connect]
-                         [:get "/api/simulators/ws/some/path" ::details]
-                         [:get "/api/simulators/123" ::details]
-                         [:delete "/api/simulators/ws/some/path" ::delete-sim]
-                         [:delete "/api/simulators/123" ::delete-sim]
-                         [:post "/api/simulators/ws/some/path" ::send]
-                         [:post "/api/simulators/123" ::send]
-                         [:post "/api/simulators/ws/some/path/:socket-id" ::send]
-                         [:post "/api/simulators/123/:socket-id" ::send]
-                         [:delete "/api/simulators/ws/some/path" ::disconnect]
-                         [:delete "/api/simulators/123" ::disconnect]
-                         [:patch "/api/simulators/ws/some/path" ::reset]
-                         [:patch "/api/simulators/123" ::reset]]]
-              (is (contains? simulators sim)))))
+            (are [method path handler] (contains? simulators [method path handler])
+              :get "/simulators/some/path" ::connect
+              :get "/api/simulators/ws/some/path" ::details
+              :get "/api/simulators/123" ::details
+              :delete "/api/simulators/ws/some/path" ::delete-sim
+              :delete "/api/simulators/123" ::delete-sim
+              :post "/api/simulators/ws/some/path" ::send
+              :post "/api/simulators/123" ::send
+              :post "/api/simulators/ws/some/path/sockets/:socket-id" ::send
+              :post "/api/simulators/123/sockets/:socket-id" ::send
+              :delete "/api/simulators/ws/some/path" ::disconnect
+              :delete "/api/simulators/123" ::disconnect
+              :patch "/api/simulators/ws/some/path" ::reset
+              :patch "/api/simulators/123" ::reset)))
 
         (testing "when path is /"
           (spies/reset! details-spy remove-spy delete-sim-spy ws-sim-spy
@@ -502,20 +502,20 @@
           (spies/respond-with! details-spy (constantly {:config {:path "/"} :id 123}))
           (let [simulators (set (routes.sim/ws-routes ::env ::simulator))]
             (testing "returns simulators with the correct paths"
-              (doseq [sim [[:get "/simulators" ::connect]
-                           [:get "/api/simulators/ws" ::details]
-                           [:get "/api/simulators/123" ::details]
-                           [:delete "/api/simulators/ws" ::delete-sim]
-                           [:delete "/api/simulators/123" ::delete-sim]
-                           [:post "/api/simulators/ws" ::send]
-                           [:post "/api/simulators/123" ::send]
-                           [:post "/api/simulators/ws/:socket-id" ::send]
-                           [:post "/api/simulators/123/:socket-id" ::send]
-                           [:delete "/api/simulators/ws" ::disconnect]
-                           [:delete "/api/simulators/123" ::disconnect]
-                           [:patch "/api/simulators/ws" ::reset]
-                           [:patch "/api/simulators/123" ::reset]]]
-                (is (contains? simulators sim))))))))))
+              (are [method path handler] (contains? simulators [method path handler])
+                :get "/simulators" ::connect
+                :get "/api/simulators/ws" ::details
+                :get "/api/simulators/123" ::details
+                :delete "/api/simulators/ws" ::delete-sim
+                :delete "/api/simulators/123" ::delete-sim
+                :post "/api/simulators/ws" ::send
+                :post "/api/simulators/123" ::send
+                :post "/api/simulators/ws/sockets/:socket-id" ::send
+                :post "/api/simulators/123/sockets/:socket-id" ::send
+                :delete "/api/simulators/ws" ::disconnect
+                :delete "/api/simulators/123" ::disconnect
+                :patch "/api/simulators/ws" ::reset
+                :patch "/api/simulators/123" ::reset))))))))
 
 (deftest ^:unit http-sim->routes-test
   (testing "(http-sim->routes)"

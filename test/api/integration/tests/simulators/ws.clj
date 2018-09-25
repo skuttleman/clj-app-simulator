@@ -216,7 +216,7 @@
                           (is (= "this is a message" (:body request)))))))
 
                   (testing "and when posting a message to the first socket"
-                    (let [response (test.http/post (str "/api/simulators/ws/some/:url-param/" socket-id-1)
+                    (let [response (test.http/post (str "/api/simulators/ws/some/:url-param/sockets/" socket-id-1)
                                                    "application/edn"
                                                    {:body {:some [:edn :data]}})]
                       (testing "returns a success"

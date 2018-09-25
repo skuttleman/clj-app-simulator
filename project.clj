@@ -49,7 +49,7 @@
                    :unit        :unit}
 
   :cljsbuild {:builds [{:id           "dev"
-                        :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/common"]
+                        :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/cljc" "test/common"]
                         :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/on-reload"}
                         :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.tests
                                        :asset-path           "/js/compiled/out"

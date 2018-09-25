@@ -343,13 +343,13 @@
                  (let [root (http.views/sim {})
                        button (test.dom/query-one root :.button.clear-button)]
                    (testing "is disabled"
-                     (is (:disabled (test.dom/attrs button)))))))))
+                     (is (:disabled (test.dom/attrs button))))))))
 
           #?(:cljs
              (testing "has a button to delete the simulators"
                (let [button (test.dom/query-one root :.button.delete-button)]
                  (is (= ::delete (:on-click (test.dom/attrs button))))
-                 (is (spies/called-with? delete-spy ::simulator-id)))))))))
+                 (is (spies/called-with? delete-spy ::simulator-id))))))))))
 
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
