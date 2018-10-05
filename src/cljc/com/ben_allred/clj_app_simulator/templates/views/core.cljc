@@ -15,7 +15,7 @@
 
 (defn not-found [_]
   [:div
-   [:h2 "Page not found"]
+   [:h1.title.is-2 "Page not found"]
    [:div
     "Try going "
     [:a.home {:href (nav*/path-for :home)} "home"]]])
@@ -29,20 +29,20 @@
    [header-tab handler :resources "resources"]])
 
 (defn root [& children]
-  (into [:div [:h2 "Simulators"]] children))
+  (into [:div [:h1.title.is-2 "Simulators"]] children))
 
 (defn details [& children]
-  (into [:div [:h2 "Simulator Details"]] children))
+  (into [:div [:h1.title.is-2 "Simulator Details"]] children))
 
 (defn new [state & children]
   (let [type (get-in state [:page :query-params :type] "http")]
     (into [:div
-           [:h2 (str "New " (string/upper-case type) " Simulator")]]
+           [:h1.title.is-2 (str "New " (string/upper-case type) " Simulator")]]
           children)))
 
 (defn resources [child]
   [:div
-   [:h2 "Resources"]
+   [:h1.title.is-2 "Resources"]
    child])
 
 (defn app* [{:keys [toast modal components]} state]

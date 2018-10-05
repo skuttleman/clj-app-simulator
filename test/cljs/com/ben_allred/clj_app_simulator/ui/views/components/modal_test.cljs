@@ -14,7 +14,7 @@
   (testing "(modal)"
     (let [spy (spies/create)]
       (testing "adds class of state to modal-wrapper"
-        (is (test.dom/query-one (modal :some-state) :.modal-wrapper.some-state)))
+        (is (test.dom/query-one (modal :some-state) :.modal.some-state)))
 
       (testing "has click handler to hide modal"
         (spies/reset! spy)
@@ -23,10 +23,7 @@
           (is (spies/called-with? spy actions/hide-modal))))
 
       (testing "has close-button"
-        (spies/reset! spy)
-        (with-redefs [store/dispatch spy]
-          (test.dom/simulate-event (test.dom/query-one (modal :some-state) :.close-button) :click)
-          (is (spies/called-with? spy actions/hide-modal))))
+        (is (test.dom/query-one (modal :some-state) :.modal-close.is-large)))
 
       (testing "has a modal component"
         (is (test.dom/query-one (modal :some-state) :.modal)))
@@ -38,13 +35,13 @@
         (spies/reset! spy)
         (with-redefs [dom/stop-propagation spy]
           (let [event-data {:event :data}
-                modal (test.dom/query-one (modal :some-state) :.modal)]
+                modal (test.dom/query-one (modal :some-state) :.modal-content)]
             (test.dom/simulate-event modal :click event-data)
             (is (spies/called-with? spy event-data)))))
 
       (testing "has modal-title"
         (let [modal (test.dom/query-one (modal :some-state nil ::title) :.modal)
-              modal-title (test.dom/query-one modal :.modal-title)]
+              modal-title (test.dom/query-one modal :.card-header-title)]
           (is (test.dom/contains? modal-title ::title))))
 
       (testing "has modal-content"
@@ -58,7 +55,7 @@
           (let [click-spy (spies/constantly ::click)
                 modal (modal :some-state ::content ::title [:button {:on-click click-spy} "Contents"] [:button "Contents"])
                 [button-1 button-2] (-> modal
-                                        (test.dom/query-one :.modal-actions)
+                                        (test.dom/query-one :.card-footer)
                                         (test.dom/query-all :button))
                 hide-modal (ffirst (spies/calls click-spy))]
 
@@ -72,4 +69,5 @@
             (testing "has hide-modal"
               (is (= hide-modal (:on-click (test.dom/attrs button-2)))))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

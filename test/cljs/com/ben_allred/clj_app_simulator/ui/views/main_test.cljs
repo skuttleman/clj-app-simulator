@@ -34,7 +34,7 @@
               (is (spies/called-with? path-for-spy :new {:query-params {:type :http}}))
               (is (spies/called-with? path-for-spy :new {:query-params {:type :ws}}))
               (is (-> element
-                      (test.dom/query-one :.button-success)
+                      (test.dom/query-one :.button)
                       (test.dom/contains? "Create")))))
 
           (testing "displays simulators"

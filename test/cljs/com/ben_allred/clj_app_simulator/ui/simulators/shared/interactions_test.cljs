@@ -238,7 +238,6 @@
                 close-btn (test.dom/query-one tree :.cancel-button)
                 delete-btn (test.dom/query-one tree :.delete-button)]
             (testing "gives the modal a close button"
-              (is (test.dom/query-one close-btn :.button.button-secondary.pure-button))
               (is (test.dom/contains? close-btn "Cancel")))
 
             (testing "gives the modal a button which deletes the simulator"

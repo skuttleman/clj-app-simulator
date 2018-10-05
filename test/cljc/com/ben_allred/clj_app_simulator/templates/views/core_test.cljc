@@ -12,7 +12,7 @@
       (with-redefs [nav*/path-for nav-spy]
         (let [root (views/not-found ::state)]
           (testing "renders a header"
-            (is (test.dom/contains? root [:h2 "Page not found"])))
+            (is (test.dom/contains? root [:h1.title.is-2 "Page not found"])))
 
           (testing "renders a home link"
             (let [link (test.dom/query-one root :.home)]
@@ -80,7 +80,7 @@
           root (apply views/root children)]
       (testing "contains a header"
         (is (-> root
-                (test.dom/query-one :h2)
+                (test.dom/query-one :h1)
                 (test.dom/contains? "Simulators"))))
 
       (testing "renders children"
@@ -100,7 +100,7 @@
           root (views/details child)]
       (testing "contains a header"
         (is (-> root
-                (test.dom/query-one :h2)
+                (test.dom/query-one :h1)
                 (test.dom/contains? "Simulator Details"))))
 
       (testing "renders the child"
@@ -114,7 +114,7 @@
           root (views/new {:page {:query-params {:type "type"}}} child)]
       (testing "contains a header"
         (is (-> root
-                (test.dom/query-one :h2)
+                (test.dom/query-one :h1)
                 (test.dom/contains? "New TYPE Simulator"))))
 
       (testing "renders the child"
@@ -128,7 +128,7 @@
           root (views/resources child)]
       (testing "contains a header"
         (is (-> root
-                (test.dom/query-one :h2)
+                (test.dom/query-one :h1)
                 (test.dom/contains? "Resources"))))
 
       (testing "renders the child"

@@ -33,7 +33,7 @@
 
 (deftest ^:unit socket-test
   (testing "(socket)"
-    (let [format-spy (spies/create identity)
+    (let [format-spy (spies/create (fn [v & _] v))
           send-spy (spies/constantly ::send-modal)
           disconnect-spy (spies/constantly ::disconnect)]
       (with-redefs [dates/format format-spy

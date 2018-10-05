@@ -2,7 +2,10 @@
   (:require [clojure.string :as string]
             [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
             [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.formation.core :as f]))
+            [com.ben-allred.formation.core :as f]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
+            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
 (defn ^:private maybe-parse-int [value]
   (let [delay (nums/parse-int value)
@@ -44,6 +47,8 @@
                      %)})
 
 (def model->source
-  {:name        strings/trim-to-nil
-   :group       strings/trim-to-nil
-   :description strings/trim-to-nil})
+  [{:name        strings/trim-to-nil
+    :group       strings/trim-to-nil
+    :description strings/trim-to-nil}
+   (fns/=> (maps/update-maybe :response #(cond-> %
+                                           (nil? (:body % "")) (dissoc :body))))])

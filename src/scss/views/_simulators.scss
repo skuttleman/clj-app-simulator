@@ -10,8 +10,6 @@
         }
 
         .sim-card {
-            border: 1px solid $gray;
-            padding: 4px;
             width: 100%;
 
             .details-container {
@@ -22,6 +20,11 @@
                     display: flex;
                     flex-direction: column;
                     align-items: flex-start;
+
+                    .sim-card-description {
+                        white-space: normal;
+                        text-align: left;
+                    }
                 }
             }
 
@@ -68,25 +71,8 @@
 }
 
 .sim-card-counts {
-    display: flex;
-    flex-wrap: wrap;
-    width: 25px;
+    margin: 4px;
     & > * {
-        border-radius: 50%;
-        color: $white;
-        font-weight: bold;
-        width: 25px;
-        height: 25px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        &.sim-card-request-count {
-            background-color: $orange;
-            align-self: flex-start;
-        }
-        &.sim-card-socket-count {
-            background-color: $blue;
-            align-self: flex-end;
-        }
+        margin-left: 4px;
     }
 }

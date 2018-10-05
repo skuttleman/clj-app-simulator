@@ -10,10 +10,10 @@
     [:div
      "Uploaded "
      [:span.resource-timestamp (dates/format timestamp)]]]
-   [:div.button-row
+   [:div.button-row.buttons-right
     (conj replace-btn "Replace")
     [:div
-     [:button.button.button-error.pure-button.delete-button
+     [:button.button.is-danger
       delete-attrs
       "Delete"]]]])
 
@@ -22,7 +22,7 @@
          [:div.button-row
           (conj upload-btn "Upload")
           [:div
-           [:button.button.button-error.pure-button.delete-button
+           [:button.button.is-danger
             delete-attrs
             "Delete All"]]]
          (if (seq uploads)

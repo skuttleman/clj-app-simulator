@@ -131,5 +131,6 @@
 (defn show-toast [level text]
   (fn [[dispatch]]
     (let [key (gensym)]
-      (dispatch [:toast/display key level text])
+      (dispatch [:toast/adding key level text])
+      (macros/after 1 (dispatch [:toast/display key]))
       (macros/after 6000 (dispatch (remove-toast key))))))

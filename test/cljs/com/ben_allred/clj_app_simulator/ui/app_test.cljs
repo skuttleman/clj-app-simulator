@@ -16,7 +16,7 @@
    :modal            ::modal-data})
 
 (deftest ^:unit app-test
-  (testing "(app-test)"
+  (testing "(app)"
     (let [get-state-spy (spies/constantly ::state)
           dispatch-spy (spies/create)
           toast-spy (spies/constantly ::toast)

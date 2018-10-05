@@ -20,7 +20,7 @@
                :always (map (fn [[type label]]
                               {:href  (nav/path-for :new {:query-params {:type type}})
                                :label label})))}
-     [:button.button.button-success.pure-button "Create"]]]
+     [:button.button "Create"]]]
    [views.sim/simulators (:data simulators)]])
 
 (defn details [{:keys [page simulators uploads]}]

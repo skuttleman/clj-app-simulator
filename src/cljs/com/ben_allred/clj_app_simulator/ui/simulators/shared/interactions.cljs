@@ -6,7 +6,8 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]))
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn toaster [level default-msg]
   (fn [body]
@@ -95,10 +96,10 @@
       (actions/show-modal
         [modals/confirm-delete "this simulator"]
         "Delete Simulator"
-        [:button.button.button-error.pure-button.delete-button
+        [:button.button.is-danger.delete-button
          {:on-click (partial delete-sim id)}
          "Delete"]
-        [:button.button.button-secondary.pure-button.cancel-button
+        [:button.button.cancel-button
          "Cancel"]))))
 
 (defn show-request-modal [sim request]

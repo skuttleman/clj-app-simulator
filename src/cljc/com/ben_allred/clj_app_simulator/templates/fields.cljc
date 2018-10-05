@@ -27,7 +27,7 @@
            (when (or label errors)
              [:div.field-info
               (when label
-                [:label label])
+                [:label.label label])
               (when errors
                 [:ul.error-list
                  (for [error errors]
@@ -42,7 +42,7 @@
         available? (set (map first options))]
     [form-field
      attrs
-     [:select
+     [:select.select
       {:class-name class-name
        :value      (if (available? value)
                      (to-view value)
@@ -61,18 +61,19 @@
         to-model (or to-model identity)]
     [form-field
      attrs
-     [:textarea
+     [:textarea.textarea
       {:value      (to-view value)
        :class-name class-name
        #?@(:clj  [:disabled true]
-           :cljs [:on-change (comp on-change to-model dom/target-value)])}]]))
+           :cljs [:on-change (comp on-change to-model dom/target-value)])}
+      #?(:clj (to-view value))]]))
 
 (defn input [{:keys [on-change value class-name type to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)
         to-model (or to-model identity)]
     [form-field
      attrs
-     [:input
+     [:input.input
       {:value      (to-view value)
        :class-name class-name
        :type       (or type :text)
@@ -86,11 +87,11 @@
     [form-field
      (update attrs :errors flatten)
      [:div.header-field
-      [:input.header-key
+      [:input.input.header-key
        {:value k
         #?@(:clj  [:disabled true]
             :cljs [:on-change #(on-change (to-model [(dom/target-value %) v]))])}]
-      [:input.header-value
+      [:input.input.header-value
        {:value v
         #?@(:clj  [:disabled true]
             :cljs [:on-change #(on-change (to-model [k (dom/target-value %)]))])}]]]))
@@ -98,17 +99,25 @@
 (defn multi [{:keys [key-fn value new-fn change-fn errors class-name] :as attrs} component]
   [form-field
    (dissoc attrs :errors)
+   [:div
+    [:button.button.is-small.add-item
+     {:type :button
+      #?@(:clj  [:disabled true]
+          :cljs [:on-click #(change-fn conj (new-fn (count value)))])}
+     [:i.fa.fa-plus]]]
    [:ul.multi
     {:class-name class-name}
     (for [[idx val :as key] (map-indexed vector value)]
       [:li.multi-item
        {:key (key-fn key)}
-       [:i.fa.fa-minus.remove-item
-        #?(:cljs {:on-click #(change-fn (comp vec (remove-by-idx idx)))})]
+       [:div
+        [:button.button.is-small.remove-item
+         {:type :button
+          #?@(:clj  [:disabled true]
+              :cljs [:on-click #(change-fn (comp vec (remove-by-idx idx)))])}
+         [:i.fa.fa-minus.remove-item]]]
        [component (-> attrs
                       (dissoc :label)
                       (assoc :value val
                              :errors (nth errors idx nil)
-                             #?@(:cljs [:on-change #(change-fn (comp vec (update-by-idx idx %)))])))]])]
-   [:i.fa.fa-plus.add-item
-    #?(:cljs {:on-click #(change-fn conj (new-fn (count value)))})]])
+                             #?@(:cljs [:on-change #(change-fn (comp vec (update-by-idx idx %)))])))]])]])

@@ -110,8 +110,8 @@
       (is (= {} (reducers/toasts))))
 
     (testing "handles :toast/display"
-      (is (= {::some ::toast ::key {:level ::level :text ::text}}
-             (reducers/toasts {::some ::toast} [:toast/display ::key ::level ::text]))))
+      (is (= {::some ::toast ::key {::some ::data}}
+             (reducers/toasts {::some ::toast ::key {:adding? ::adding ::some ::data}} [:toast/display ::key ::level ::text]))))
 
     (testing "handles :toast/unmount"
       (is (= {::some-other ::toast}

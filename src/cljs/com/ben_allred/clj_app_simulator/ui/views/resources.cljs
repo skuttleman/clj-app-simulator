@@ -11,7 +11,7 @@
    upload
    [components/upload
     {:on-change  (partial interactions/replace-resource id)
-     :class-name "button button-warning pure-button"
+     :class-name "is-warning"
      :multiple   false}]])
 
 (defn root [uploads]
@@ -20,6 +20,6 @@
     :on-click (interactions/show-delete-modal "Delete All Resources" "all resources" actions/delete-uploads)}
    [components/upload
     {:on-change  interactions/upload-resources
-     :class-name "button button-success pure-button"}]
+     :class-name "is-primary"}]
    resource
    uploads])

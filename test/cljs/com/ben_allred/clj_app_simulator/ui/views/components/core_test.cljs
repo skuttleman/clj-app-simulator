@@ -9,26 +9,6 @@
 (defn ^:private available [data]
   {:status :available :data data})
 
-(deftest ^:unit with-height-test
-  (testing "(with-height)"
-    (let [are-f (fn [open? item-count]
-                  (-> {}
-                      (components/with-height open? item-count)
-                      (:style)
-                      (:height)
-                      (js/parseInt)))]
-      (testing "calculates item height when open"
-        (are [item-count expected] (= expected (are-f true item-count))
-          0 24
-          1 42
-          2 60
-          10 204
-          25 474))
-
-      (testing "calculates item height when closed"
-        (doseq [num (repeat 10 (rand-int 1000))]
-          (is (zero? (are-f false num))))))))
-
 (deftest ^:unit spinner-overlay-test
   (testing "(spinner-overlay)"
     (testing "when shown"
@@ -78,76 +58,53 @@
 
 (deftest ^:unit menu*-test
   (testing "(menu*)"
-    (let [height-spy (spies/constantly {::some ::attrs})]
-      (with-redefs [components/with-height height-spy]
-        (let [btn [:button.my-button ::with ::content]
-              attrs {:open?      true
-                     :on-click   ::on-click
-                     :class-name :my-class
-                     :items      [{:href ::href-1 :label ::label-1}
-                                  {:href ::href-2 :label ::label-2}]}
-              root (components/menu* attrs btn)]
-          (testing "has a dropdown menu wrapper"
-            (is (-> root
-                    (test.dom/query-one :.dropdown-menu-wrapper.my-class)
-                    (test.dom/attrs)
-                    (:on-click)
-                    (= ::on-click))))
+    (let [btn [:button.my-button ::with ::content]
+          attrs {:open?      true
+                 :on-click   ::on-click
+                 :class-name "my-class"
+                 :items      [{:href ::href-1 :label ::label-1}
+                              {:href ::href-2 :label ::label-2}]}
+          root (components/menu* attrs btn)]
+      (testing "has a dropdown wrapper"
+        (is (test.dom/query-one root :.dropdown.my-class))
+        (is (-> root
+                (test.dom/query-one :.my-button)
+                (test.dom/attrs)
+                (:on-click)
+                (= ::on-click))))
 
-          (testing "has menu items"
-            (let [menu (test.dom/query-one root :.menu)
-                  [item-1 item-2] (test.dom/query-all menu :.menu-item)]
-              (is (= 0 (:key (test.dom/attrs item-1))))
-              (is (-> item-1
-                      (test.dom/query-one :a)
-                      (test.dom/attrs)
-                      (:href)
-                      (= ::href-1)))
-              (is (-> item-1
-                      (test.dom/query-one :a)
-                      (test.dom/contains? ::label-1)))
-              (is (= 1 (:key (test.dom/attrs item-2))))
-              (is (-> item-2
-                      (test.dom/query-one :a)
-                      (test.dom/attrs)
-                      (:href)
-                      (= ::href-2)))
-              (is (-> item-2
-                      (test.dom/query-one :a)
-                      (test.dom/contains? ::label-2)))))
+      (testing "has menu items"
+        (let [menu (test.dom/query-one root :.dropdown-content)
+              [item-1 item-2] (test.dom/query-all menu :.dropdown-item)]
+          (is (= ::label-1 (:key (test.dom/attrs item-1))))
+          (is (-> item-1
+                  (test.dom/query-one :a)
+                  (test.dom/attrs)
+                  (:href)
+                  (= ::href-1)))
+          (is (-> item-1
+                  (test.dom/query-one :a)
+                  (test.dom/contains? ::label-1)))
+          (is (= ::label-2 (:key (test.dom/attrs item-2))))
+          (is (-> item-2
+                  (test.dom/query-one :a)
+                  (test.dom/attrs)
+                  (:href)
+                  (= ::href-2)))
+          (is (-> item-2
+                  (test.dom/query-one :a)
+                  (test.dom/contains? ::label-2)))))
 
-          (testing "when the menu is open"
-            (testing "adds an icon to the button"
-              (let [button (test.dom/query-one root :.my-button)]
-                (is (test.dom/query-one button :.dropdown-chevron.fa.fa-chevron-up))))
+      (testing "when the menu is open"
+        (testing "adds an icon to the button"
+          (let [button (test.dom/query-one root :.my-button)]
+            (is (test.dom/query-one button :.fa.fa-angle-down)))))
 
-            (testing "has a dropdown menu"
-              (let [dropdown-menu (test.dom/query-one root :.dropdown-menu.open)]
-                (is (spies/called-with? height-spy
-                                        (spies/matcher map?)
-                                        (spies/matcher identity)
-                                        2))
-                (is (-> dropdown-menu
-                        (test.dom/attrs)
-                        (::some)
-                        (= ::attrs))))))
-
-          (testing "when the menu is closed"
-            (let [root (components/menu* (dissoc attrs :open?) btn)]
-              (testing "adds an icon to the button"
-                (let [button (test.dom/query-one root :.my-button)]
-                  (is (test.dom/query-one button :.dropdown-chevron.fa.fa-chevron-down))))
-
-              (testing "has a dropdown menu"
-                (let [dropdown-menu (test.dom/query-one root :.dropdown-menu.closed)]
-                  (is (spies/called-with? height-spy
-                                          (spies/matcher map?)
-                                          (spies/matcher not)
-                                          2))
-                  (is (-> dropdown-menu
-                          (test.dom/attrs)
-                          (::some)
-                          (= ::attrs))))))))))))
+      (testing "when the menu is closed"
+        (let [root (components/menu* (dissoc attrs :open?) btn)]
+          (testing "adds an icon to the button"
+            (let [button (test.dom/query-one root :.my-button)]
+              (is (test.dom/query-one button :.fa.fa-angle-down)))))))))
 
 (deftest ^:unit menu-test
   (testing "(menu)"
@@ -171,58 +128,46 @@
 
 (deftest ^:unit upload-test
   (testing "(upload)"
-    (with-redefs [gensym (spies/constantly ::id)]
-      (testing "when rendering the hidden file input"
-        (let [on-change-spy (spies/create)
-              root (components/upload nil)
-              tree (root {:on-change on-change-spy :multiple ::multiple})
-              [_ attrs :as input] (test.dom/query-one tree :.hidden.file-upload)
-              event (js/Object.)
-              target (js/Object.)]
-          (set! (.-target event) target)
-          (set! (.-value target) ::value)
-          (set! (.-files target) (to-array [::file-1 ::file-2 ::file-3]))
+    (testing "when rendering the hidden file input"
+      (testing "has a class name"
+        (is (-> (components/upload {:class-name ::class})
+                (test.dom/query-one :.file)
+                (test.dom/attrs)
+                (:class-name)
+                (= ::class))))
 
-          (testing "has attrs"
-            (is (= ::id (:id attrs)))
-            (is (= :file (:type attrs)))
-            (is (= ::multiple (:multiple attrs))))
+      (let [on-change-spy (spies/create)
+            root (components/upload {:on-change on-change-spy :multiple ::multiple})
+            [_ attrs :as input] (test.dom/query-one root :.file-input)
+            event (js/Object.)
+            target (js/Object.)]
+        (set! (.-target event) target)
+        (set! (.-value target) ::value)
+        (set! (.-files target) (to-array [::file-1 ::file-2 ::file-3]))
 
-          (testing "handles :on-change"
-            (spies/reset! on-change-spy)
-            (test.dom/simulate-event input :change event)
+        (testing "has attrs"
+          (is (= :file (:type attrs)))
+          (is (= ::multiple (:multiple attrs))))
 
-            (is (spies/called-times? on-change-spy 1))
-            (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
-            (is (nil? (.-files target)))
-            (is (nil? (.-value target))))))
+        (testing "handles :on-change"
+          (spies/reset! on-change-spy)
+          (test.dom/simulate-event input :change event)
 
-      (testing "defaults to multiple files"
-        (let [root (components/upload nil)
-              tree (root {})
-              [_ attrs] (test.dom/query-one tree :.hidden.file-upload)]
-          (is (true? (:multiple attrs)))))
+          (is (spies/called-times? on-change-spy 1))
+          (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
+          (is (nil? (.-files target)))
+          (is (nil? (.-value target))))))
 
-      (testing "renders a button"
-        (let [query-spy (spies/constantly ::node)
-              click-spy (spies/create)
-              root (components/upload nil)
-              tree (root {:class-name ::class} ::child-1 ::child-2)
-              [_ attrs child-1 child-2 :as button] (test.dom/query-one tree :button)]
-          (testing "has attrs"
-            (is (= ::class (:class-name attrs))))
+    (testing "defaults to multiple files"
+      (let [root (components/upload {})
+            [_ attrs] (test.dom/query-one root :.file-input)]
+        (is (true? (:multiple attrs)))))
 
-          (testing "handles :on-click"
-            (with-redefs [dom/query-one query-spy
-                          dom/click click-spy]
-              (test.dom/simulate-event button :click)
-
-              (is (spies/called-with? query-spy (str "#" ::id)))
-              (is (spies/called-with? click-spy ::node))))
-
-          (testing "has children"
-            (is (= ::child-1 child-1))
-            (is (= ::child-2 child-2))))))))
+    (let [root (components/upload {:class-name ::class} ::child-1 ::child-2)
+          [_ child-1 child-2] (test.dom/query-one root :.file-label)]
+      (testing "has children"
+        (is (= ::child-1 child-1))
+        (is (= ::child-2 child-2))))))
 
 (defn run-tests []
   (t/run-tests))

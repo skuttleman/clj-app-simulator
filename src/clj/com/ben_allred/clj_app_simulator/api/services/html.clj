@@ -25,7 +25,7 @@
 (defn ^:private home [state]
   [views/root
    [:div.button-row
-    [:button.button.button-success.pure-button
+    [:button.button.create-button
      {:disabled true}
      "Create"]]
    [views.sim/simulators (get-in state [:simulators :data])]
@@ -66,13 +66,19 @@
   [views.res/resource
    {:disabled true}
    upload
-   [:button.button.button-warning.pure-button {:disabled true}]])
+   [:button.button.is-warning.file-cta
+    {:disabled true}
+    [:span.file-icon
+     [:i.fa.fa-upload]]]])
 
 (defn ^:private resources [state]
   [views/resources
    [views.res/resources
     {:disabled true}
-    [:button.button.button-success.pure-button {:disabled true}]
+    [:button.button.is-primary.file-cta
+     {:disabled true}
+     [:span.file-icon
+      [:i.fa.fa-upload]]]
     resource
     (get-in state [:uploads :data])
     [views/spinner]]])
@@ -94,11 +100,12 @@
     [:link {:rel  "stylesheet"
             :href "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css"
             :type "text/css"}]
-    [:link {:rel         "stylesheet"
-            :href        "https://unpkg.com/purecss@1.0.0/build/pure-min.css"
-            :type        "text/css"
-            :integrity   "sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
-            :crossorigin "anonymous"}]
+    [:link {:rel  "stylesheet"
+            :href "https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css"
+            :type "text/css"}]
+    [:link {:rel  "stylesheet"
+            :href "https://cdn.jsdelivr.net/npm/bulma-tooltip@2.0.2/dist/css/bulma-tooltip.min.css"
+            :type "text/css"}]
     [:link {:rel  "stylesheet"
             :href "/css/main.css"
             :type "text/css"}]]

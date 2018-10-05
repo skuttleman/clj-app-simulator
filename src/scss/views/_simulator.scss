@@ -62,7 +62,7 @@
         border-bottom: 1px solid;
         border-color: $blue;
         border-bottom-color: lighten($blue, 35%);
-        padding: 0 10px;
+        padding-left: 10px;
 
         &:not(:last-child) {
             margin-bottom: 5px;
@@ -82,10 +82,24 @@
     .ws-message {
         list-style: circle;
         margin-left: 18px;
+        .ws-content {
+            display: flex;
+            justify-content: space-between;
 
-        .body {
-            color: $green;
-            margin-right: 10px;
+            .body {
+                color: $green;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-break: break-all;
+                display: inline-block;
+                margin: 0;
+            }
+
+            .timestamp {
+                min-width: 240px;
+                text-align: right;
+            }
         }
     }
 

@@ -9,7 +9,7 @@
   ([label m class xform-key]
    [:div
     {:class-name class}
-    [:h5 label]
+    [:h4.title.is-5 label]
     [:ul.key-vals
      (for [[k v] (sort-by key m)]
        [:li

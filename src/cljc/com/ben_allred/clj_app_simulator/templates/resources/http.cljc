@@ -8,7 +8,7 @@
 
 (def http-methods
   (->> [:http/get :http/post :http/put :http/patch :http/delete]
-       (map (juxt str (comp string/upper-case name)))))
+       (map (juxt identity (comp string/upper-case name)))))
 
 (defn edit-config []
   {:delay    [(f/pred nums/number? "Delay must be a number")

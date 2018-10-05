@@ -32,7 +32,7 @@
                            (home)
                            (test.dom/query-one views/root))]
               (is (-> tree
-                      (test.dom/query-one :.pure-button)
+                      (test.dom/query-one :.create-button)
                       (test.dom/attrs)
                       (:disabled)))
               (is (-> tree

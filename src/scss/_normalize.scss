@@ -1,22 +1,13 @@
-*:not(p) {
-    font-family: sans-serif;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-h3 {
-    font-size: 20px;
-}
-
-h4 {
-    font-size: 18px;
-}
-
-h5 {
-    font-size: 16px;
-}
-
 textarea {
-    resize: none;
+    resize: none !important;
+}
+
+html {
+    overflow-y: hidden;
+}
+
+.is-1, .is-2, .is-3, .is-4, .is-5, .is-6 {
+    &.title {
+        margin-bottom: 0;
+    }
 }

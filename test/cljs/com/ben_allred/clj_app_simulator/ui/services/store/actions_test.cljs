@@ -354,19 +354,30 @@
           key (gensym)
           gensym-spy (spies/constantly key)]
       (with-redefs [gensym gensym-spy]
-        (testing "displays modal"
+        (testing "adds the modal"
           (spies/reset! dispatch)
           (action [dispatch])
           (is (spies/called? gensym-spy))
           (is (spies/called-with? dispatch
-                                  [:toast/display key ::level "Some text"]))
+                                  [:toast/adding key ::level "Some text"]))
           (is (spies/called-times? dispatch 1)))
-        (testing "unmounts modal"
+
+        (testing "displays modal"
           (spies/reset! dispatch)
           (spies/reset! timeout-spy)
           (with-redefs [macros/set-timeout timeout-spy]
             (action [dispatch])
             (let [[f ms] (first (spies/calls timeout-spy))]
+              (f)
+              (is (spies/called-with? dispatch [:toast/display key]))
+              (is (= 1 ms)))))
+
+        (testing "unmounts modal"
+          (spies/reset! dispatch)
+          (spies/reset! timeout-spy)
+          (with-redefs [macros/set-timeout timeout-spy]
+            (action [dispatch])
+            (let [[f ms] (second (spies/calls timeout-spy))]
               (f)
               (is (spies/called-with? dispatch [:toast/remove key]))
               (is (= 6000 ms)))))))))

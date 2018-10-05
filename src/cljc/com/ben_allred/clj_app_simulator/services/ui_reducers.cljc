@@ -37,7 +37,8 @@
   ([] {})
   ([state [type key level text]]
    (case type
-     :toast/display (assoc state key {:level level :text text})
+     :toast/adding (assoc state key {:level level :text text :adding? true})
+     :toast/display (update state key dissoc :adding?)
      :toast/remove (dissoc state key)
      state)))
 

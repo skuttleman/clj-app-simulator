@@ -8,7 +8,8 @@
     [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
     [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-    [com.ben-allred.clj-app-simulator.templates.core :as templates]))
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn path-field [form]
   [shared.views/path-field form tr/model->view tr/view->model])
@@ -31,16 +32,17 @@
      [:ul.ws-messages
       (for [{:keys [body timestamp]} requests]
         [:li.ws-message
-         {:key (str socket-id "-" timestamp)}
-         [:span.body body]
-         [:span.timestamp (dates/format timestamp)]])]
+         {:key (str socket-id "-" (dates/format timestamp "YYYYDDMMhhmmssSSS"))}
+         [:div.ws-content
+          [:p.body body]
+          [:span.timestamp (dates/format timestamp)]]])]
      [:div.button-row
-      [:button.button.button-secondary.pure-button.send-button
+      [:button.button.is-info.send-button
        #?(:clj  {:disabled true}
           :cljs {:disabled inactive?
                  :on-click (interactions/show-message-modal simulator-id socket-id)})
        "Send Message"]
-      [:button.button.button-error.pure-button.disconnect-button
+      [:button.button.is-danger.disconnect-button
        #?(:clj  {:disabled true}
           :cljs {:disabled inactive?
                  :on-click (interactions/disconnect simulator-id socket-id)})
@@ -54,10 +56,10 @@
      [group-field form]
      [description-field form]
      [:div.button-row
-      [:button.button.button-secondary.pure-button.save-button
+      [:button.button.is-info.save-button
        {:disabled disabled?}
        "Save"]
-      [:button.button.button-warning.pure-button.reset-button
+      [:button.button.is-warning.reset-button
        {:type :button
         #?@(:clj  [:disabled true]
             :cljs [:on-click (interactions/reset-simulator form id)])}
@@ -70,7 +72,7 @@
     (fn [_simulator]
       [sim-edit-form* id form])))
 
-(defn sim [{:keys [sockets requests id] :as simulator}]
+(defn sim [{:keys [id sockets requests] :as simulator}]
   (let [connections (->> requests
                          (group-by :socket-id)
                          (merge (zipmap sockets (repeat [])))
@@ -80,7 +82,7 @@
     [:div.simulator
      [views.sim/sim-details simulator]
      [sim-edit-form simulator]
-     [:h4 "Connections:"]
+     [:h3.title.is-4 "Connections:"]
      (if (seq connections)
        [:ul.sockets
         (for [[socket-id {:keys [active? requests]}] connections]
@@ -89,22 +91,22 @@
        [:div.no-sockets
         "None"])
      [:div.button-row
-      [:button.button.button-secondary.pure-button.message-button
+      [:button.button.is-info.message-button
        #?(:clj  {:disabled true}
           :cljs {:disabled (empty? sockets)
                  :on-click (interactions/show-message-modal id nil)})
        "Broadcast Message"]
-      [:button.button.button-error.pure-button.clear-button
+      [:button.button.is-danger.clear-button
        #?(:clj  {:disabled true}
           :cljs {:disabled (empty? requests)
                  :on-click (shared.interactions/clear-requests :ws id)})
        "Clear Messages"]
-      [:button.button.button-error.pure-button.disconnect-button
+      [:button.button.is-danger.disconnect-button
        #?(:clj  {:disabled true}
           :cljs {:disabled (empty? sockets)
                  :on-click (interactions/disconnect-all id)})
        "Disconnect All"]
-      [:button.button.button-error.pure-button.delete-button
+      [:button.button.is-danger.delete-button
        #?(:clj  {:disabled true}
           :cljs {:on-click (shared.interactions/show-delete-modal id)})
        "Delete Simulator"]]]))
@@ -118,10 +120,10 @@
      [group-field form]
      [description-field form]
      [:div.button-row
-      [:button.button.button-secondary.pure-button.save-button
+      [:button.button.is-info.save-button
        {:disabled disabled?}
        "Save"]
-      [:a.button.button-warning.pure-button.reset-button
+      [:a.button.is-warning.reset-button
        {:href (nav*/path-for :home)}
        "Cancel"]]]))
 

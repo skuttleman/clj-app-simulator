@@ -1,32 +1,25 @@
-.pure-button {
-    &.button-success {
-        background: $green;
-    }
-    &.button-error {
-        background: $red;
-        color: white;
-    }
-    &.button-warning {
-        background: $orange;
-        color: white;
-    }
-    &.button-secondary {
-        background: $light-blue;
-    }
-}
-
-.button {
-    cursor: pointer;
-    &.fa-minus-circle.red {
-        margin-right: 10px;
-    }
-}
-
 .button-row {
     display: flex;
-    margin: 5px 0;
-    & > *:not(:last-child) {
-        margin-right: 10px;
+    flex-wrap: wrap;
+
+    & > * {
+        margin-top: 5px;
+        margin-bottom: 5px;
+        &:not(:last-child) {
+            margin-right: 10px;
+        }
+    }
+
+    &.buttons-right {
+        justify-content: flex-end;
+
+        & > * {
+            margin-right: 0;
+
+            &:not(:first-child) {
+                margin-left: 10px;
+            }
+        }
     }
 }
 

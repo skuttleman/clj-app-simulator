@@ -72,10 +72,10 @@
      [headers-field form]
      [file-field form uploads]
      [:div.button-row
-      [:button.button.button-secondary.pure-button.save-button
+      [:button.button.is-info.save-button
        {:disabled disabled?}
        "Save"]
-      [:button.button.button-warning.pure-button.reset-button
+      [:button.button.is-warning.reset-button
        {:type :button
         #?@(:clj  [:disabled true]
             :cljs [:on-click (interactions/reset-simulator form id)])}
@@ -95,18 +95,18 @@
   [:div.simulator
    [views.sim/sim-details simulator]
    [sim-edit-form simulator uploads]
-   [:h4 "Requests:"]
+   [:h3.title.is-4 "Requests:"]
    [:ul.requests
     (for [request (sort-by :timestamp > requests)]
       ^{:key (str (:timestamp request))}
       [shared.views/sim-request config request])]
    [:div.button-row
-    [:button.button.button-error.pure-button.clear-button
+    [:button.button.is-danger.clear-button
      #?(:clj  {:disabled true}
         :cljs {:disabled (empty? requests)
                :on-click (shared.interactions/clear-requests :http id)})
      "Clear Requests"]
-    [:button.button.button-error.pure-button.delete-button
+    [:button.button.is-danger.delete-button
      #?(:clj  {:disabled true}
         :cljs {:on-click (shared.interactions/show-delete-modal id)})
      "Delete Simulator"]]])
@@ -125,10 +125,10 @@
      [headers-field form]
      [file-field form uploads]
      [:div.button-row
-      [:button.button.button-secondary.pure-button.save-button
+      [:button.button.is-info.save-button
        {:disabled disabled?}
        "Save"]
-      [:a.button.button-warning.pure-button.reset-button
+      [:a.button.is-warning.reset-button
        {:href (nav*/path-for :home)}
        "Cancel"]]]))
 

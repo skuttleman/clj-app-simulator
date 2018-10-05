@@ -6,11 +6,6 @@
             [reagent.core :as r]
             [com.ben-allred.clj-app-simulator.templates.core :as templates]))
 
-(defn with-height [attrs open? item-count]
-  (assoc-in attrs [:style :height] (if open?
-                                     (str (+ 24 (* 18 item-count)) "px")
-                                     "0")))
-
 (defn spinner-overlay [show? component]
   (if show?
     [:div
@@ -29,23 +24,21 @@
     (into (colls/force-sequential component) (map :data status-data))
     [views/spinner]))
 
-(defn menu* [{:keys [open? on-click items class-name]} button]
-  [:div.dropdown-menu-wrapper
-   {:class-name class-name
-    :on-click   on-click}
-   (conj button [:i.fa.dropdown-chevron
-                 {:class-name (if open? :fa-chevron-up :fa-chevron-down)}])
-   [:div.dropdown-menu
-    (-> {}
-        (with-height open? (count items))
-        (templates/classes {:open   open?
-                            :closed (not open?)}))
-    [:ul.menu
-     (for [[idx {:keys [href label]}] (map-indexed vector items)]
-       [:li.menu-item
-        {:key idx}
-        [:a {:href href}
-         label]])]]])
+(defn menu* [{:keys [open? on-click items class-name]} [btn attrs? & content]]
+  (let [btn-attrs (cond-> {:aria-haspopup true :aria-controls "dropdown-menu"
+                           :on-click      on-click}
+                    (map? attrs?) (merge attrs?))
+        content (cond->> content
+                  (not (map? attrs?)) (cons attrs?))]
+    [:div.dropdown
+     (-> {:class-name class-name}
+         (templates/classes {:is-active open?}))
+     [:div.dropdown-trigger
+      (into [btn btn-attrs] (concat content [" " [:i.fa.fa-angle-down {:aria-hidden true}]]))]
+     [:div#dropdown-menu.dropdown-menu {:role :menu}
+      [:div.dropdown-content
+       (for [{:keys [href label]} items]
+         [:a.dropdown-item {:href href :key label} label])]]]))
 
 (defn menu [_attrs _button]
   (let [open? (r/atom false)]
@@ -54,24 +47,20 @@
        (assoc attrs :on-click #(swap! open? not) :open? @open?)
        button])))
 
-(defn upload [_attrs & _children]
-  (let [id (gensym)]
-    (fn [{:keys [class-name on-change multiple] :or {multiple true}} & children]
-      [:div
-       [:input.file-upload.hidden
-        {:id        id
-         :type      :file
-         :on-change #(let [target (.-target %)
-                           files (.-files target)]
-                       (on-change (for [i (range (.-length files))]
-                                    (aget files i)))
-                       (set! (.-files target) nil)
-                       (set! (.-value target) nil))
-         :multiple  multiple}]
-       (into [:button
-              {:class-name class-name
-               :on-click   #(->> id
-                                 (str "#")
-                                 (dom/query-one)
-                                 (dom/click))}]
-             children)])))
+(defn upload [{:keys [class-name on-change multiple] :or {multiple true}} & children]
+  [:div.file
+   {:class-name class-name}
+   [:label.label
+    [:input.file-input
+     {:type      :file
+      :on-change #(let [target (.-target %)
+                        files (.-files target)]
+                    (on-change (for [i (range (.-length files))]
+                                 (aget files i)))
+                    (set! (.-files target) nil)
+                    (set! (.-value target) nil))
+      :multiple  multiple}]
+    [:span.file-cta
+     [:span.file-icon
+      [:i.fa.fa-upload]]
+     (into [:span.file-label] children)]]])

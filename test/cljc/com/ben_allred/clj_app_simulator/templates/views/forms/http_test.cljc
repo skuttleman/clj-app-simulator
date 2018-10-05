@@ -414,7 +414,8 @@
       (with-redefs [#?@(:cljs [forms/create form-spy])]
         (testing "renders the form"
           (let [component (http.views/sim-create-form)
-                model {:response {:status 200}
+                model {:response {:status 200
+                                  :body nil}
                        :method   :http/get
                        :path     "/"
                        :delay    0}]

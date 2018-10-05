@@ -36,7 +36,7 @@
           (testing "has a nav link to the details page"
             (is (spies/called-with? nav-spy :details {:id id}))
             (is (-> sim-card
-                    (test.dom/query-one :.clean)
+                    (test.dom/query-one :.details-link)
                     (test.dom/attrs)
                     (:href)
                     (= ::href))))
@@ -64,14 +64,14 @@
           (testing "when there are one or more requests"
             (testing "shows the request count"
               (-> sim-card
-                  (test.dom/query-one :div.sim-card-request-count)
+                  (test.dom/query-one :.sim-card-request-count)
                   (test.dom/contains? request-count)
                   (is))))
 
           (testing "when there are one or more sockets"
             (testing "shows the socket count"
               (-> sim-card
-                  (test.dom/query-one :div.sim-card-socket-count)
+                  (test.dom/query-one :.sim-card-socket-count)
                   (test.dom/contains? socket-count)
                   (is)))))
 

@@ -39,7 +39,7 @@
                                         (shared.interactions/toaster :error "The message could not be sent")))))
 
 (defn send-message-button [attrs form]
-  [:button.button.button-secondary.pure-button
+  [:button.button.is-info
    (assoc attrs :disabled (forms/errors form))
    "Send"])
 
@@ -57,5 +57,5 @@
                                       (:message (forms/current-model form))
                                       hide))}
            form]
-          [:button.button.button-warning.pure-button.cancel-button
+          [:button.button.cancel-button
            "Cancel"])))))

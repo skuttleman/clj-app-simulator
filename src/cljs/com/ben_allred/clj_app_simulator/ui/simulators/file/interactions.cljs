@@ -28,10 +28,10 @@
       (actions/show-modal
         [modals/confirm-delete msg]
         title
-        [:button.button.button-error.pure-button.delete-button
+        [:button.button.is-danger.delete-button
          {:on-click (delete-file action)}
          "Delete"]
-        [:button.button.button-secondary.pure-button.cancel-button
+        [:button.button.cancel-button
          "Cancel"]))))
 
 (defn replace-resource [id files]

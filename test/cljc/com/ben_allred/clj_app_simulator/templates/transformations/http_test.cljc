@@ -10,15 +10,17 @@
                                 (tr/source->model)
                                 (= expected))
         {:delay    ::delay
-         :response {:headers {:header-1 [::a ::b]
+         :response {:body    ::body
+                    :headers {:header-1 [::a ::b]
                               :header-2 ::c}}}
         {:delay    ::delay
-         :response {:headers [[:header-1 ::a]
+         :response {:body    ::body
+                    :headers [[:header-1 ::a]
                               [:header-1 ::b]
                               [:header-2 ::c]]}}
 
         {:delay nil}
-        {:delay 0}))))
+        {:delay 0 :response {:body nil}}))))
 
 (deftest ^:unit model->view-test
   (testing "(model->view)"
