@@ -35,30 +35,37 @@
   (testing "(socket)"
     (let [format-spy (spies/create (fn [v & _] v))
           send-spy (spies/constantly ::send-modal)
+          show-spy (spies/constantly ::show-msg)
           disconnect-spy (spies/constantly ::disconnect)]
       (with-redefs [dates/format format-spy
-                    #?@(:cljs [interactions/show-message-modal send-spy
+                    #?@(:cljs [interactions/show-send-modal send-spy
+                               interactions/show-ws-modal show-spy
                                interactions/disconnect disconnect-spy])]
-        (let [messages [{:body ::body-1 :timestamp :timestamp-1}
-                        {:body ::body-2 :timestamp :timestamp-2}
-                        {:body ::body-3 :timestamp :timestamp-3}]]
+        (let [messages [{:body :body-1 :timestamp :timestamp-1 :message-id :message-id-1}
+                        {:body :body-2 :timestamp :timestamp-2 :message-id :message-id-2}
+                        {:body :body-3 :timestamp :timestamp-3 :message-id :message-id-3}]]
           (testing "when there are messages"
             (let [root (ws.views/socket ::simulator-id "socket-id" messages true)
-                  [message-1 message-2 message-3] (test.dom/query-all root :.ws-message)]
-              (is (= "socket-id-:timestamp-1" (:key (test.dom/attrs message-1))))
-              (is (spies/called-with? format-spy :timestamp-1))
-              (is (test.dom/contains? message-1 :timestamp-1))
-              (is (test.dom/contains? message-1 ::body-1))
+                  msg-trees (test.dom/query-all root :.ws-message)
+                  msg-count (count msg-trees)]
+              (is (= (count messages) msg-count))
+              (doseq [idx (range msg-count)
+                      :let [tree (nth msg-trees idx)
+                            num (inc idx)]]
+                (testing (str "has message " num)
+                  (is (= (str ":message-id-" num) (:key (test.dom/attrs tree))))
+                  (is (spies/called-with? format-spy (keyword (str "timestamp-" num))))
+                  (is (test.dom/contains? tree (keyword (str "timestamp-" num))))
+                  (is (test.dom/contains? tree (keyword (str "body-" num)))))
 
-              (is (= "socket-id-:timestamp-2" (:key (test.dom/attrs message-2))))
-              (is (spies/called-with? format-spy :timestamp-2))
-              (is (test.dom/contains? message-2 :timestamp-2))
-              (is (test.dom/contains? message-2 ::body-2))
-
-              (is (= "socket-id-:timestamp-3" (:key (test.dom/attrs message-3))))
-              (is (spies/called-with? format-spy :timestamp-3))
-              (is (test.dom/contains? message-3 :timestamp-3))
-              (is (test.dom/contains? message-3 ::body-3))))
+                #?(:cljs
+                   (testing "handles on-click"
+                     (is (spies/called-with? show-spy (nth messages idx)))
+                     (is (-> tree
+                             (test.dom/query-one :.ws-content)
+                             (test.dom/attrs)
+                             (:on-click)
+                             (= ::show-msg))))))))
 
           (testing "when there are no messages"
             (let [root (ws.views/socket ::simulator-id "socket-id" nil true)]
@@ -187,7 +194,7 @@
           delete-spy (spies/constantly ::delete)]
       (with-redefs [#?@(:cljs [shared.interactions/clear-requests clear-spy
                                interactions/disconnect-all disconnect-spy
-                               interactions/show-message-modal send-spy
+                               interactions/show-send-modal send-spy
                                shared.interactions/show-delete-modal delete-spy])]
         (let [requests [{:socket-id 222 :timestamp 1}
                         {:socket-id 333 :timestamp 2}

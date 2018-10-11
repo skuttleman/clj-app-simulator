@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals
   (:require [com.ben-allred.clj-app-simulator.utils.strings :as strings]
             [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.dates :as dates]))
+            [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn sim-iterate
   ([label m class]
@@ -22,7 +23,7 @@
 
 (defn request-modal [{:keys [method path]} {:keys [timestamp route-params query-params headers body]}]
   [:div.request-details
-   [:p (string/upper-case (name method)) ": " path]
+   [:p (string/upper-case (name method)) (str ": /simulators" (when (not= "/" path) path))]
    [:p (dates/format timestamp)]
    (when (seq route-params)
      [sim-iterate "Route Params:" route-params "route-params"])
@@ -34,6 +35,13 @@
      [:div.request-body
       [:span "Body:"]
       [:p body]])])
+
+(defn socket-modal [{:keys [timestamp body]}]
+  [:div.message-details
+   [:p (dates/format timestamp)]
+   [:div.socket-message-body
+    [:span "Body:"]
+    [:pre.message-body body]]])
 
 (defn confirm-delete [msg]
   [:div.confirm

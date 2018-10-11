@@ -3,10 +3,12 @@
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
             [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]))
+            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+            [com.ben-allred.clj-app-simulator.templates.fields :as fields]))
 
 
 (defn update-simulator [form id submittable?]
@@ -43,12 +45,18 @@
    (assoc attrs :disabled (forms/errors form))
    "Send"])
 
-(defn show-message-modal [simulator-id socket-id]
+(defn message-editor [form model->view view->model]
+  [:div.send-ws-message
+   [fields/textarea
+    (-> {:label "Message"}
+        (shared.views/with-attrs form [:message] model->view view->model))]])
+
+(defn show-send-modal [simulator-id socket-id]
   (fn [_]
     (let [form (forms/create {:message ""} resources/socket-message)]
       (store/dispatch
         (actions/show-modal
-          [modals/message form nil nil]
+          [message-editor form nil nil]
           (str (if socket-id "Send" "Broadcast") " a Message")
           [send-message-button
            {:on-click (fn [hide]
@@ -59,3 +67,10 @@
            form]
           [:button.button.cancel-button
            "Cancel"])))))
+
+(defn show-ws-modal [message]
+  (fn [_]
+    (store/dispatch
+      (actions/show-modal
+        [modals/socket-modal message]
+        "Message Details"))))

@@ -17,7 +17,7 @@
    (let [dispatch (spies/create)
          get-state (spies/constantly ::state)
          spy (spies/constantly {:dispatch  dispatch
-                                         :get-state get-state})]
+                                :get-state get-state})]
      (with-redefs [store/ws-store spy]
        [(ws.sim/->WsSimulator ::env ::id config) spy config dispatch get-state]))))
 
@@ -68,9 +68,11 @@
   (testing "(on-message)"
     (let [find-socket-spy (spies/constantly ::socket-id)
           receive-spy (spies/create)
-          get-state-spy (spies/constantly ::state)]
+          get-state-spy (spies/constantly ::state)
+          uuid-spy (spies/constantly ::uuid)]
       (with-redefs [actions/find-socket-id find-socket-spy
-                    common/receive receive-spy]
+                    common/receive receive-spy
+                    uuids/random uuid-spy]
         (testing "when the socket-id is found"
           (spies/reset! find-socket-spy receive-spy get-state-spy)
           (ws.sim/on-message ::simulator
@@ -81,12 +83,14 @@
           (testing "receives the request"
             (is (spies/called? get-state-spy))
             (is (spies/called-with? find-socket-spy ::state ::ws))
+            (is (spies/called-with? uuid-spy))
             (is (spies/called-with? receive-spy
                                     ::simulator
                                     {:headers      ::headers
                                      :query-params ::query-params
                                      :route-params ::route-params
                                      :socket-id    ::socket-id
+                                     :message-id   ::uuid
                                      :body         ::message}))))
 
         (testing "when the socket-id is not found"

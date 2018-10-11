@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.ws
   (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
                        [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]])
+                       [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
+                       [reagent.core :as r]])
     [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
     [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
@@ -30,17 +31,18 @@
      (when (empty? requests)
        [:span.ws-messages.no-messages "no messages"])
      [:ul.ws-messages
-      (for [{:keys [body timestamp]} requests]
+      (for [{:keys [body timestamp message-id] :as msg} requests]
         [:li.ws-message
-         {:key (str socket-id "-" (dates/format timestamp "YYYYDDMMhhmmssSSS"))}
+         {:key (str message-id)}
          [:div.ws-content
-          [:p.body body]
+          #?(:cljs {:on-click (interactions/show-ws-modal msg)})
+          [:p.ws-body body]
           [:span.timestamp (dates/format timestamp)]]])]
      [:div.button-row
       [:button.button.is-info.send-button
        #?(:clj  {:disabled true}
           :cljs {:disabled inactive?
-                 :on-click (interactions/show-message-modal simulator-id socket-id)})
+                 :on-click (interactions/show-send-modal simulator-id socket-id)})
        "Send Message"]
       [:button.button.is-danger.disconnect-button
        #?(:clj  {:disabled true}
@@ -94,7 +96,7 @@
       [:button.button.is-info.message-button
        #?(:clj  {:disabled true}
           :cljs {:disabled (empty? sockets)
-                 :on-click (interactions/show-message-modal id nil)})
+                 :on-click (interactions/show-send-modal id nil)})
        "Broadcast Message"]
       [:button.button.is-danger.clear-button
        #?(:clj  {:disabled true}

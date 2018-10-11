@@ -61,10 +61,16 @@
                                           :body         "this is a body"})
               details (test.dom/query-one root :.request-details)]
           (testing "displays the method and path"
-            (is (test.dom/contains? details [:* "METHOD" ": " "/some/path"])))
+            (is (test.dom/contains? details [:* "METHOD" ": /simulators/some/path"])))
 
-          (testing "formats the dt moment"
-            (is (spies/called-with? format-spy ::moment)))
+          (testing "when the path is '/'"
+            (let [root (modals/request-modal {:method ::method :path "/"} nil)
+                  details (test.dom/query-one root :.request-details)]
+              (testing "displays the method and path without a trailing '/'"
+                (is (test.dom/contains? details [:* "METHOD" ": /simulators"]))))
+
+            (testing "formats the dt moment"
+              (is (spies/called-with? format-spy ::moment))))
 
           (testing "displays the formatted moment"
             (is (test.dom/contains? details ::formatted)))
@@ -110,6 +116,16 @@
           (let [details (modals/request-modal {:method ::method} {})]
             (testing "does not display a body"
               (is (not (test.dom/contains? details :.request-body))))))))))
+
+(deftest ^:unit socket-modal-test
+  (testing "(socket-modal)"
+    (let [format-spy (spies/constantly ::dt-string)]
+      (with-redefs [dates/format format-spy]
+        (let [root (modals/socket-modal {:timestamp ::timestamp :body ::body})]
+          (testing "renders modal body"
+            (is (spies/called-with? format-spy ::timestamp))
+            (is (test.dom/contains? root [:* ::dt-string]))
+            (is (test.dom/contains? root [:*.message-body ::body]))))))))
 
 (defn run-tests []
   (t/run-tests))

@@ -7,8 +7,8 @@
      :cljs (:require [cljsjs.moment])))
 
 (def ^:private default-format
-  #?(:clj  "EEE MMM d, YYYY 'at' h:mm:ss a z"
-     :cljs "ddd MMM D, YYYY [at] h:mm:ss a z"))
+  #?(:clj  "EEE MMM d, YYYY 'at' h:mm a"
+     :cljs "ddd MMM D, YYYY [at] h:mm a"))
 
 (defn ^:private inst->dt [inst]
   #?(:clj  (if (instance? Instant inst)
@@ -24,6 +24,6 @@
   ([inst fmt]
     #?(:clj  (-> fmt
                  (DateTimeFormatter/ofPattern)
-                 (.withZone (ZoneId/of "UTC"))
+                 (.withZone (ZoneId/systemDefault))
                  (.format (inst->dt inst)))
        :cljs (.format (inst->dt inst) fmt))))

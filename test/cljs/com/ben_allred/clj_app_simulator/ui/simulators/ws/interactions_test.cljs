@@ -1,16 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test
   (:require [clojure.test :as t :refer [deftest testing is]]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
+            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
             [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
+            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
+            [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
             [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.modals :as modals]
-            [test.utils.dom :as test.dom]))
+            [test.utils.dom :as test.dom]
+            [test.utils.spies :as spies]))
 
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
@@ -109,8 +111,18 @@
             (is (= ::attrs (::some attrs)))
             (is (= ::errors (:disabled attrs)))))))))
 
-(deftest ^:unit show-message-modal-test
-  (testing "(show-message-modal)"
+(deftest ^:unit message-editor-test
+  (testing "(message-editor)"
+    (let [with-attrs-spy (spies/create identity)]
+      (with-redefs [shared.views/with-attrs with-attrs-spy]
+        (let [root (interactions/message-editor ::form ::model->view ::view->model)
+              input (test.dom/query-one root fields/textarea)]
+          (testing "renders a message field"
+            (is (spies/called-with? with-attrs-spy (spies/matcher map?) ::form [:message] ::model->view ::view->model))
+            (is (= "Message" (:label (test.dom/attrs input))))))))))
+
+(deftest ^:unit show-send-modal-test
+  (testing "(show-send-modal)"
     (let [create-spy (spies/constantly ::form)
           action-spy (spies/constantly ::action)
           dispatch-spy (spies/create)
@@ -123,14 +135,14 @@
                     forms/errors errors-spy
                     interactions/send-message send-spy
                     forms/current-model model-spy]
-        (let [handler (interactions/show-message-modal ::simulator-id ::socket-id)]
+        (let [handler (interactions/show-send-modal ::simulator-id ::socket-id)]
           (handler ::event)
           (testing "creates a form"
             (is (spies/called-with? create-spy {:message ""} resources/socket-message)))
 
           (testing "shows the modal"
             (is (spies/called-with? action-spy
-                                    [modals/message ::form nil nil]
+                                    [interactions/message-editor ::form nil nil]
                                     (spies/matcher string?)
                                     (spies/matcher vector?)
                                     (spies/matcher vector?)))
@@ -157,6 +169,18 @@
                 (is (spies/called-with? model-spy ::form))
                 (is (spies/called-with? send-spy ::simulator-id ::socket-id ::message ::hide))
                 (is (= ::send result))))))))))
+
+(deftest ^:unit show-ws-modal-test
+  (testing "(show-ws-modal)"
+    (let [dispatch-spy (spies/create)
+          action-spy (spies/constantly ::action)]
+      (with-redefs [store/dispatch dispatch-spy
+                    actions/show-modal action-spy]
+        (testing "shows the socket modal"
+          ((interactions/show-ws-modal ::message) ::ignored)
+
+          (is (spies/called-with? action-spy [modals/socket-modal ::message] (spies/matcher string?)))
+          (is (spies/called-with? dispatch-spy ::action)))))))
 
 (defn run-tests []
   (t/run-tests))
