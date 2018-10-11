@@ -8,7 +8,7 @@
 (defn toast [messages]
   [:div.toast-container
    [:ul.toast-messages
-    (for [[key {:keys [text level adding?]}] (sort-by key messages)]
+    (for [[key {:keys [ref level adding?]}] (take 2 (sort-by key messages))]
       [:li.toast-message.message
        (-> {:key key}
            (templates/classes {"is-success" (= :success level)
@@ -19,4 +19,4 @@
         [:button.delete
          {:aria-label "delete"
           :on-click   #(store/dispatch (actions/remove-toast key))}]]
-       [:div.message-body text]])]])
+       [:div.message-body @ref]])]])

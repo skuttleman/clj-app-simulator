@@ -35,9 +35,9 @@
 
 (defn toasts
   ([] {})
-  ([state [type key level text]]
+  ([state [type key level ref]]
    (case type
-     :toast/adding (assoc state key {:level level :text text :adding? true})
+     :toast/adding (assoc state key {:level level :ref ref :adding? true})
      :toast/display (update state key dissoc :adding?)
      :toast/remove (dissoc state key)
      state)))

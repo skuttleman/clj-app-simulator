@@ -353,34 +353,36 @@
           action (actions/show-toast ::level "Some text")
           key (gensym)
           gensym-spy (spies/constantly key)]
-      (with-redefs [gensym gensym-spy]
-        (testing "adds the modal"
-          (spies/reset! dispatch)
-          (action [dispatch])
-          (is (spies/called? gensym-spy))
-          (is (spies/called-with? dispatch
-                                  [:toast/adding key ::level "Some text"]))
-          (is (spies/called-times? dispatch 1)))
+      (with-redefs [gensym gensym-spy
+                    macros/set-timeout timeout-spy]
+        (action [dispatch])
+        (let [[action-type key' level ref] (ffirst (spies/calls dispatch))]
+          (testing "adds the toast"
+            (is (spies/called-times? dispatch 1))
+            (is (spies/called? gensym-spy))
+            (is (= :toast/adding action-type))
+            (is (= key key'))
+            (is (= ::level level)))
 
-        (testing "displays modal"
-          (spies/reset! dispatch)
-          (spies/reset! timeout-spy)
-          (with-redefs [macros/set-timeout timeout-spy]
-            (action [dispatch])
-            (let [[f ms] (first (spies/calls timeout-spy))]
-              (f)
-              (is (spies/called-with? dispatch [:toast/display key]))
-              (is (= 1 ms)))))
+          (testing "does no async actions"
+            (is (spies/never-called? timeout-spy)))
 
-        (testing "unmounts modal"
-          (spies/reset! dispatch)
-          (spies/reset! timeout-spy)
-          (with-redefs [macros/set-timeout timeout-spy]
-            (action [dispatch])
-            (let [[f ms] (second (spies/calls timeout-spy))]
-              (f)
-              (is (spies/called-with? dispatch [:toast/remove key]))
-              (is (= 6000 ms)))))))))
+          (testing "when deref-ing the value"
+            (testing "yields the text"
+              (is (= "Some text" @ref)))
+
+            (let [calls (spies/calls timeout-spy)]
+              (testing "displays the toast"
+                (spies/reset! dispatch)
+                (let [[f] (first (filter (comp #{1} second) calls))]
+                  (f)
+                  (spies/called-with? dispatch [:toast/display key])))
+
+              (testing "removes the toast"
+                (spies/reset! dispatch)
+                (let [[f] (first (filter (comp #{6000} second) calls))]
+                  (f)
+                  (spies/called-with? dispatch [:toast/remove key]))))))))))
 
 (defn run-tests []
   (t/run-tests))

@@ -15,9 +15,3 @@
 
 (defn click [node]
   (.click node))
-
-(defn both [handler]
-  (fn [other]
-    (fn [event]
-      (other event)
-      (handler event))))

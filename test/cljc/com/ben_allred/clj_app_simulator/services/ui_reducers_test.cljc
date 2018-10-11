@@ -109,6 +109,10 @@
     (testing "has default state"
       (is (= {} (reducers/toasts))))
 
+    (testing "handles :toast/adding"
+      (is (= {::old ::value ::key {:level ::level :ref ::ref :adding? true}}
+             (reducers/toasts {::old ::value} [:toast/adding ::key ::level ::ref]))))
+
     (testing "handles :toast/display"
       (is (= {::some ::toast ::key {::some ::data}}
              (reducers/toasts {::some ::toast ::key {:adding? ::adding ::some ::data}} [:toast/display ::key ::level ::text]))))
