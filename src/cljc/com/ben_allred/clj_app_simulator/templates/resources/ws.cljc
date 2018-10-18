@@ -1,5 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.ws
-  (:require [com.ben-allred.formation.core :as f]))
+  (:require [com.ben-allred.formation.core :as f]
+            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (defn validate-new* []
   (f/make-validator
@@ -9,7 +10,10 @@
 
 (defn socket-message* []
   (f/make-validator
-    {:message (f/pred seq "Must have a message")}))
+    {:message (f/required "Must have a message")}))
+
+(def view->model
+  {:message strings/empty-to-nil})
 
 (def validate-new (validate-new*))
 

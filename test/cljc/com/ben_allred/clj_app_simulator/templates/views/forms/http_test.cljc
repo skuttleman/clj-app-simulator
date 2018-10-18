@@ -73,7 +73,7 @@
           error-spy (spies/constantly {:response {:headers ::errors}})]
       (with-redefs [#?@(:cljs [forms/update-in update-spy
                                forms/current-model current-spy
-                               forms/errors error-spy])]
+                               forms/display-errors error-spy])]
         (let [root (http.views/headers-field ::form)
               multi (test.dom/query-one root fields/multi)
               attrs (test.dom/attrs multi)]
@@ -154,7 +154,7 @@
           changed-spy (spies/constantly true)
           update-spy (spies/constantly ::submit)
           reset-spy (spies/constantly ::reset)]
-      (with-redefs [#?@(:cljs [forms/errors errors-spy
+      (with-redefs [#?@(:cljs [forms/display-errors errors-spy
                                forms/changed? changed-spy
                                interactions/update-simulator update-spy
                                interactions/reset-simulator reset-spy])]
@@ -213,9 +213,6 @@
                              (:on-submit)
                              (= ::submit))))
 
-                   (testing "has a disabled :on-submit"
-                     (is (spies/called-with? update-spy ::form ::id false)))
-
                    (testing "has a disabled save button"
                      (is (-> edit-form
                              (test.dom/query-one :.save-button)
@@ -233,9 +230,6 @@
                              (test.dom/attrs)
                              (:on-submit)
                              (= ::submit))))
-
-                   (testing "has a disabled :on-submit"
-                     (is (spies/called-with? update-spy ::form ::id false)))
 
                    (testing "has a disabled save button"
                      (is (-> edit-form
@@ -255,7 +249,7 @@
                              (= ::submit))))
 
                    (testing "has an enabled :on-submit"
-                     (is (spies/called-with? update-spy ::form ::id true)))
+                     (is (spies/called-with? update-spy ::form ::id)))
 
                    (testing "has an enabled save button"
                      (is (-> edit-form
@@ -357,13 +351,13 @@
           create-spy (spies/constantly ::submit)
           nav-spy (spies/constantly ::href)]
       (with-redefs [nav*/path-for nav-spy
-                    #?@(:cljs [forms/errors errors-spy
+                    #?@(:cljs [forms/display-errors errors-spy
                                interactions/create-simulator create-spy])]
         (let [root (http.views/sim-create-form* ::form)
               form (test.dom/query-one root :.simulator-create)]
           #?(:cljs
              (testing "handles submit"
-               (is (spies/called-with? create-spy ::form true))
+               (is (spies/called-with? create-spy ::form))
                (is (-> form
                        (test.dom/attrs)
                        (:on-submit)
@@ -402,7 +396,7 @@
              (testing "renders a disabled save button"
                (let [root (http.views/sim-create-form* ::form)]
                  (is (spies/called-with? errors-spy ::form))
-                 (is (spies/called-with? create-spy ::form false))
+                 (is (spies/called-with? create-spy ::form))
                  (is (-> root
                          (test.dom/query-one :.save-button)
                          (test.dom/attrs)

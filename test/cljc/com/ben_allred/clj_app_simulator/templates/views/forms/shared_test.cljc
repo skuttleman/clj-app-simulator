@@ -18,7 +18,7 @@
              view->model {:some {:path ::to-model}}]
          (with-redefs [forms/assoc-in assoc-spy
                        forms/current-model current-model-spy
-                       forms/errors errors-spy]
+                       forms/display-errors errors-spy]
            (testing "builds attrs"
              (let [{:keys [on-change value to-view to-model errors]}
                    (shared.views/with-attrs {:some ::attrs}

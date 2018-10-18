@@ -129,7 +129,7 @@
                                     :simulators.reset/succeed
                                     :simulators.reset/fail))
             (is (= result ::result))))))))
-;; TODO HERE
+
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
     (let [dispatch-spy (spies/create)

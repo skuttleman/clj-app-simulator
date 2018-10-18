@@ -25,18 +25,7 @@
             (is (= {:some :data :numbers {:one 1}} (forms/current-model form))))
 
           (testing "has changes"
-            (is (forms/changed? form)))
-
-          (testing "and when supplying an empty path"
-            (forms/assoc-in form [] {:new :map})
-            (testing "has an initial model"
-              (is (= {:some :data} (forms/initial-model form))))
-
-            (testing "has a current model"
-              (is (= {:new :map} (forms/current-model form))))
-
-            (testing "has changes"
-              (is (forms/changed? form)))))
+            (is (forms/changed? form))))
 
         (testing "and when using update-in"
           (forms/update-in form [:update-in :path] assoc :a 1)
@@ -44,21 +33,10 @@
             (is (= {:some :data} (forms/initial-model form))))
 
           (testing "has a current model"
-            (is (= {:new :map :update-in {:path {:a 1}}} (forms/current-model form))))
+            (is (= {:some :data :numbers {:one 1} :update-in {:path {:a 1}}} (forms/current-model form))))
 
           (testing "has changes"
-            (is (forms/changed? form)))
-
-          (testing "and when supplying an empty path"
-            (forms/update-in form [] dissoc :new)
-            (testing "has an initial model"
-              (is (= {:some :data} (forms/initial-model form))))
-
-            (testing "has a current model"
-              (is (= {:update-in {:path {:a 1}}} (forms/current-model form))))
-
-            (testing "has changes"
-              (is (forms/changed? form)))))
+            (is (forms/changed? form))))
 
         (testing "and when resetting the form"
           (forms/reset! form {:re :set})
@@ -72,20 +50,23 @@
             (is (not (forms/changed? form))))))
 
       (testing "and when including a validator"
-        (let [validator (spies/constantly ::errors)
+        (let [validator (spies/constantly {:a ::errors})
               form (forms/create {:a :model} validator)]
           (testing "calls the validator with the model"
-            (is (= ::errors (forms/errors form)))
+            (is (= nil (forms/display-errors form)))
+            (is (= {:a ::errors} (forms/errors form)))
             (is (spies/called-with? validator {:a :model})))
 
           (testing "and when the model changes"
             (spies/reset! validator)
-            (spies/respond-with! validator (constantly ::new-errors))
+            (spies/respond-with! validator (constantly {:a ::errors :with ::new-errors}))
             (forms/assoc-in form [:with] :data)
             (testing "updates the errors"
-              (is (= ::new-errors (forms/errors form))))
+              (is (= {:with ::new-errors} (forms/display-errors form)))
+              (is (= {:a ::errors :with ::new-errors} (forms/errors form))))
 
             (testing "calls the validator with the new model"
               (is (spies/called-with? validator {:a :model :with :data})))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

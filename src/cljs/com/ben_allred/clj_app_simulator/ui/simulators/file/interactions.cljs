@@ -5,14 +5,14 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]))
 
-(defn update-simulator [form id submittable?]
-  (shared.interactions/update-simulator form tr/model->source id submittable?))
+(defn update-simulator [form id]
+  (shared.interactions/update-simulator form tr/model->source id))
 
 (defn reset-simulator [form id]
   (shared.interactions/reset-simulator form tr/sim->model id))
 
-(defn create-simulator [form submittable?]
-  (shared.interactions/create-simulator form tr/model->source submittable?))
+(defn create-simulator [form]
+  (shared.interactions/create-simulator form tr/model->source))
 
 (defn ^:private delete-file [action]
   (fn [hide]

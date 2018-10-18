@@ -19,8 +19,8 @@
     (let [update-spy (spies/constantly ::update)]
       (with-redefs [shared.interactions/update-simulator update-spy]
         (testing "updates the simulator"
-          (let [handler (interactions/update-simulator ::form ::id ::submittable?)]
-            (is (spies/called-with? update-spy ::form tr/model->source ::id ::submittable?))
+          (let [handler (interactions/update-simulator ::form ::id)]
+            (is (spies/called-with? update-spy ::form tr/model->source ::id))
             (is (= ::update handler))))))))
 
 (deftest ^:unit reset-simulator-test
@@ -37,8 +37,8 @@
     (let [create-spy (spies/constantly ::create)]
       (with-redefs [shared.interactions/create-simulator create-spy]
         (testing "creates the simulator"
-          (let [handler (interactions/create-simulator ::form ::submittable?)]
-            (is (spies/called-with? create-spy ::form tr/model->source ::submittable?))
+          (let [handler (interactions/create-simulator ::form)]
+            (is (spies/called-with? create-spy ::form tr/model->source))
             (is (= ::create handler))))))))
 
 (deftest ^:unit disconnect-all-test
@@ -83,13 +83,21 @@
           dispatch-spy (spies/constantly ::dispatch)
           toaster-spy (spies/create (fn [level _] (constantly level)))
           hide-spy (spies/create)
-          action-spy (spies/constantly ::action)]
+          action-spy (spies/constantly ::action)
+          toast-spy (spies/constantly ::toast)
+          verify-spy (spies/create)
+          errors-spy (spies/create)
+          model-spy (spies/constantly {:message ::message})]
       (with-redefs [shared.interactions/do-request do-request-spy
                     store/dispatch dispatch-spy
                     shared.interactions/toaster toaster-spy
-                    actions/send-message action-spy]
+                    actions/send-message action-spy
+                    actions/show-toast toast-spy
+                    forms/verify! verify-spy
+                    forms/errors errors-spy
+                    forms/current-model model-spy]
         (testing "handles the request"
-          ((interactions/send-message ::simulator-id ::socket-id ::message hide-spy) ::event)
+          ((interactions/send-message ::form ::simulator-id ::socket-id hide-spy) ::event)
           (is (spies/called-with? action-spy ::simulator-id ::socket-id ::message))
           (is (spies/called-with? dispatch-spy ::action))
           (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
@@ -103,7 +111,7 @@
 (deftest ^:unit send-message-button-test
   (testing "(send-message-button)"
     (let [errors-spy (spies/constantly ::errors)]
-      (with-redefs [forms/errors errors-spy]
+      (with-redefs [forms/display-errors errors-spy]
         (testing "renders a button"
           (let [button (interactions/send-message-button {::some ::attrs} ::form)
                 attrs (test.dom/attrs button)]
@@ -132,17 +140,17 @@
       (with-redefs [forms/create create-spy
                     actions/show-modal action-spy
                     store/dispatch dispatch-spy
-                    forms/errors errors-spy
+                    forms/display-errors errors-spy
                     interactions/send-message send-spy
                     forms/current-model model-spy]
         (let [handler (interactions/show-send-modal ::simulator-id ::socket-id)]
           (handler ::event)
           (testing "creates a form"
-            (is (spies/called-with? create-spy {:message ""} resources/socket-message)))
+            (is (spies/called-with? create-spy {} resources/socket-message)))
 
           (testing "shows the modal"
             (is (spies/called-with? action-spy
-                                    [interactions/message-editor ::form nil nil]
+                                    [interactions/message-editor ::form nil resources/view->model]
                                     (spies/matcher string?)
                                     (spies/matcher vector?)
                                     (spies/matcher vector?)))
@@ -166,8 +174,7 @@
                       (not)))
               (spies/reset! send-spy model-spy)
               (let [result (on-click ::hide)]
-                (is (spies/called-with? model-spy ::form))
-                (is (spies/called-with? send-spy ::simulator-id ::socket-id ::message ::hide))
+                (is (spies/called-with? send-spy ::form ::simulator-id ::socket-id ::hide))
                 (is (= ::send result))))))))))
 
 (deftest ^:unit show-ws-modal-test

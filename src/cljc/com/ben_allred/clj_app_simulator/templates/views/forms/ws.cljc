@@ -51,21 +51,20 @@
        "Disconnect"]]]))
 
 (defn sim-edit-form* [id form]
-  (let [disabled? #?(:clj true :cljs (or (forms/errors form) (not (forms/changed? form))))]
-    [:form.simulator-edit
-     #?(:cljs {:on-submit (interactions/update-simulator form id (not disabled?))})
-     [name-field form]
-     [group-field form]
-     [description-field form]
-     [:div.button-row
-      [:button.button.is-info.save-button
-       {:disabled disabled?}
-       "Save"]
-      [:button.button.is-warning.reset-button
-       {:type :button
-        #?@(:clj  [:disabled true]
-            :cljs [:on-click (interactions/reset-simulator form id)])}
-       "Reset"]]]))
+  [:form.simulator-edit
+   #?(:cljs {:on-submit (interactions/update-simulator form id)})
+   [name-field form]
+   [group-field form]
+   [description-field form]
+   [:div.button-row
+    [:button.button.is-info.save-button
+     {:disabled #?(:clj true :cljs (or (forms/display-errors form) (not (forms/changed? form))))}
+     "Save"]
+    [:button.button.is-warning.reset-button
+     {:type :button
+      #?@(:clj  [:disabled true]
+          :cljs [:on-click (interactions/reset-simulator form id)])}
+     "Reset"]]])
 
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [model (tr/sim->model sim)
@@ -114,20 +113,19 @@
        "Delete Simulator"]]]))
 
 (defn sim-create-form* [form]
-  (let [disabled? #?(:clj true :cljs (forms/errors form))]
-    [:form.simulator-create
-     #?(:cljs {:on-submit (interactions/create-simulator form (not disabled?))})
-     [path-field form]
-     [name-field form]
-     [group-field form]
-     [description-field form]
-     [:div.button-row
-      [:button.button.is-info.save-button
-       {:disabled disabled?}
-       "Save"]
-      [:a.button.is-warning.reset-button
-       {:href (nav*/path-for :home)}
-       "Cancel"]]]))
+  [:form.simulator-create
+   #?(:cljs {:on-submit (interactions/create-simulator form)})
+   [path-field form]
+   [name-field form]
+   [group-field form]
+   [description-field form]
+   [:div.button-row
+    [:button.button.is-info.save-button
+     {:disabled #?(:clj true :cljs (forms/display-errors form))}
+     "Save"]
+    [:a.button.is-warning.reset-button
+     {:href (nav*/path-for :home)}
+     "Cancel"]]])
 
 (defn sim-create-form []
   (let [model {:method :ws

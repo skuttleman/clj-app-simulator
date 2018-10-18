@@ -42,11 +42,11 @@
 (deftest ^:unit socket-message*-test
   (testing "(socket-message*)"
     (let [validator-spy (spies/constantly ::validator)
-          pred-spy (spies/constantly ::required)]
+          required-spy (spies/constantly ::required)]
       (with-redefs [f/make-validator validator-spy
-                    f/pred pred-spy]
+                    f/required required-spy]
         (let [socket-message (resources/socket-message*)]
-          (is (spies/called-with? pred-spy seq (spies/matcher string?)))
+          (is (spies/called-with? required-spy (spies/matcher string?)))
           (is (spies/called-with? validator-spy {:message ::required}))
           (is (= ::validator socket-message)))))))
 

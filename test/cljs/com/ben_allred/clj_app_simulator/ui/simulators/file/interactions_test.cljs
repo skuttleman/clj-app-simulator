@@ -14,8 +14,8 @@
     (let [shared-spy (spies/constantly ::handler)]
       (with-redefs [shared.interactions/update-simulator shared-spy]
         (testing "updates the simulator"
-          (let [handler (interactions/update-simulator ::form ::id ::submittable?)]
-            (is (spies/called-with? shared-spy ::form tr/model->source ::id ::submittable?))
+          (let [handler (interactions/update-simulator ::form ::id)]
+            (is (spies/called-with? shared-spy ::form tr/model->source ::id))
             (is (= handler ::handler))))))))
 
 (deftest ^:unit reset-simulator
@@ -32,8 +32,8 @@
     (let [shared-spy (spies/constantly ::handler)]
       (with-redefs [shared.interactions/create-simulator shared-spy]
         (testing "creates the simulator"
-          (let [handler (interactions/create-simulator ::form ::submittable?)]
-            (is (spies/called-with? shared-spy ::form tr/model->source ::submittable?))
+          (let [handler (interactions/create-simulator ::form)]
+            (is (spies/called-with? shared-spy ::form tr/model->source))
             (is (= handler ::handler))))))))
 
 (deftest ^:unit show-delete-modal-test

@@ -15,7 +15,7 @@
 (deftest ^:unit view->model-test
   (testing "(view->model)"
     (testing "trims the path to nil"
-      (is (= strings/trim-to-nil (:path tr/view->model))))
+      (is (identical? strings/trim-to-nil (:path tr/view->model))))
 
     (testing "converts the method to a keyword"
       (is (= keyword (:method tr/view->model))))))

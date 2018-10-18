@@ -47,16 +47,22 @@
           action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
           reset-spy (spies/create)
+          verify-spy (spies/create)
+          errors-spy (spies/create)
+          changed-spy (spies/constantly true)
           request-spy (spies/create)]
       (with-redefs [forms/current-model (constantly ::model)
                     dom/prevent-default prevent-spy
                     actions/update-simulator action-spy
                     store/dispatch dispatch-spy
                     forms/reset! reset-spy
+                    forms/verify! verify-spy
+                    forms/errors errors-spy
+                    forms/changed? changed-spy
                     shared.interactions/do-request request-spy]
         (testing "when form is submittable"
           (spies/reset! prevent-spy request-spy source-spy action-spy dispatch-spy reset-spy)
-          ((shared.interactions/update-simulator ::form source-spy ::id true) ::event)
+          ((shared.interactions/update-simulator ::form source-spy ::id) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? prevent-spy ::event)))
@@ -76,9 +82,10 @@
 
                 (is (spies/called-with? reset-spy ::form ::model))))))
 
-        (testing "when form is not submittable"
+        (testing "when form has errors"
           (spies/reset! prevent-spy request-spy)
-          ((shared.interactions/update-simulator ::form source-spy ::id false) ::event)
+          (spies/respond-with! errors-spy (constantly ::errors))
+          ((shared.interactions/update-simulator ::form source-spy ::id) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? prevent-spy ::event)))
@@ -168,13 +175,16 @@
 
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
-    (let [prevent-spy (spies/create)
+    (let [error-spy (spies/constantly nil)
+          prevent-spy (spies/create)
           source-spy (spies/constantly ::source)
           action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
           nav-spy (spies/create)
           request-spy (spies/create)]
       (with-redefs [forms/current-model (constantly ::model)
+                    forms/errors error-spy
+                    forms/verify! (constantly nil)
                     dom/prevent-default prevent-spy
                     actions/create-simulator action-spy
                     store/dispatch dispatch-spy
@@ -182,7 +192,7 @@
                     shared.interactions/do-request request-spy]
         (testing "when form is submittable"
           (spies/reset! prevent-spy request-spy source-spy action-spy dispatch-spy nav-spy)
-          ((shared.interactions/create-simulator ::form source-spy true) ::event)
+          ((shared.interactions/create-simulator ::form source-spy) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? prevent-spy ::event)))
@@ -204,7 +214,8 @@
 
         (testing "when form is not submittable"
           (spies/reset! prevent-spy request-spy)
-          ((shared.interactions/create-simulator ::form source-spy false) ::event)
+          (spies/respond-with! error-spy (constantly ::errors))
+          ((shared.interactions/create-simulator ::form source-spy) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? prevent-spy ::event)))

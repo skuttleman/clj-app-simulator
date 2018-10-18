@@ -6,6 +6,10 @@
     (when-not (empty? s)
       s)))
 
+(defn empty-to-nil [s]
+  (when (seq s)
+    s))
+
 (defn maybe-pr-str [s]
   (cond-> s
     (not (string? s)) (pr-str)))

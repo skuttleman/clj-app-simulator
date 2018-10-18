@@ -29,11 +29,13 @@
          (on-success body)
          (on-failure body))))))
 
-(defn update-simulator [form model->source id submittable?]
+(defn update-simulator [form model->source id]
   (fn [e]
     (let [current-model (forms/current-model form)]
       (dom/prevent-default e)
-      (when submittable?
+      (forms/verify! form)
+      (if (and (not (forms/errors form))
+                 (forms/changed? form))
         (do-request (->> current-model
                          (model->source)
                          (actions/update-simulator id)
@@ -41,7 +43,8 @@
                     (comp (fn [_]
                             (forms/reset! form current-model))
                           (toaster :success "The simulator has been updated"))
-                    (toaster :error "The simulator could not be updated"))))))
+                    (toaster :error "The simulator could not be updated"))
+        (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
 
 (defn clear-requests [type id]
   (fn [_]
@@ -74,11 +77,12 @@
             (toaster :success "The simulator has been reset"))
       (toaster :error "The simulator could not be reset"))))
 
-(defn create-simulator [form model->source submittable?]
+(defn create-simulator [form model->source]
   (fn [e]
     (let [current-model (forms/current-model form)]
       (dom/prevent-default e)
-      (when submittable?
+      (forms/verify! form)
+      (if (not (forms/errors form))
         (do-request (-> current-model
                         (model->source)
                         (actions/create-simulator)
@@ -88,7 +92,8 @@
                                    (assoc {} :id)
                                    (nav/nav-and-replace! :details))
                           (toaster :success "The simulator has been created"))
-                    (toaster :error "The simulator could not be created"))))))
+                    (toaster :error "The simulator could not be created"))
+        (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
 
 (defn show-delete-modal [id]
   (fn [_]

@@ -11,7 +11,7 @@
                   :value (get-in (forms/current-model form) path)
                   :to-view (get-in model->view path)
                   :to-model (get-in view->model path)
-                  :errors (get-in (forms/errors form) path))))
+                  :errors (get-in (forms/display-errors form) path))))
 
 (defn name-field [form model->view view->model]
   [fields/input

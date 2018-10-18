@@ -125,7 +125,7 @@
           changed-spy (spies/constantly true)
           update-spy (spies/constantly ::submit)
           reset-spy (spies/constantly ::reset)]
-      (with-redefs [#?@(:cljs [forms/errors errors-spy
+      (with-redefs [#?@(:cljs [forms/display-errors errors-spy
                                forms/changed? changed-spy
                                interactions/update-simulator update-spy
                                interactions/reset-simulator reset-spy])]
@@ -137,7 +137,7 @@
           #?(:cljs
              (testing "when there are no errors and the form has changes"
                (testing "handles on submit"
-                 (is (spies/called-with? update-spy ::form ::id true))
+                 (is (spies/called-with? update-spy ::form ::id))
                  (is (= ::submit (:on-submit (test.dom/attrs form))))
                  (is (-> form
                          (test.dom/query-one :.save-button)
@@ -151,7 +151,6 @@
           #?(:cljs
              (testing "form is not submittable"
                (let [root (ws.views/sim-edit-form* ::id ::form)]
-                 (is (spies/called-with? update-spy ::form ::id false))
                  (is (-> root
                          (test.dom/query-one :.save-button)
                          (test.dom/attrs)
@@ -163,7 +162,6 @@
           #?(:cljs
              (testing "form is not submittable"
                (let [root (ws.views/sim-edit-form* ::id ::form)]
-                 (is (spies/called-with? update-spy ::form ::id false))
                  (is (-> root
                          (test.dom/query-one :.save-button)
                          (test.dom/attrs)
@@ -308,14 +306,14 @@
           create-spy (spies/constantly ::submit)
           nav-spy (spies/constantly ::home)]
       (with-redefs [nav*/path-for nav-spy
-                    #?@(:cljs [forms/errors errors-spy
+                    #?@(:cljs [forms/display-errors errors-spy
                                interactions/create-simulator create-spy])]
         (let [root (ws.views/sim-create-form* ::form)
               form (test.dom/query-one root :.simulator-create)]
           #?(:cljs
              (testing "can submit the form"
                (is (spies/called-with? errors-spy ::form))
-               (is (spies/called-with? create-spy ::form true))
+               (is (spies/called-with? create-spy ::form))
                (is (-> form
                        (test.dom/attrs)
                        (:on-submit)
@@ -364,7 +362,6 @@
                 form (test.dom/query-one root :.simulator-create)]
             #?(:cljs
                (testing "disables the form"
-                 (is (spies/called-with? create-spy ::form false))
                  (is (-> form
                          (test.dom/query-one :.save-button)
                          (test.dom/attrs)

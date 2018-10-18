@@ -4,40 +4,55 @@
             [reagent.core :as r]
             [reagent.ratom :as ratom]))
 
-(defprotocol IForm
-  (initial-model [form])
-  (current-model [form])
-  (changed? [form])
-  (errors [form])
-  (reset! [form model])
-  (assoc-in [form path value])
-  (-update-in [form path f f-args]))
+(defn ^:private only-dirty [errors dirty-fields]
+  (reduce (fn [err path]
+            (if-some [value (get-in errors path)]
+              (clojure.core/assoc-in err path value)
+              err))
+          nil
+          dirty-fields))
 
 (defn create
   ([model]
    (create model nil))
   ([model validator]
-   (let [initial (r/atom model)
-         current (r/atom model)
-         errors (when validator (ratom/make-reaction #(validator @current)))]
-     (reify IForm
-       (initial-model [_]
-         @initial)
-       (current-model [_]
-         @current)
-       (changed? [_]
-         (not= @initial @current))
-       (errors [_]
-         (when errors @errors))
-       (reset! [_ model]
-         (clojure.core/reset! initial model)
-         (clojure.core/reset! current model))
-       (assoc-in [this path value]
-         (-update-in this path (constantly value) nil))
-       (-update-in [_ path f f-args]
-         (if (seq path)
-           (apply swap! current clojure.core/update-in path f f-args)
-           (apply clojure.core/swap! current f f-args)))))))
+   (let [current (r/atom model)]
+     {:initial (r/atom model)
+      :dirty-fields (r/atom #{})
+      :filter-dirty? (r/atom true)
+      :current current
+      :errors  (if validator
+                 (ratom/make-reaction #(validator @current))
+                 (delay nil))})))
 
-(defn update-in [form path f & f-args]
-  (-update-in form path f f-args))
+(defn initial-model [{:keys [initial]}]
+  @initial)
+
+(defn current-model [{:keys [current]}]
+  @current)
+
+(defn changed? [{:keys [current initial]}]
+  (not= @initial @current))
+
+(defn errors [{:keys [errors]}]
+  @errors)
+
+(defn display-errors [{:keys [dirty-fields filter-dirty?] :as form}]
+  (cond-> (errors form)
+    @filter-dirty? (only-dirty @dirty-fields)))
+
+(defn verify! [{:keys [filter-dirty?]}]
+  (clojure.core/reset! filter-dirty? false))
+
+(defn reset! [{:keys [current dirty-fields initial filter-dirty?]} model]
+  (clojure.core/reset! dirty-fields #{})
+  (clojure.core/reset! filter-dirty? true)
+  (clojure.core/reset! initial model)
+  (clojure.core/reset! current model))
+
+(defn update-in [{:keys [current dirty-fields]} path f & f-args]
+  (swap! dirty-fields conj path)
+  (apply swap! current clojure.core/update-in path f f-args))
+
+(defn assoc-in [form path value]
+  (update-in form path (constantly value)))
