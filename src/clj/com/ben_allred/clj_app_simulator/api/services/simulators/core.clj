@@ -63,7 +63,7 @@
 
 (defn reset-all! [env]
   (let [sims (simulator-configs env)]
-    (dorun (map common/reset sims))
+    (dorun (map common/reset! sims))
     (activity/publish env :simulators/reset-all (map common/details sims)))
   [:no-content])
 

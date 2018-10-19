@@ -71,7 +71,7 @@
           get-state-spy (spies/constantly ::state)
           uuid-spy (spies/constantly ::uuid)]
       (with-redefs [actions/find-socket-id find-socket-spy
-                    common/receive receive-spy
+                    common/receive! receive-spy
                     uuids/random uuid-spy]
         (testing "when the socket-id is found"
           (spies/reset! find-socket-spy receive-spy get-state-spy)
@@ -153,8 +153,10 @@
               (is (spies/called-with? dispatch ::action)))
 
             (testing "returns a simulator"
-              (is (satisfies? common/ISimulator sim))
-              (is (satisfies? common/IWSSimulator sim)))))
+              (doseq [protocol [common/IRun common/IIdentify common/IReceive
+                                common/IReset common/IRoute
+                                common/IPartiallyReset common/ICommunicate]]
+                (is (satisfies? protocol sim))))))
 
         (testing "when the config is invalid"
           (let [[sim _ _ dispatch] (simulator {})]
@@ -168,12 +170,12 @@
   (testing "(->WsSimulator.start)"
     (let [[sim] (simulator)]
       (testing "does not expload"
-        (common/start sim)))))
+        (common/start! sim)))))
 
 (deftest ^:unit ->WsSimulator.stop-test
   (testing "(->WsSimulator.stop)"
     (let [[sim _ _ dispatch] (simulator)]
-      (common/stop sim)
+      (common/stop! sim)
       (is (spies/called-with? dispatch actions/disconnect-all)))))
 
 (deftest ^:unit ->WsSimulator.receive-test
@@ -185,7 +187,7 @@
         (testing "receives messages"
           (let [[sim _ _ dispatch] (simulator)
                 request {::some ::things :socket-id ::socket-id}]
-            (common/receive sim request)
+            (common/receive! sim request)
             (is (spies/called-with? action-spy request))
             (is (spies/called-with? dispatch ::action))
             (is (spies/called-with? receive-spy ::env sim {:socket-id ::socket-id}))))))))
@@ -196,7 +198,7 @@
       (with-redefs [store/requests requests-spy]
         (testing "returns requests"
           (let [[sim _ _ _ get-state] (simulator)
-                result (common/requests sim)]
+                result (common/received sim)]
             (is (spies/called-with? get-state))
             (is (spies/called-with? requests-spy ::state))
             (is (= ::messages result))))))))
@@ -224,7 +226,7 @@
   (testing "(->WsSimulator.reset)"
     (testing "resets the simulator"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/reset sim)
+        (common/reset! sim)
         (is (spies/called-with? dispatch actions/disconnect-all))
         (is (spies/called-with? dispatch actions/reset))))))
 
@@ -245,14 +247,14 @@
           config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
       (with-redefs [actions/change change-spy]
         (testing "changes changeable config properties"
-          (common/change sim (assoc config :method ::method :path ::path))
+          (common/reset! sim (assoc config :method ::method :path ::path))
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))))))
 
 (deftest ^:unit ->WsSimulator.reset-messages-test
   (testing "(->WsSimulator.reset-messages)"
     (let [[sim _ _ dispatch] (simulator)]
-      (common/reset-messages sim)
+      (common/partially-reset! sim :messages)
       (is (spies/called-with? dispatch actions/reset-messages)))))
 
 (deftest ^:unit ->WsSimulator.connect-test
@@ -269,7 +271,7 @@
               request {::some ::details :websocket? true}
               store {:dispatch dispatch :get-state get-state}]
           (testing "when the request is for a websocket"
-            (let [result (common/connect sim request)
+            (let [result (common/connect! sim request)
                   [_ {:keys [on-open on-message on-close]}] (first (spies/calls channel-spy))]
               (testing "builds the channel"
                 (is (spies/called-with? channel-spy request (spies/matcher map?))))
@@ -291,7 +293,7 @@
 
           (testing "when the request is not for a websocket"
             (spies/reset! channel-spy)
-            (let [result (common/connect sim (assoc request :websocket? false))]
+            (let [result (common/connect! sim (assoc request :websocket? false))]
               (testing "does not build a channel"
                 (is (spies/never-called? channel-spy)))
 
@@ -302,7 +304,7 @@
   (testing "(->WsSimulator.disconnect)"
     (testing "when called without a socket-id"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/disconnect sim)
+        (common/disconnect! sim)
         (testing "disconnects all sockets"
           (is (spies/called-with? dispatch actions/disconnect-all)))))
 
@@ -310,7 +312,7 @@
       (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/disconnect action-spy]
           (let [[sim _ _ dispatch] (simulator)]
-            (common/disconnect sim ::socket-id)
+            (common/disconnect! sim ::socket-id)
             (testing "disconnects a specific socket"
               (is (spies/called-with? action-spy ::socket-id))
               (is (spies/called-with? dispatch ::action)))))))))
@@ -321,7 +323,7 @@
       (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/send-all action-spy]
           (let [[sim _ _ dispatch] (simulator)]
-            (common/send sim ::message)
+            (common/send! sim ::message)
             (testing "sends a specific socket"
               (is (spies/called-with? action-spy ::message))
               (is (spies/called-with? dispatch ::action)))))))
@@ -330,7 +332,7 @@
       (let [action-spy (spies/constantly ::action)]
         (with-redefs [actions/send-one action-spy]
           (let [[sim _ _ dispatch] (simulator)]
-            (common/send sim ::socket-id ::message)
+            (common/send! sim ::socket-id ::message)
             (testing "sends a specific socket"
               (is (spies/called-with? action-spy ::socket-id ::message))
               (is (spies/called-with? dispatch ::action)))))))))

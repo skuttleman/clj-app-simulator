@@ -11,7 +11,6 @@
             [com.ben-allred.clj-app-simulator.services.env :as env]
             [com.ben-allred.clj-app-simulator.utils.colls :as colls]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [immutant.web :as web]
@@ -71,9 +70,6 @@
 
 (def ^:private app
   (-> #'base
-      #_((fn [app]
-         (fn [request]
-           (log/spy (app request)))))
       (site {:multipart {:store (temp-file/temp-file-store {:expires-in nil})}})
       (middleware/content-type)
       (middleware/log-response)))

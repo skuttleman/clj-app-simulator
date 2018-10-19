@@ -30,8 +30,9 @@
 
       (testing "returns a simulator"
         (let [[sim] (simulator)]
-          (is (satisfies? common/ISimulator sim))
-          (is (satisfies? common/IHTTPSimulator sim)))))
+          (doseq [protocol [common/IIdentify common/IReceive common/IReset
+                            common/IRoute common/IPartiallyReset]]
+           (is (satisfies? protocol sim))))))
 
     (testing "when config is invalid"
       (testing "returns nil"
@@ -47,12 +48,12 @@
 (deftest ^:unit ->HttpSimulator.start-test
   (testing "(->HttpSimulator.start)"
     (testing "does not explode"
-      (common/start (first (simulator))))))
+      (common/start! (first (simulator))))))
 
 (deftest ^:unit ->HttpSimulator.stop-test
   (testing "(->HttpSimulator.stop)"
     (testing "does not explode"
-      (common/stop (first (simulator))))))
+      (common/stop! (first (simulator))))))
 
 (deftest ^:unit ->HttpSimulator.receive-test
   (testing "(->HttpSimulator.receive)"
@@ -65,7 +66,7 @@
                     store/delay delay-spy
                     http.sim/sleep sleep-spy
                     store/response response-spy]
-        (let [result (common/receive sim ::request)]
+        (let [result (common/receive! sim ::request)]
           (is (spies/called? get-state))
           (testing "receives the request"
             (is (spies/called-with? receive-spy ::request))
@@ -81,7 +82,7 @@
           (testing "does not sleep"
             (spies/respond-with! delay-spy (constantly ::delay))
             (spies/reset! sleep-spy)
-            (common/receive sim ::request)
+            (common/receive! sim ::request)
             (is (spies/never-called? sleep-spy))))))))
 
 (deftest ^:unit ->HttpSimulator.requests-test
@@ -90,7 +91,7 @@
       (let [[sim _ _ _ get-state] (simulator)
             requests-spy (spies/constantly ::requests)]
         (with-redefs [store/requests requests-spy]
-          (let [result (common/requests sim)]
+          (let [result (common/received sim)]
             (is (spies/called? get-state))
             (is (spies/called-with? requests-spy ::state))
             (is (= ::requests result))))))))
@@ -120,7 +121,7 @@
   (testing "(->HttpSimulator.reset)"
     (testing "resets simulator"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/reset sim)
+        (common/reset! sim)
         (is (spies/called-with? dispatch actions/reset))))))
 
 (deftest ^:unit ->HttpSimulator.routes-test
@@ -137,14 +138,14 @@
   (testing "(->HttpSimulator.reset-requests)"
     (testing "resets simulator's requests"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/reset-requests sim)
+        (common/partially-reset! sim :requests)
         (is (spies/called-with? dispatch actions/reset-requests))))))
 
 (deftest ^:unit ->HttpSimulator.reset-response-test
   (testing "(->HttpSimulator.reset-response)"
     (testing "resets simulator's response"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/reset-response sim)
+        (common/partially-reset! sim :response)
         (is (spies/called-with? dispatch actions/reset-response))))))
 
 (deftest ^:unit ->HttpSimulator.change-test
@@ -154,15 +155,15 @@
           config {:delay 100 :response {:body "{\"some\":\"json\"}"} :extra ::junk}]
       (with-redefs [actions/change change-spy]
         (testing "changes changeable config properties"
-          (common/change sim (assoc config :method ::method :path ::path))
+          (common/reset! sim (assoc config :method ::method :path ::path))
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))
         (testing "when config is bad"
           (with-redefs [http.sim/why-not-update? (spies/constantly ::reasons)]
             (testing "throws exception"
-              (is (thrown? Throwable (common/change sim ::bad-config))))
+              (is (thrown? Throwable (common/reset! sim ::bad-config))))
             (testing "explains spec errors"
               (try
-                (common/change sim ::bad-config)
+                (common/reset! sim ::bad-config)
                 (catch Throwable ex
                   (is (= ::reasons (:problems (ex-data ex)))))))))))))

@@ -1,11 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.api.services.resources.core
   (:refer-clojure :exclude [get])
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
+  (:require [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+            [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [clojure.set :as set]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity])
-  (:import (java.io File)
-           (java.util Date)))
+            [clojure.set :as set])
+  (:import (java.util Date)))
 
 (defonce ^:private uploads (atom {}))
 
@@ -19,10 +19,7 @@
                   (set/rename-keys {:tempfile :file})
                   (assoc :timestamp (Date.)))
         result (file->data [id file'])]
-    (swap! uploads update-in [env id] (fn [old-file?]
-                                        (when old-file?
-                                          (.delete ^File (:file old-file?)))
-                                        file'))
+    (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
     result))
 
 (defn upload!
@@ -37,15 +34,17 @@
      result)))
 
 (defn clear! [env]
-  (doseq [[_ {:keys [file]}] (clojure.core/get @uploads env)]
-    (.delete ^File file))
+  (->> (clojure.core/get @uploads env)
+       (vals)
+       (map (comp streams/delete :file))
+       (dorun))
   (swap! uploads dissoc env)
   (activity/publish env :resources/clear nil))
 
 (defn remove! [env id]
   (let [id (uuids/->uuid id)]
     (when-let [resource (get-in @uploads [env id])]
-      (.delete ^File (:file resource))
+      (streams/delete (:file resource))
       (swap! uploads update env dissoc id)
       (activity/publish env :resources/remove (file->data [id resource])))))
 

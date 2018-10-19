@@ -6,4 +6,8 @@
 
 (defn open-input-stream [file]
   (when (instance? File file)
-    (FileUtils/openInputStream file)))
+    (FileUtils/openInputStream ^File file)))
+
+(defn delete [file]
+  (when (instance? File file)
+    (.delete ^File file)))

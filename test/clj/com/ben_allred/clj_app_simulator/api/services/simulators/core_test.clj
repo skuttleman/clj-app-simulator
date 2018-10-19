@@ -229,7 +229,7 @@
           publish-spy (spies/create)
           details-spy (spies/create (partial conj [::details]))]
       (with-redefs [sims/simulators simulators-spy
-                    common/reset reset-spy
+                    common/reset! reset-spy
                     activity/publish publish-spy
                     common/details details-spy]
         (let [result (simulators/reset-all! ::env)]

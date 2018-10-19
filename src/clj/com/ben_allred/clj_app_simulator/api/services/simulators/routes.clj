@@ -17,7 +17,7 @@
   (activity/publish env
                     :simulators/receive
                     (merge {:simulator (select-keys (common/details simulator) #{:id :config})
-                            :request   (peek (common/requests simulator))}
+                            :request   (peek (common/received simulator))}
                            request)))
 
 (defn http-sim-route [env simulator]
@@ -25,13 +25,13 @@
     (let [response (->> (update request :body #(if (instance? InputStream %)
                                                  (strings/trim-to-nil (slurp %))
                                                  %))
-                        (common/receive simulator))]
+                        (common/receive! simulator))]
       (receive env simulator {})
       response)))
 
 (defn ws-sim-route [simulator]
   (fn [request]
-    (common/connect simulator request)))
+    (common/connect! simulator request)))
 
 (defn get-sim [simulator]
   (fn [_]
@@ -49,10 +49,10 @@
   (fn [{{:keys [action config]} :body}]
     (try (let [action (keyword action)]
            (case action
-             :simulators/reset (common/reset simulator)
-             :simulators/change (common/change simulator config)
-             :simulators.http/reset-requests (common/reset-requests simulator)
-             :simulators.http/reset-response (common/reset-response simulator)
+             :simulators/reset (common/reset! simulator)
+             :simulators/change (common/reset! simulator config)
+             :simulators.http/reset-requests (common/partially-reset! simulator :requests)
+             :simulators.http/reset-response (common/partially-reset! simulator :response)
              nil)
            (let [details (common/details simulator)]
              (when (#{:simulators/reset :simulators/change :simulators.http/reset-requests :simulators.http/reset-response} action)
@@ -66,11 +66,11 @@
     (let [action (keyword action)
           socket-id (uuids/->uuid socket-id)]
       (case action
-        :simulators/reset (common/reset simulator)
-        :simulators/change (common/change simulator config)
-        :simulators.ws/reset-messages (common/reset-messages simulator)
-        :simulators.ws/disconnect-all (common/disconnect simulator)
-        :simulators.ws/disconnect (common/disconnect simulator socket-id)
+        :simulators/reset (common/reset! simulator)
+        :simulators/change (common/reset! simulator config)
+        :simulators.ws/reset-messages (common/partially-reset! simulator :messages)
+        :simulators.ws/disconnect-all (common/disconnect! simulator)
+        :simulators.ws/disconnect (common/disconnect! simulator socket-id)
         nil)
       (let [details (cond-> (common/details simulator)
                       socket-id (assoc :socket-id socket-id))]
@@ -83,13 +83,13 @@
     (let [body (if (instance? InputStream body) (slurp body) (str body))
           socket-id (:socket-id params)]
       (if socket-id
-        (common/send simulator (uuids/->uuid socket-id) body)
-        (common/send simulator body))
+        (common/send! simulator (uuids/->uuid socket-id) body)
+        (common/send! simulator body))
       [:no-content])))
 
 (defn disconnect-ws [simulator]
   (fn [_]
-    (common/disconnect simulator)
+    (common/disconnect! simulator)
     [:no-content]))
 
 (defn http-routes [env simulator]

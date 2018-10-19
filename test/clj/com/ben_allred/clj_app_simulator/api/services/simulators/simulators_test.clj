@@ -13,7 +13,7 @@
                       ::another-env {[::method-3 ::path-3] ::sim-5}})
           stop-spy (spies/create)]
       (with-redefs [sims/sims sims
-                    common/stop stop-spy]
+                    common/stop! stop-spy]
         (sims/clear! ::env)
         (testing "stops all simulators"
           (is (spies/called-with? stop-spy ::sim-1))
@@ -35,7 +35,7 @@
           start-spy (spies/create)
           identifier-spy (spies/constantly ::key)]
       (with-redefs [sims/sims sims
-                    common/start start-spy
+                    common/start! start-spy
                     common/identifier identifier-spy]
         (testing "when the simulator does not exist"
           (let [result (sims/add! ::env ::simulator)]
@@ -70,7 +70,7 @@
                              [::method ::path-2] ::sim-2}})
           stop-spy (spies/create)]
       (with-redefs [sims/sims sims
-                    common/stop stop-spy]
+                    common/stop! stop-spy]
         (sims/remove! ::env [::method ::path-2])
         (testing "when the simulator exists"
           (testing "stops the simulator"

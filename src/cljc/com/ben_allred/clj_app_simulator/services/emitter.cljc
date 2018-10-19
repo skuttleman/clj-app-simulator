@@ -3,7 +3,6 @@
                        [clojure.core.async.impl.protocols :as impl]]
                 :cljs [[cljs.core.async :as async :include-macros true]
                        [cljs.core.async.impl.protocols :as impl]])
-                       [com.ben-allred.clj-app-simulator.utils.maps :as maps]
                        [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defprotocol IEmitter

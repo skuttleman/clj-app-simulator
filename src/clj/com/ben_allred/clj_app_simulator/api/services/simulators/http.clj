@@ -56,35 +56,39 @@
           id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
       (reify
-        common/ISimulator
-        (start [_])
-        (stop [_])
-        (receive [_ request]
+        common/IReceive
+        (receive! [_ request]
           (dispatch (actions/receive request))
           (let [state (get-state)
                 delay (store/delay state)]
             (when (pos-int? delay)
               (sleep delay))
             (store/response state)))
-        (requests [_]
+        (received [_]
           (store/requests (get-state)))
+
+        common/IIdentify
         (details [_]
           (-> (get-state)
               (store/details)
               (assoc :id id)))
         (identifier [_]
           [(keyword (name method)) id-path])
-        (reset [_]
+
+        common/IReset
+        (reset! [_]
           (dispatch actions/reset))
-        (routes [this]
-          (routes.sim/http-sim->routes env this))
-        (change [_ config]
+        (reset! [_ config]
           (if-let [config (conform-to :http.partial/http-simulator config)]
             (dispatch (actions/change (dissoc config :method :path)))
             (throw (ex-info "config does not conform to spec" {:problems (why-not-update? config)}))))
 
-        common/IHTTPSimulator
-        (reset-requests [_]
-          (dispatch actions/reset-requests))
-        (reset-response [_]
-          (dispatch actions/reset-response))))))
+        common/IRoute
+        (routes [this]
+          (routes.sim/http-sim->routes env this))
+
+        common/IPartiallyReset
+        (partially-reset! [_ type]
+          (case type
+            :requests (dispatch actions/reset-requests)
+            :response (dispatch actions/reset-response)))))))

@@ -38,12 +38,12 @@
   (let [{:keys [get-state]} store
         {:keys [query-params route-params headers]} request]
     (when-let [socket-id (actions/find-socket-id (get-state) ws)]
-      (common/receive simulator {:headers      headers
-                                 :query-params query-params
-                                 :route-params route-params
-                                 :socket-id    socket-id
-                                 :message-id   (uuids/random)
-                                 :body         message}))))
+      (common/receive! simulator {:headers      headers
+                                  :query-params query-params
+                                  :route-params route-params
+                                  :socket-id    socket-id
+                                  :message-id   (uuids/random)
+                                  :body         message}))))
 
 (defn on-close [env simulator _ store ws _]
   (let [{:keys [dispatch get-state]} store]
@@ -58,44 +58,56 @@
           id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
       (reify
-        common/ISimulator
-        (start [_])
-        (stop [_]
+        common/IRun
+        (start! [_]
+          nil)
+        (stop! [_]
           (dispatch actions/disconnect-all))
-        (receive [this request]
+
+        common/IReceive
+        (receive! [this request]
           (dispatch (actions/receive request))
           (routes.sim/receive env this (select-keys request #{:socket-id})))
-        (requests [_]
+        (received [_]
           (store/requests (get-state)))
+
+        common/IIdentify
         (details [_]
           (-> (get-state)
               (store/details)
               (assoc :id id)))
         (identifier [_]
           [method id-path])
-        (reset [_]
+
+        common/IReset
+        (reset! [_]
           (dispatch actions/disconnect-all)
           (dispatch actions/reset))
-        (routes [this]
-          (routes.sim/ws-sim->routes env this))
-        (change [_ config]
+        (reset! [_ config]
           (dispatch (actions/change (dissoc config :path :method))))
 
-        common/IWSSimulator
-        (reset-messages [this]
-          (dispatch actions/reset-messages))
-        (connect [this {:keys [websocket?] :as request}]
+        common/IRoute
+        (routes [this]
+          (routes.sim/ws-sim->routes env this))
+
+        common/IPartiallyReset
+        (partially-reset! [_ type]
+          (case type
+            :messages (dispatch actions/reset-messages)))
+
+        common/ICommunicate
+        (connect! [this {:keys [websocket?] :as request}]
           (when websocket?
             (web.async/as-channel
               request
               {:on-open    (partial on-open env this request store)
                :on-message (partial on-message this request store)
                :on-close   (partial on-close env this request store)})))
-        (disconnect [_]
+        (disconnect! [_]
           (dispatch actions/disconnect-all))
-        (disconnect [_ socket-id]
+        (disconnect! [_ socket-id]
           (dispatch (actions/disconnect socket-id)))
-        (send [_ message]
+        (send! [_ message]
           (dispatch (actions/send-all message)))
-        (send [_ socket-id message]
+        (send! [_ socket-id message]
           (dispatch (actions/send-one socket-id message)))))))

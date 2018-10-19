@@ -3,7 +3,8 @@
             [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
             [test.utils.spies :as spies]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids])
+            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+            [com.ben-allred.clj-app-simulator.api.services.streams :as streams])
   (:import (java.util Date)))
 
 (deftest ^:unit upload!-test
@@ -55,10 +56,12 @@
                                        :file         ::file-1
                                        :content-type ::content-type-1
                                        :timestamp    123}}})
-            publish-spy (spies/create)]
+            publish-spy (spies/create)
+            delete-spy (spies/create)]
         (with-redefs [resources/uploads uploads
                       activity/publish publish-spy
-                      uuids/->uuid identity]
+                      uuids/->uuid identity
+                      streams/delete delete-spy]
           (let [result (resources/upload! ::env 111 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3})
                 [_ event data] (first (spies/calls publish-spy))
                 state (::env @uploads)]
@@ -72,6 +75,9 @@
             (testing "has file-3"
               (is (= ::file-3 (get-in state [111 :file]))))
 
+            (testing "deletes the existing file"
+              (is (spies/called-with? delete-spy ::file-1)))
+
             (testing "returns added file"
               (is (= (dissoc result :timestamp)
                      {:filename ::filename-3 :content-type ::content-type-3 :id 111})))))))))
@@ -80,21 +86,30 @@
   (testing "(clear!)"
     (let [uploads (atom {::env {111 {:filename     ::file-3
                                      :content-type ::content-type
-                                     :timestamp    789}
+                                     :timestamp    789
+                                     :file ::file-111}
                                 222 {:filename     ::file-1
                                      :content-type ::content-type
-                                     :timestamp    123}
+                                     :timestamp    123
+                                     :file ::file-222}
                                 333 {:filename     ::file-2
                                      :content-type ::content-type
-                                     :timestamp    456}}
+                                     :timestamp    456
+                                     :file ::file-333}}
                          ::other-env {444 {}}})
-          publish-spy (spies/create)]
+          publish-spy (spies/create)
+          delete-spy (spies/create)]
       (with-redefs [resources/uploads uploads
-                    activity/publish publish-spy]
+                    activity/publish publish-spy
+                    streams/delete delete-spy]
         (resources/clear! ::env)
         (testing "clears uploads"
           (is (empty? (::env @uploads)))
-          (is (seq (::other-env @uploads))))
+          (is (seq (::other-env @uploads)))
+          (is (spies/called-times? delete-spy 3))
+          (is (spies/called-with? delete-spy ::file-111))
+          (is (spies/called-with? delete-spy ::file-222))
+          (is (spies/called-with? delete-spy ::file-333)))
 
         (testing "publishes an event"
           (is (spies/called-with? publish-spy ::env :resources/clear nil)))))))
@@ -103,24 +118,27 @@
   (testing "(remove!)"
     (let [upload-data {::env {111 {:filename     ::file-3
                                    :content-type ::content-type
-                                   :file         ::file
+                                   :file         ::file-111
                                    :timestamp    789}
                               222 {:filename     ::file-1
                                    :content-type ::content-type
-                                   :file         ::file
+                                   :file         ::file-222
                                    :timestamp    123}
                               333 {:filename     ::file-2
                                    :content-type ::content-type
-                                   :file         ::file
+                                   :file         ::file-333
                                    :timestamp    456}}}
           uploads (atom upload-data)
-          publish-spy (spies/create)]
+          publish-spy (spies/create)
+          delete-spy (spies/create)]
       (with-redefs [uuids/->uuid identity
                     resources/uploads uploads
-                    activity/publish publish-spy]
+                    activity/publish publish-spy
+                    streams/delete delete-spy]
         (resources/remove! ::env 222)
         (testing "clears uploads"
-          (is (= (update upload-data ::env dissoc 222) @uploads)))
+          (is (= (update upload-data ::env dissoc 222) @uploads))
+          (is (spies/called-with? delete-spy ::file-222)))
 
         (testing "publishes an event"
           (let [[_ event data] (first (spies/calls publish-spy))]

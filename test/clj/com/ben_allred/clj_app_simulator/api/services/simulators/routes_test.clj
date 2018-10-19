@@ -31,7 +31,7 @@
           request-spy (spies/constantly [::request-1 ::request-2])]
       (with-redefs [activity/publish publish-spy
                     common/details details-spy
-                    common/requests request-spy]
+                    common/received request-spy]
         (testing "publishes an event"
           (routes.sim/receive ::env ::simulator {::extra ::things})
           (is (spies/called-with? details-spy ::simulator))
@@ -48,7 +48,7 @@
     (let [receive-spy (spies/constantly ::response)
           publish-spy (spies/create)
           receive-publish-spy (spies/create)]
-      (with-redefs [common/receive receive-spy
+      (with-redefs [common/receive! receive-spy
                     activity/publish publish-spy
                     routes.sim/receive receive-publish-spy]
         (let [sim (routes.sim/http-sim-route ::env ::simulator)]
@@ -83,7 +83,7 @@
 (deftest ^:unit ws-sim-route-test
   (testing "(ws-sim-route)"
     (let [connect-spy (spies/constantly ::socket-upgrade)]
-      (with-redefs [common/connect connect-spy]
+      (with-redefs [common/connect! connect-spy]
         (let [result ((routes.sim/ws-sim-route ::simulator) ::request)]
           (testing "connects the socket request"
             (is (spies/called-with? connect-spy ::simulator ::request)))
@@ -129,10 +129,14 @@
   (testing "(patch-sim)"
     (let [[reset-spy reset-requests-spy reset-response-spy change-spy publish-spy] (repeatedly spies/create)
           details-spy (spies/constantly ::details)]
-      (with-redefs [common/reset reset-spy
-                    common/reset-requests reset-requests-spy
-                    common/reset-response reset-response-spy
-                    common/change change-spy
+      (with-redefs [common/reset! (fn [& args]
+                                    (if (= 1 (count args))
+                                      (apply reset-spy args)
+                                      (apply change-spy args)))
+                    common/partially-reset! (fn [sim type]
+                                              (case type
+                                                :response (reset-response-spy sim)
+                                                :requests (reset-requests-spy sim)))
                     common/details details-spy
                     activity/publish publish-spy]
         (let [handler (routes.sim/patch-sim ::env ::simulator)]
@@ -225,10 +229,12 @@
           disconnect-spy (spies/create)
           details-spy (spies/constantly {::some ::details})
           publish-spy (spies/create)]
-      (with-redefs [common/reset reset-spy
-                    common/reset-messages reset-messages-spy
-                    common/change change-spy
-                    common/disconnect disconnect-spy
+      (with-redefs [common/reset! (fn [& args]
+                                    (if (= 1 (count args))
+                                      (apply reset-spy args)
+                                      (apply change-spy args)))
+                    common/partially-reset! reset-messages-spy
+                    common/disconnect! disconnect-spy
                     common/details details-spy
                     activity/publish publish-spy]
         (let [handler (routes.sim/patch-ws ::env ::simulator)]
@@ -266,7 +272,7 @@
             (spies/reset! reset-messages-spy details-spy publish-spy)
             (let [result (handler {:body {:action :simulators.ws/reset-messages}})]
               (testing "takes the requested action"
-                (is (spies/called-with? reset-messages-spy ::simulator)))
+                (is (spies/called-with? reset-messages-spy ::simulator :messages)))
 
               (testing "gets the details"
                 (is (spies/called-with? details-spy ::simulator)))
@@ -331,7 +337,7 @@
 (deftest ^:unit send-ws-test
   (testing "(send-ws)"
     (let [send-spy (spies/create)]
-      (with-redefs [common/send send-spy]
+      (with-redefs [common/send! send-spy]
         (let [handler (routes.sim/send-ws ::simulator)
               socket-id (uuids/random)
               request {:body "some-message"}
@@ -366,7 +372,7 @@
 (deftest ^:unit disconnect-ws-test
   (testing "(disconnect-ws)"
     (let [disconnect-spy (spies/create)]
-      (with-redefs [common/disconnect disconnect-spy]
+      (with-redefs [common/disconnect! disconnect-spy]
         (let [handler (routes.sim/disconnect-ws ::simulator)
               result (handler {})]
           (testing "disconnects the sockets"
