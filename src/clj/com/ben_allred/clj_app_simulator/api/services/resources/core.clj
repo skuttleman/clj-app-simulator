@@ -4,7 +4,8 @@
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
             [clojure.set :as set]
             [com.ben-allred.clj-app-simulator.api.services.activity :as activity])
-  (:import (java.util Date)))
+  (:import (java.io File)
+           (java.util Date)))
 
 (defonce ^:private uploads (atom {}))
 
@@ -18,7 +19,10 @@
                   (set/rename-keys {:tempfile :file})
                   (assoc :timestamp (Date.)))
         result (file->data [id file'])]
-    (swap! uploads assoc-in [env id] file')
+    (swap! uploads update-in [env id] (fn [old-file?]
+                                        (when old-file?
+                                          (.delete ^File (:file old-file?)))
+                                        file'))
     result))
 
 (defn upload!
@@ -33,12 +37,15 @@
      result)))
 
 (defn clear! [env]
+  (doseq [[_ {:keys [file]}] (clojure.core/get @uploads env)]
+    (.delete ^File file))
   (swap! uploads dissoc env)
   (activity/publish env :resources/clear nil))
 
 (defn remove! [env id]
   (let [id (uuids/->uuid id)]
     (when-let [resource (get-in @uploads [env id])]
+      (.delete ^File (:file resource))
       (swap! uploads update env dissoc id)
       (activity/publish env :resources/remove (file->data [id resource])))))
 

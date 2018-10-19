@@ -15,6 +15,7 @@
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [immutant.web :as web]
+            [ring.middleware.multipart-params.temp-file :as temp-file]
             [ring.middleware.reload :refer [wrap-reload]])
   (:import (clojure.lang IPersistentVector)))
 
@@ -70,7 +71,10 @@
 
 (def ^:private app
   (-> #'base
-      (site)
+      #_((fn [app]
+         (fn [request]
+           (log/spy (app request)))))
+      (site {:multipart {:store (temp-file/temp-file-store {:expires-in nil})}})
       (middleware/content-type)
       (middleware/log-response)))
 
@@ -80,7 +84,11 @@
 
 (defn ^:private run [app env]
   (let [port (server-port env :port 3000)
-        server (web/run app {:port port})]
+        server (web/run app {:port port})
+        runtime (Runtime/getRuntime)]
+    (->> ^Runnable (fn [] (resources/clear! env))
+         (Thread.)
+         (.addShutdownHook runtime))
     (println "Server is listening on port" port)
     server))
 
