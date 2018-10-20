@@ -69,9 +69,9 @@
              (reducers/simulators {:data {123 ::data}} [:simulators.fetch-all/fail ::reason]))))
 
     (testing "handles :simulators.activity/receive"
-      (is (= {:status :available :data {999 {:id 999 :requests [123 456] :other ::stuff}}}
-             (reducers/simulators {:data {999 {:id 999 :other ::stuff :requests [123]}}}
-                                  [:simulators.activity/receive {:simulator {:id 999} :request 456}]))))
+      (is (= {:status :available :data {999 {:id 999 :requests [{:id 123} {:id 456 :message-id ::message-id}] :other ::stuff}}}
+             (reducers/simulators {:data {999 {:id 999 :other ::stuff :requests [{:id 123}]}}}
+                                  [:simulators.activity/receive {:simulator {:id 999} :request {:id 456} :message-id ::message-id}]))))
 
     (testing "handles :simulators.activity/add"
       (is (= {:status :available :data {123 ::simulator 456 {:id 456 ::other ::stuff}}}

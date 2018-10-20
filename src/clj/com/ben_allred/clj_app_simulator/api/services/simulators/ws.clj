@@ -68,7 +68,7 @@
         common/IReceive
         (receive! [this request]
           (dispatch (actions/receive request))
-          (routes.sim/receive env this (select-keys request #{:socket-id})))
+          (routes.sim/receive env this (select-keys request #{:socket-id :message-id})))
         (received [_]
           (store/requests (get-state)))
 

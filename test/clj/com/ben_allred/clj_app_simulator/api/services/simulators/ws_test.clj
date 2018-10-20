@@ -187,11 +187,11 @@
                     routes.sim/receive receive-spy]
         (testing "receives messages"
           (let [[sim _ _ dispatch] (simulator)
-                request {::some ::things :socket-id ::socket-id}]
+                request {::some ::things :socket-id ::socket-id :message-id ::message-id}]
             (common/receive! sim request)
             (is (spies/called-with? action-spy request))
             (is (spies/called-with? dispatch ::action))
-            (is (spies/called-with? receive-spy ::env sim {:socket-id ::socket-id}))))))))
+            (is (spies/called-with? receive-spy ::env sim {:socket-id ::socket-id :message-id ::message-id}))))))))
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"

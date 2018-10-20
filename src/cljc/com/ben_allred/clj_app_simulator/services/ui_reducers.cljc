@@ -48,9 +48,9 @@
     (comp :id :simulator second)
     (fn
       ([] nil)
-      ([state [type {:keys [simulator request]}]]
+      ([state [type {:keys [simulator request message-id]}]]
        (case type
-         :simulators.activity/receive (update state :requests (fnil conj []) request)
+         :simulators.activity/receive (update state :requests (fnil conj []) (assoc request :message-id message-id))
          :simulators.activity/reset-requests (assoc state :requests [])
          :simulators.activity/change (assoc state :config (:config simulator))
          :simulators.activity/reset (assoc state :config (:config simulator))

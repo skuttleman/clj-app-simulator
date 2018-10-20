@@ -12,7 +12,7 @@
 
 (defn ^:private clean [request]
   (-> request
-      (select-keys [:body :query-params :route-params :headers :socket-id])
+      (select-keys [:body :query-params :route-params :headers :socket-id :message-id])
       (update :headers (partial maps/map-keys keyword))
       (update :query-params (partial maps/map-keys keyword))
       (prepare)
