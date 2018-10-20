@@ -133,7 +133,7 @@
                     nav/navigate! nav-spy]
         (testing "when making the request"
           (spies/reset! action-spy dispatch-spy hide-spy)
-          ((shared.interactions/delete-sim ::id hide-spy) ::event)
+          (((shared.interactions/delete-sim ::id) hide-spy) ::event)
           (let [[request on-success] (first (spies/calls request-spy))]
             (testing "deletes the simulator"
               (is (spies/called-with? action-spy ::id))
@@ -228,15 +228,16 @@
   (testing "(show-delete-modal)"
     (let [action-spy (spies/constantly ::action)
           delete-spy (spies/constantly ::delete)
+          delete-handler (spies/constantly delete-spy)
           dispatch-spy (spies/create)]
       (with-redefs [actions/show-modal action-spy
-                    shared.interactions/delete-sim delete-spy
+                    shared.interactions/delete-sim delete-handler
                     store/dispatch dispatch-spy]
         (testing "when taking the action"
           ((shared.interactions/show-delete-modal ::id) ::event)
           (testing "shows a modal"
             (is (spies/called-with? action-spy
-                                    [modals/confirm-delete "this simulator"]
+                                    [:modals/confirm-delete "this simulator"]
                                     "Delete Simulator"
                                     (spies/matcher vector?)
                                     (spies/matcher vector?)))
@@ -254,8 +255,9 @@
 
             (testing "gives the modal a button which deletes the simulator"
               (let [f (:on-click (test.dom/attrs delete-btn))]
+                (is (spies/called-with? delete-handler ::id))
                 (f ::hide)
-                (is (spies/called-with? delete-spy ::id ::hide))))))))))
+                (is (spies/called-with? delete-spy ::hide))))))))))
 
 (deftest ^:unit show-request-modal-test
   (testing "(show-request-modal)"
@@ -267,7 +269,7 @@
           ((shared.interactions/show-request-modal ::sim {::some ::request :timestamp ::dt}) ::event)
           (testing "dispatches an action"
             (is (spies/called-with? action-spy
-                                    [modals/request-modal ::sim {::some ::request :timestamp ::dt}]
+                                    [:modals/request-modal ::sim {::some ::request :timestamp ::dt}]
                                     "Request Details"))
             (is (spies/called-with? dispatch-spy ::action))))))))
 

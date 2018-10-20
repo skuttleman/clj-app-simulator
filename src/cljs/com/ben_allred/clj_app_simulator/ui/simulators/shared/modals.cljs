@@ -3,7 +3,9 @@
     [clojure.string :as string]
     [com.ben-allred.clj-app-simulator.utils.dates :as dates]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
-    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]))
 
 (defn sim-iterate
   ([label m class]
@@ -47,3 +49,9 @@
 (defn confirm-delete [msg]
   [:div.confirm
    [:p "Are you sure you want to delete " msg "?"]])
+
+(defn message-editor [form model->view view->model]
+  [:div.send-ws-message
+   [fields/textarea
+    (-> {:label "Message"}
+        (shared.views/with-attrs form [:message] model->view view->model))]])

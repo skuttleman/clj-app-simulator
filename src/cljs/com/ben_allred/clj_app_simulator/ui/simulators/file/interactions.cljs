@@ -27,7 +27,7 @@
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/confirm-delete msg]
+        [:modals/confirm-delete msg]
         title
         [:button.button.is-danger.delete-button
          {:on-click (delete-file action)}

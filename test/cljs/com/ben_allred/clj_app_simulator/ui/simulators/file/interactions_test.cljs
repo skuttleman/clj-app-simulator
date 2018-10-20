@@ -54,7 +54,7 @@
             (is (spies/called-with? dispatch-spy ::action)))
 
           (testing "has a modal"
-            (is (= modal [modals/confirm-delete ::msg])))
+            (is (= modal [:modals/confirm-delete ::msg])))
 
           (testing "has a title"
             (is (= title ::title)))

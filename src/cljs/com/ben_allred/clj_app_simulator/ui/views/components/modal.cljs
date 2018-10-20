@@ -5,7 +5,14 @@
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
     [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
     [com.ben-allred.clj-app-simulator.utils.colls :as colls]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]))
+
+(def ^:private id->component
+  {:modals/confirm-delete modals/confirm-delete
+   :modals/request-modal modals/request-modal
+   :modals/message-editor modals/message-editor
+   :modals/socket-modal modals/socket-modal})
 
 (defn ^:private hide-modal []
   (store/dispatch actions/hide-modal))
@@ -17,12 +24,6 @@
                        [{} args])]
     (into [tag (update attrs :on-click #(if % (% hide-modal) hide-modal))]
           args)))
-
-(defn ^:private card-footer [actions]
-  (into [:div.card-footer]
-        (comp (map wrap-attrs)
-              (map (colls/onto [:div.card-footer-item])))
-        actions))
 
 (defn modal [{:keys [state content title actions]}]
   (when (not= :unmounted state)
@@ -38,9 +39,11 @@
          [:div.card-header
           [:div.card-header-title title]])
        [:div.card-content
-        content]
-       (some->> actions
-                (seq)
-                (card-footer))]]
+        (update content 0 id->component)]
+       (when (seq actions)
+         (into [:div.card-footer]
+               (comp (map wrap-attrs)
+                     (map (colls/onto [:div.card-footer-item])))
+               actions))]]
      [:button.modal-close.is-large
       {:aria-label "close"}]]))

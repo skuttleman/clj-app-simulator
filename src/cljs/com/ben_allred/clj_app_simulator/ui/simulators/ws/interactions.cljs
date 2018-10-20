@@ -1,9 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions
   (:require
-    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
     [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
-    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
@@ -33,42 +31,28 @@
                                     (shared.interactions/toaster :success "The web socket has been disconnected")
                                     (shared.interactions/toaster :error "The web socket could not be disconnected"))))
 
-(defn send-message [form simulator-id socket-id hide]
-  (fn [_]
-    (forms/verify! form)
-    (if (not (forms/errors form))
-      (-> simulator-id
-          (actions/send-message socket-id (:message (forms/current-model form)))
-          (store/dispatch)
-          (shared.interactions/do-request (comp hide (shared.interactions/toaster :success "The message has been sent"))
-                                          (shared.interactions/toaster :error "The message could not be sent")))
-      (store/dispatch (actions/show-toast :error "You must fix errors before proceeding")))))
-
-(defn send-message-button [attrs form]
-  [:button.button.is-info
-   (assoc attrs :disabled (forms/display-errors form))
-   "Send"])
-
-(defn message-editor [form model->view view->model]
-  [:div.send-ws-message
-   [fields/textarea
-    (-> {:label "Message"}
-        (shared.views/with-attrs form [:message] model->view view->model))]])
+(defn send-message [form simulator-id socket-id]
+  (fn [hide]
+    (fn [_]
+      (forms/verify! form)
+      (if (not (forms/errors form))
+        (-> simulator-id
+            (actions/send-message socket-id (:message (forms/current-model form)))
+            (store/dispatch)
+            (shared.interactions/do-request (comp hide (shared.interactions/toaster :success "The message has been sent"))
+                                            (shared.interactions/toaster :error "The message could not be sent")))
+        (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
 
 (defn show-send-modal [simulator-id socket-id]
   (fn [_]
     (let [form (forms/create {} resources/socket-message)]
       (store/dispatch
         (actions/show-modal
-          [message-editor form nil resources/view->model]
+          [:modals/message-editor form nil resources/view->model]
           (str (if socket-id "Send" "Broadcast") " a Message")
-          [send-message-button
-           {:on-click (fn [hide]
-                        (send-message form
-                                      simulator-id
-                                      socket-id
-                                      hide))}
-           form]
+          [:button.button.is-info
+           {:on-click (send-message form simulator-id socket-id)}
+           "Send"]
           [:button.button.cancel-button
            "Cancel"])))))
 
@@ -76,5 +60,5 @@
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/socket-modal message]
+        [:modals/socket-modal message]
         "Message Details"))))

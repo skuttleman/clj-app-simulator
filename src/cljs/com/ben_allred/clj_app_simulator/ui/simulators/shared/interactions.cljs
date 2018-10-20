@@ -5,7 +5,6 @@
     [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
     [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]))
@@ -57,18 +56,16 @@
                   (toaster :success (str "The " name " have been cleared"))
                   (toaster :error (str "The " name " could not be cleared"))))))
 
-(defn delete-sim
-  ([id]
-   (delete-sim id nil))
-  ([id hide]
-   (fn [_]
-     (do-request (store/dispatch (actions/delete-simulator id))
-                 (comp (fn [_]
-                         (when hide
-                           (hide))
-                         (nav/navigate! :home))
-                       (toaster :success "The simulator has been deleted"))
-                 (toaster :error "The simulator could not be deleted")))))
+(defn delete-sim [id]
+  (fn [hide]
+    (fn [_]
+      (do-request (store/dispatch (actions/delete-simulator id))
+                  (comp (fn [_]
+                          (when hide
+                            (hide))
+                          (nav/navigate! :home))
+                        (toaster :success "The simulator has been deleted"))
+                  (toaster :error "The simulator could not be deleted")))))
 
 (defn reset-simulator [form sim->model id]
   (fn [_]
@@ -100,10 +97,10 @@
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/confirm-delete "this simulator"]
+        [:modals/confirm-delete "this simulator"]
         "Delete Simulator"
         [:button.button.is-danger.delete-button
-         {:on-click (partial delete-sim id)}
+         {:on-click (delete-sim id)}
          "Delete"]
         [:button.button.cancel-button
          "Cancel"]))))
@@ -112,5 +109,5 @@
   (fn [_]
     (store/dispatch
       (actions/show-modal
-        [modals/request-modal sim request]
+        [:modals/request-modal sim request]
         "Request Details"))))

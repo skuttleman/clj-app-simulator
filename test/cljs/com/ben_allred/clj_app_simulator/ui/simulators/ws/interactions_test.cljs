@@ -97,7 +97,7 @@
                     forms/errors errors-spy
                     forms/current-model model-spy]
         (testing "handles the request"
-          ((interactions/send-message ::form ::simulator-id ::socket-id hide-spy) ::event)
+          (((interactions/send-message ::form ::simulator-id ::socket-id) hide-spy) ::event)
           (is (spies/called-with? action-spy ::simulator-id ::socket-id ::message))
           (is (spies/called-with? dispatch-spy ::action))
           (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
@@ -108,22 +108,11 @@
             (is (spies/called? hide-spy))
             (is (= :error (on-error ::result)))))))))
 
-(deftest ^:unit send-message-button-test
-  (testing "(send-message-button)"
-    (let [errors-spy (spies/constantly ::errors)]
-      (with-redefs [forms/display-errors errors-spy]
-        (testing "renders a button"
-          (let [button (interactions/send-message-button {::some ::attrs} ::form)
-                attrs (test.dom/attrs button)]
-            (is (spies/called-with? errors-spy ::form))
-            (is (= ::attrs (::some attrs)))
-            (is (= ::errors (:disabled attrs)))))))))
-
 (deftest ^:unit message-editor-test
   (testing "(message-editor)"
     (let [with-attrs-spy (spies/create identity)]
       (with-redefs [shared.views/with-attrs with-attrs-spy]
-        (let [root (interactions/message-editor ::form ::model->view ::view->model)
+        (let [root (modals/message-editor ::form ::model->view ::view->model)
               input (test.dom/query-one root fields/textarea)]
           (testing "renders a message field"
             (is (spies/called-with? with-attrs-spy (spies/matcher map?) ::form [:message] ::model->view ::view->model))
@@ -150,7 +139,7 @@
 
           (testing "shows the modal"
             (is (spies/called-with? action-spy
-                                    [interactions/message-editor ::form nil resources/view->model]
+                                    [:modals/message-editor ::form nil resources/view->model]
                                     (spies/matcher string?)
                                     (spies/matcher vector?)
                                     (spies/matcher vector?)))
@@ -161,9 +150,8 @@
                           (first)
                           (filter vector?)
                           (into [:div]))
-                send-button (test.dom/query-one tree interactions/send-message-button)
-                cancel-button (test.dom/query-one tree :.cancel-button)
-                on-click (:on-click (test.dom/attrs send-button))]
+                send-button (test.dom/query-one tree :.button.is-info)
+                cancel-button (test.dom/query-one tree :.cancel-button)]
             (testing "has a cancel button"
               (is (test.dom/query-one cancel-button :button)))
 
@@ -172,10 +160,11 @@
                       (test.dom/attrs)
                       (:disabled)
                       (not)))
-              (spies/reset! send-spy model-spy)
-              (let [result (on-click ::hide)]
-                (is (spies/called-with? send-spy ::form ::simulator-id ::socket-id ::hide))
-                (is (= ::send result))))))))))
+              (is (spies/called-with? send-spy ::form ::simulator-id ::socket-id))
+              (is (-> send-button
+                      (test.dom/attrs)
+                      (:on-click)
+                      (= ::send))))))))))
 
 (deftest ^:unit show-ws-modal-test
   (testing "(show-ws-modal)"
@@ -186,7 +175,7 @@
         (testing "shows the socket modal"
           ((interactions/show-ws-modal ::message) ::ignored)
 
-          (is (spies/called-with? action-spy [modals/socket-modal ::message] (spies/matcher string?)))
+          (is (spies/called-with? action-spy [:modals/socket-modal ::message] (spies/matcher string?)))
           (is (spies/called-with? dispatch-spy ::action)))))))
 
 (defn run-tests []
