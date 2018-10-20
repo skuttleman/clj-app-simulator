@@ -15,9 +15,7 @@
                                         #"\s")
                           (string/join "."))
           classes (->> (string/split (str classes "." class-name) #"\.")
-                       (map string/trim)
-                       (filter seq)
-                       (set))]
+                       (transduce (comp (map string/trim) (filter seq)) conj #{}))]
       (cond-> {}
         (seq classes) (assoc :classes classes)
         tag (assoc :tag tag)
@@ -39,11 +37,11 @@
 
 (defn query-all [tree selector]
   (let [matches (->> tree
-                     (filter sequential?)
-                     (mapcat (fn [node]
-                               (if ((some-fn keyword? fn?) (first node))
-                                 (query-all node selector)
-                                 (mapcat #(query-all % selector) node)))))]
+                     (sequence (comp (filter sequential?)
+                                     (mapcat (fn [node]
+                                               (if ((some-fn keyword? fn?) (first node))
+                                                 (query-all node selector)
+                                                 (mapcat #(query-all % selector) node)))))))]
     (cond->> matches
       (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
 

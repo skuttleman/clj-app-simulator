@@ -55,8 +55,7 @@
       (do
         (sims/clear! env)
         (let [sims (->> configs
-                        (map (partial make-simulator! env))
-                        (map common/details))]
+                        (map (comp common/details (partial make-simulator! env))))]
           (activity/publish env :simulators/init sims)
           [:created {:simulators sims}]))
       [:bad-request {:message "one or more invalid simulators"}])))

@@ -13,7 +13,7 @@
 
 (defn sim-details [{{:keys [method path]} :config}]
   [:div.sim-card-identifier
-   [:div.sim-card-method (when method (string/upper-case (name method)))]
+   [:div.sim-card-method (some-> method (name) (string/upper-case))]
    [:div.sim-card-path
     [:span.path-prefix "/simulators"]
     [:span.path-user-defined (when (not= "/" path) path)]]])

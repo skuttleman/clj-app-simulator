@@ -7,16 +7,7 @@
 
 (def source->model
   (f/make-transformer
-    [(fns/=> (update :delay fns/or 0)
-             (update-in [:response :body] identity))
-     {:response {:headers (fns/=>> (mapcat (fn [[k v]]
-                                             (if (coll? v)
-                                               (->> v
-                                                    (sort)
-                                                    (map (fn [v'] [k v'])))
-                                               [[k v]])))
-                                   (sort-by first)
-                                   (vec))}}]))
+    (conj shared.tr/source->model* #(update-in % [:response :body] identity))))
 
 (def model->view shared.tr/model->view)
 

@@ -10,7 +10,9 @@
             [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
             [compojure.core :as c]
             [integration.utils.http :as test.http]
-            [test.utils.spies :as spies]))
+            [test.utils.spies :as spies]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
@@ -117,7 +119,7 @@
 (deftest ^:unit details-test
   (testing "(details)"
     (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
-          details-spy (spies/create (partial conj [::details]))]
+          details-spy (spies/create (colls/onto [::details]))]
       (with-redefs [sims/simulators simulators-spy
                     common/details details-spy]
         (let [result (simulators/details ::env)]
@@ -168,8 +170,8 @@
   (testing "(set!)"
     (let [valid-spy (spies/constantly true)
           clear-spy (spies/create)
-          make-spy (spies/create (partial conj [::simulator]))
-          details-spy (spies/create (partial assoc {} :details))
+          make-spy (spies/create (colls/onto [::simulator]))
+          details-spy (spies/create (maps/onto :details))
           publish-spy (spies/create)]
       (with-redefs [simulators/valid? valid-spy
                     sims/clear! clear-spy
@@ -227,7 +229,7 @@
     (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
           reset-spy (spies/create)
           publish-spy (spies/create)
-          details-spy (spies/create (partial conj [::details]))]
+          details-spy (spies/create (colls/onto [::details]))]
       (with-redefs [sims/simulators simulators-spy
                     common/reset! reset-spy
                     activity/publish publish-spy

@@ -45,6 +45,4 @@
                               (recur (apply node args))
                               (render node)))
                           tree)]
-      (->> args
-           (map render*)
-           (into [node])))))
+      (into [node] (map render*) args))))

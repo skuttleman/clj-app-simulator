@@ -1,6 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.utils.colls-test
+  (:refer-clojure :exclude [list?])
   (:require [clojure.test :as t :refer [deftest testing is are]]
             [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
+
+
+(def ^:private list? (some-fn clojure.core/list? seq?))
 
 (deftest ^:unit force-sequential-test
   (testing "(force-sequential)"
@@ -31,6 +35,44 @@
 
     (testing "returns coll unchanged"
       (is (= [1 2 3 4 5] (colls/replace-by identity 7 [1 2 3 4 5]))))))
+
+(deftest ^:unit prepend-test
+  (testing "(prepend)"
+    (testing "works on lists and vectors"
+      (are [coll x expected] (= (colls/prepend coll x) expected)
+        [] 1 [1]
+        () 1 [1]
+        nil 1 [1]
+        '(1 2 3) 0 [0 1 2 3]
+        [1 2 3] 0 [0 1 2 3]))
+
+    (testing "retains type"
+      (is (vector? (colls/prepend [1 2 3] 0)))
+      (is (list? (colls/prepend '(1 2 3) 0))))
+
+    (testing "can be used as a transducer"
+      (is (= (transduce (comp (map inc) (colls/prepend -20) (map dec) (take 10)) conj (range))
+             [-21 0 1 2 3 4 5 6 7 8])))))
+
+(deftest ^:unit append-test
+  (testing "(append)"
+    (testing "works on lists and vectors"
+      (are [coll x expected] (= (colls/append coll x) expected)
+        [] 1 [1]
+        () 1 [1]
+        nil 1 [1]
+        '(1 2 3) 0 [1 2 3 0]
+        [1 2 3] 0 [1 2 3 0]))
+
+    (testing "retains type"
+      (is (vector? (colls/append [1 2 3] 0)))
+      (is (list? (colls/append '(1 2 3) 0))))
+
+    (testing "can be used as a transducer"
+      (is (= (transduce (comp (map inc) (colls/append -20) (map dec) (take 10)) conj (range))
+             [0 1 2 3 4 5 6 7 8 9]))
+      (is (= (transduce (comp (map inc) (colls/append -20) (map dec)) conj (range 9))
+             [0 1 2 3 4 5 6 7 8 -21])))))
 
 (defn run-tests []
   (t/run-tests))

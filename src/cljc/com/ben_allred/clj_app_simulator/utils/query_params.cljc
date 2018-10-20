@@ -9,14 +9,13 @@
   [(keyword k) (or v true)])
 
 (defn parse [s]
-  (->> (string/split (str s) #"&")
-       (map #(string/split % #"="))
-       (filter (comp seq first))
-       (map parsify)
-       (into {})))
+  (into {}
+        (comp (map #(string/split % #"="))
+              (filter (comp seq first))
+              (map parsify))
+        (string/split (str s) #"&")))
 
 (defn stringify [qp]
   (->> qp
-       (map namify)
-       (map (partial string/join "="))
+       (map (comp (partial string/join "=") namify))
        (string/join "&")))

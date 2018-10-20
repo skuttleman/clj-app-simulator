@@ -4,7 +4,8 @@
             [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns])
   (:import (java.util Date)))
 
 (defonce ^:private uploads (atom {}))
@@ -21,17 +22,17 @@
         result (file->data [id file'])]
     (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
     result))
+(defn ^:private add! [env key idfn]
+  (comp (map #(upload* env (idfn) %))
+        (fns/each (partial activity/publish env key))))
 
 (defn upload!
   ([env resource-id file]
-   (let [result (upload* env (uuids/->uuid resource-id) file)]
-     (activity/publish env :resources/put result)
-     result))
+   (->> [file]
+        (fns/transv (add! env :resources/put (constantly (uuids/->uuid resource-id))))
+        (first)))
   ([env files]
-   (let [result (map (fn [file] (upload* env (uuids/random) file)) files)]
-     (doseq [file result]
-       (activity/publish env :resources/add file))
-     result)))
+   (fns/transv (add! env :resources/add uuids/random) files)))
 
 (defn clear! [env]
   (->> (clojure.core/get @uploads env)

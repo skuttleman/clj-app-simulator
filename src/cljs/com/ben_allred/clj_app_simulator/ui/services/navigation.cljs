@@ -2,7 +2,8 @@
   (:require [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
             [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
             [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [pushy.core :as pushy]))
+            [pushy.core :as pushy]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
 
 (defn ^:private namify [[k v]]
   [k (str (keywords/safe-name v))])
@@ -20,7 +21,7 @@
    (nav*/path-for page params)))
 
 (defonce ^:private history
-  (let [history (pushy/pushy (comp store/dispatch (partial conj [:router/navigate])) match-route)]
+  (let [history (pushy/pushy (comp store/dispatch (colls/onto [:router/navigate])) match-route)]
     (pushy/start! history)
     history))
 

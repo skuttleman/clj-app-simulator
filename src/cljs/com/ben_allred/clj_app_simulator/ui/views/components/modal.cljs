@@ -3,7 +3,8 @@
             [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
             [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]))
+            [com.ben-allred.clj-app-simulator.templates.core :as templates]
+            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
 
 (defn ^:private hide-modal []
   (store/dispatch actions/hide-modal))
@@ -15,6 +16,12 @@
                        [{} args])]
     (into [tag (update attrs :on-click #(if % (% hide-modal) hide-modal))]
           args)))
+
+(defn ^:private card-footer [actions]
+  (into [:div.card-footer]
+        (comp (map wrap-attrs)
+              (map (colls/onto [:div.card-footer-item])))
+        actions))
 
 (defn modal [{:keys [state content title actions]}]
   (when (not= :unmounted state)
@@ -31,10 +38,8 @@
           [:div.card-header-title title]])
        [:div.card-content
         content]
-       (when (seq actions)
-         (->> actions
-              (map wrap-attrs)
-              (map (partial conj [:div.card-footer-item]))
-              (into [:div.card-footer])))]]
+       (some->> actions
+                (seq)
+                (card-footer))]]
      [:button.modal-close.is-large
       {:aria-label "close"}]]))

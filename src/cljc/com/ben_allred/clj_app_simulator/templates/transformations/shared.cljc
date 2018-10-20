@@ -7,6 +7,17 @@
             [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
             [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
+(def source->model*
+  [#(update % :delay fns/or 0)
+   {:response {:headers (fns/=>> (mapcat (fn [[k v]]
+                                           (if (coll? v)
+                                             (->> v
+                                                  (sort)
+                                                  (map (fn [v'] [k v'])))
+                                             [[k v]])))
+                                 (sort-by first)
+                                 (vec))}}])
+
 (defn ^:private maybe-parse-int [value]
   (let [delay (nums/parse-int value)
         delay-str (str delay)

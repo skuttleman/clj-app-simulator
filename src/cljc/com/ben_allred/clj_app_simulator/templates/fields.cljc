@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.fields
   (:require #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]))
+            [com.ben-allred.clj-app-simulator.utils.fns :as fns]
+            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (def ^:private empty-value (str ::empty))
 
@@ -12,12 +12,12 @@
         value))))
 
 (defn ^:private update-by-idx [idx v]
-  (fns/=>> (map-indexed #(if (= idx %1) v %2))))
+  (map-indexed #(if (= idx %1) v %2)))
 
 (defn ^:private remove-by-idx [idx]
-  (fns/=>> (map-indexed vector)
-           (remove (comp (partial = idx) first))
-           (map second)))
+  (comp (map-indexed vector)
+        (remove (comp (partial = idx) first))
+        (map second)))
 
 (defn ^:private form-field [{:keys [label] :as attrs} & body]
   (let [errors (seq (remove nil? (:errors attrs)))]
@@ -114,10 +114,10 @@
         [:button.button.is-small.remove-item
          {:type :button
           #?@(:clj  [:disabled true]
-              :cljs [:on-click #(change-fn (comp vec (remove-by-idx idx)))])}
+              :cljs [:on-click #(change-fn (fns/intov (remove-by-idx idx)))])}
          [:i.fa.fa-minus.remove-item]]]
        [component (-> attrs
                       (dissoc :label)
                       (assoc :value val
                              :errors (nth errors idx nil)
-                             #?@(:cljs [:on-change #(change-fn (comp vec (update-by-idx idx %)))])))]])]])
+                             #?@(:cljs [:on-change #(change-fn (fns/intov (update-by-idx idx %)))])))]])]])

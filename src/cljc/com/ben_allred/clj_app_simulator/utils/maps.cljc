@@ -34,13 +34,23 @@
 (def deep-merge (partial merge-with merger))
 
 (defn dissocp [m pred]
-  (->> m
-       (remove (comp pred second))
-       (into {})))
+  (when m
+    (let [m' (meta m)]
+      (cond-> (into {} (remove (comp pred second)) m)
+        m' (with-meta m')))))
 
 (defn walk [m f]
-  (->> m
-       (map (fn [[k v]]
-              (let [v' (if (map? v) (walk v f) v)]
-                (f k v'))))
-       (into {})))
+  (when m
+    (let [m' (meta m)]
+      (cond-> (into {}
+                    (map (fn [[k v]]
+                           (let [v' (if (map? v) (walk v f) v)]
+                             (f k v'))))
+                    m)
+        m' (with-meta m')))))
+
+(defn onto
+  ([k]
+   (onto {} k))
+  ([m k]
+   (partial assoc m k)))

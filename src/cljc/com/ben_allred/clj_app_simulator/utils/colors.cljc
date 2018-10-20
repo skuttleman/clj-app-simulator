@@ -91,10 +91,10 @@
        (pr-str)
        (re-matches re)
        (rest)
-       (interleave styles)
-       (partition 2)
-       (map reverse)
-       (apply conj (colorize* str schema "#" (:hash schema)))))
+       (into (colorize* str schema "#" (:hash schema))
+             (comp (interleave styles)
+                   (partition-all 2)
+                   (map reverse)))))
 
 (def ^:private colorize-fn
   (partial colorize* (constantly "#[fn]")))

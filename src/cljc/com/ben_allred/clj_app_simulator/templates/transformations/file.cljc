@@ -5,16 +5,7 @@
             [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]))
 
 (def source->model
-  (f/make-transformer
-    [(fns/=> (update :delay fns/or 0))
-     {:response {:headers (fns/=>> (mapcat (fn [[k v]]
-                                             (if (coll? v)
-                                               (->> v
-                                                    (sort)
-                                                    (map (fn [v'] [k v'])))
-                                               [[k v]])))
-                                   (sort-by first)
-                                   (vec))}}]))
+  (f/make-transformer shared.tr/source->model*))
 
 (def model->view
   (merge-with merge
