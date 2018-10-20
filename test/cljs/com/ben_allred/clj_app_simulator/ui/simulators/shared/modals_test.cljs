@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
-            [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
+    [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit sim-iterate-test
   (testing "(sim-iterate)"

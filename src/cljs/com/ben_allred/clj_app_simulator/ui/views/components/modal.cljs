@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.modal
-  (:require [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private hide-modal []
   (store/dispatch actions/hide-modal))

@@ -1,16 +1,18 @@
 (ns integration.tests.simulators.http
-  (:require [clojure.core.async :as async]
-            [clojure.edn :as edn]
-            [clojure.spec.alpha :as s]
-            [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.ben-allred.clj-app-simulator.utils.json :as json]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-            [integration.utils.chans :as chans]
-            [integration.utils.fixtures :as fixtures]
-            [integration.utils.http :as test.http]
-            [integration.utils.ws :as test.ws])
-  (:import [java.util Date]))
+  (:require
+    [clojure.core.async :as async]
+    [clojure.edn :as edn]
+    [clojure.spec.alpha :as s]
+    [clojure.test :refer [deftest is testing use-fixtures]]
+    [com.ben-allred.clj-app-simulator.utils.json :as json]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+    [integration.utils.chans :as chans]
+    [integration.utils.fixtures :as fixtures]
+    [integration.utils.http :as test.http]
+    [integration.utils.ws :as test.ws])
+  (:import
+    (java.util Date)))
 
 (use-fixtures :once fixtures/run-server)
 

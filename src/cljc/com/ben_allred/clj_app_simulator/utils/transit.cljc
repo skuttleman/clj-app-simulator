@@ -1,7 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.utils.transit
-  (:require [cognitect.transit :as trans]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log])
-  #?(:clj (:import [java.io ByteArrayInputStream ByteArrayOutputStream InputStream])))
+  (:require
+    [cognitect.transit :as trans]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log])
+  #?(:clj
+     (:import
+       (java.io ByteArrayInputStream ByteArrayOutputStream InputStream))))
 
 (defn ^:private string->stream [s]
   #?(:clj  (-> s

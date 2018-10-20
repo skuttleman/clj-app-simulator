@@ -1,13 +1,14 @@
 (ns integration.tests.simulators.ws
-  (:require [clojure.core.async :as async]
-            [clojure.edn :as edn]
-            [clojure.test :refer [deftest testing is use-fixtures]]
-            [com.ben-allred.clj-app-simulator.utils.json :as json]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-            [integration.utils.chans :as chans]
-            [integration.utils.fixtures :as fixtures]
-            [integration.utils.http :as test.http]
-            [integration.utils.ws :as test.ws]))
+  (:require
+    [clojure.core.async :as async]
+    [clojure.edn :as edn]
+    [clojure.test :refer [deftest is testing use-fixtures]]
+    [com.ben-allred.clj-app-simulator.utils.json :as json]
+    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+    [integration.utils.chans :as chans]
+    [integration.utils.fixtures :as fixtures]
+    [integration.utils.http :as test.http]
+    [integration.utils.ws :as test.ws]))
 
 (use-fixtures :once fixtures/run-server)
 

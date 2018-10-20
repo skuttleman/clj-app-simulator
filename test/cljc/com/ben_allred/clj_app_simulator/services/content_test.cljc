@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.services.content-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.content :as content]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.content :as content]))
 
 (def ^:private header-keys #{"content-type" "accept"})
 

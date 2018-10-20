@@ -1,14 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.ws-test
-  (:require [clojure.test :refer [deftest testing is are]]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [immutant.web.async :as web.async]))
+  (:require
+    [clojure.test :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [immutant.web.async :as web.async]
+    [test.utils.spies :as spies]))
 
 (defn ^:private simulator
   ([] (simulator {:method :ws

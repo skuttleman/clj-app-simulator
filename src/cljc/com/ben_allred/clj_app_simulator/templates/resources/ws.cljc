@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.ws
-  (:require [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+  (:require
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+    [com.ben-allred.formation.core :as f]))
 
 (defn validate-new* []
   (f/make-validator

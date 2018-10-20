@@ -1,13 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.routes
-  (:require [compojure.core :as c]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids])
-  (:import [java.io InputStream]))
+  (:require
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [compojure.core :as c])
+  (:import
+    (java.io InputStream)))
 
 (defn ^:privage sim->routes [env f simulator]
   (->> (f env simulator)

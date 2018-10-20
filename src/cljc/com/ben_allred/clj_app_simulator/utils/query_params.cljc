@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.utils.query-params
-  (:require [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
 
 (defn ^:private namify [[k v]]
   [(str (keywords/safe-name k)) (str (keywords/safe-name v))])

@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.ws-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
-            [com.ben-allred.formation.core :as f]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
+    [com.ben-allred.formation.core :as f]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit validate-new*-test
   (testing "(validate-new*)"

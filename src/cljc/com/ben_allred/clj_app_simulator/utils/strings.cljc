@@ -1,5 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.utils.strings
-  (:require [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]))
 
 (defn trim-to-nil [s]
   (when-let [s (and s (string/trim s))]

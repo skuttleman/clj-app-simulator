@@ -1,13 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions
-  (:require [cljs.core.async :as async]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [cljs.core.async :as async]
+    [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+    [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
+    [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+    [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn toaster [level default-msg]
   (fn [body]
@@ -35,7 +36,7 @@
       (dom/prevent-default e)
       (forms/verify! form)
       (if (and (not (forms/errors form))
-                 (forms/changed? form))
+               (forms/changed? form))
         (do-request (->> current-model
                          (model->source)
                          (actions/update-simulator id)
@@ -49,9 +50,9 @@
 (defn clear-requests [type id]
   (fn [_]
     (let [[name action] (case type
-                   :http ["requests" :simulators.http/reset-requests]
-                   :ws ["messages" :simulators.ws/reset-messages]
-                   nil)]
+                          :http ["requests" :simulators.http/reset-requests]
+                          :ws ["messages" :simulators.ws/reset-messages]
+                          nil)]
       (do-request (store/dispatch (actions/clear-requests action id))
                   (toaster :success (str "The " name " have been cleared"))
                   (toaster :error (str "The " name " could not be cleared"))))))

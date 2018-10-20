@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core
-  (:require [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [reagent.core :as r]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [reagent.core :as r]))
 
 (defn spinner-overlay [show? component]
   (if show?

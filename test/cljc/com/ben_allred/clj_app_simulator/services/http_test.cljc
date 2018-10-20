@@ -1,12 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.services.http-test
-  (:require #?@(:clj  [[clojure.test :as t :refer [deftest testing is]]
-                       [test.utils.async :refer [async]]]
-                :cljs [[cljs.test :as t :refer [deftest testing is async]]])
-            [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.services.content :as content]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
-            [kvlt.chan :as kvlt]
-            [test.utils.spies :as spies]))
+  (:require
+    #?@(:clj  [[clojure.test :as t :refer [deftest is testing]]
+               [test.utils.async :refer [async]]]
+        :cljs [[cljs.test :as t :refer [async deftest is testing]]])
+               [clojure.core.async :as async]
+               [com.ben-allred.clj-app-simulator.services.content :as content]
+               [com.ben-allred.clj-app-simulator.services.http :as http]
+               [kvlt.chan :as kvlt]
+               [test.utils.spies :as spies]))
 
 (deftest ^:unit request*-test
   (testing "(request*)"

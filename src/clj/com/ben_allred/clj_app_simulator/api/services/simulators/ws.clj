@@ -1,14 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.ws
-  (:require [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [clojure.string :as string]
-            [immutant.web.async :as web.async]))
+  (:require
+    [clojure.spec.alpha :as s]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [clojure.string :as string]
+    [immutant.web.async :as web.async]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 

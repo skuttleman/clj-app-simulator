@@ -1,12 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.core-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [test.utils.spies :as spies]
-            [com.ben-allred.collaj.core :as collaj]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
-            [com.ben-allred.collaj.enhancers :as collaj.enhancers]
-            [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
+    [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+    [com.ben-allred.collaj.core :as collaj]
+    [com.ben-allred.collaj.enhancers :as collaj.enhancers]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit http-store-test
   (testing "(http-store)"

@@ -1,20 +1,21 @@
 (ns com.ben-allred.clj-app-simulator.api.services.html
-  (:require [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]
-            [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
-            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.collaj.core :as collaj]
-            [hiccup.core :as hiccup]))
+  (:require
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
+    [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [com.ben-allred.collaj.core :as collaj]
+    [hiccup.core :as hiccup]))
 
 (defn ^:private hiccup [tree]
   (hiccup/html tree))

@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.interactions-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
-            [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
+    [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit update-simulator
   (testing "(update-simulator)"

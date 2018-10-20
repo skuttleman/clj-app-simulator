@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]))
 
 (deftest ^:unit simulator-config-test
   (testing "(simulator-config)"

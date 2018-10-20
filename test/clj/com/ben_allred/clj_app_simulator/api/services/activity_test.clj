@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.api.services.activity-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
-            [immutant.web.async :as web.async]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
+    [immutant.web.async :as web.async]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit sub-test
   (testing "(sub)"

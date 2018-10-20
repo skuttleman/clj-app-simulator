@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.http
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.templates.resources.shared :as shared.resources]
-            [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.utils.numbers :as nums]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.templates.resources.shared :as shared.resources]
+    [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
+    [com.ben-allred.formation.core :as f]))
 
 (def statuses shared.resources/statuses)
 
@@ -21,9 +22,9 @@
                            (f/pred #(seq %) "Header must have a value")))}})
 
 (defn new-config []
-  {:path     [(f/required "Must have a path")
-              (f/pred #(or (= % "/") (re-matches #"(/:?[A-Za-z-_0-9]+)+" %)) "Invalid path")]
-   :method   (f/required "Must have a method")})
+  {:path   [(f/required "Must have a path")
+            (f/pred #(or (= % "/") (re-matches #"(/:?[A-Za-z-_0-9]+)+" %)) "Invalid path")]
+   :method (f/required "Must have a method")})
 
 (defn validate-existing* []
   (f/make-validator (edit-config)))

@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.simulators-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
 
 (deftest ^:unit sim-details-test
   (testing "(sim-details)"
@@ -123,7 +124,7 @@
               (is)))))
     (testing "when showing a list of sim-cards"
       (let [sim-group (views.sim/sim-group nil [{:id 123 ::other ::data}
-                                                      {:id 456 ::more ::things}])
+                                                {:id 456 ::more ::things}])
             sim-list (test.dom/query-one sim-group :.grouped-sims)
             [first-sim second-sim] (test.dom/query-all sim-list views.sim/sim-card)]
         (testing "includes the first simulator"

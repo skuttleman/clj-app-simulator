@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.utils.colors
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.preds :as preds]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [clojure.set :as set]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
+  (:require
+    [clojure.set :as set]
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.clj-app-simulator.utils.preds :as preds]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (def ^:private colors
   (let [m (-> [:black :red :green :yellow :blue :magenta :cyan :white]

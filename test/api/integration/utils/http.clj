@@ -1,11 +1,12 @@
 (ns integration.utils.http
   (:refer-clojure :exclude [get])
-  (:require [clojure.java.io :as io]
-            [clojure.test :refer :all]
-            [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
-            [integration.config :as cfg]
-            [com.ben-allred.clj-app-simulator.services.files :as files]))
+  (:require
+    [clojure.core.async :as async]
+    [clojure.java.io :as io]
+    [clojure.test :refer :all]
+    [com.ben-allred.clj-app-simulator.services.files :as files]
+    [com.ben-allred.clj-app-simulator.services.http :as http]
+    [integration.config :as cfg]))
 
 (defn ^:private request* [method path content-type request]
   (async/<!! (http/go method (cfg/->url path) (-> request

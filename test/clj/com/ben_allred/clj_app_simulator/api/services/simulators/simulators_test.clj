@@ -1,15 +1,16 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.simulators-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"
-    (let [sims (atom {::env {[::method-1 ::path-1] ::sim-1
-                             [::method-1 ::path-2] ::sim-2
-                             [::method-2 ::path-1] ::sim-3
-                             [::method-2 ::path-2] ::sim-4}
+    (let [sims (atom {::env         {[::method-1 ::path-1] ::sim-1
+                                     [::method-1 ::path-2] ::sim-2
+                                     [::method-2 ::path-1] ::sim-3
+                                     [::method-2 ::path-2] ::sim-4}
                       ::another-env {[::method-3 ::path-3] ::sim-5}})
           stop-spy (spies/create)]
       (with-redefs [sims/sims sims

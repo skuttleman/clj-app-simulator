@@ -1,10 +1,11 @@
 (ns integration.utils.fixtures
-  (:require [com.ben-allred.clj-app-simulator.core :as sim-core]
-            [integration.config :as cfg]
-            [com.ben-allred.clj-app-simulator.services.env :as env]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]))
+  (:require
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.clj-app-simulator.core :as sim-core]
+    [com.ben-allred.clj-app-simulator.services.env :as env]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [integration.config :as cfg]))
 
 (defn run-server [test]
   (with-redefs [env/get (assoc env/get :ring-env :test)]

@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.ws-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (deftest ^:unit model->view-test
   (testing "(model->view)"
@@ -31,10 +32,10 @@
 (deftest ^:unit sim->model-test
   (testing "(sim->model)"
     (is (= {:group ::group :name ::name :description ::description}
-           (tr/sim->model {:config {:group ::group
+           (tr/sim->model {:config {:group       ::group
                                     :description ::description
-                                    :name ::name
-                                    :other ::values}})))))
+                                    :name        ::name
+                                    :other       ::values}})))))
 
 (defn run-tests []
   (t/run-tests))

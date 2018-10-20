@@ -1,22 +1,23 @@
 (ns com.ben-allred.clj-app-simulator.api.services.html-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.html :as html]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
-            [com.ben-allred.collaj.core :as collaj]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
-            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
-            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.html :as html]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.services.ui-reducers :as ui-reducers]
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
+    [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [com.ben-allred.collaj.core :as collaj]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit app-test
   (testing "(app)"
@@ -53,7 +54,7 @@
                          [state [ws.views/sim-create-form] [views/spinner]])))))
 
             (testing "and when the type is file"
-              (let [state {:page {:query-params {:type "file"}}
+              (let [state {:page    {:query-params {:type "file"}}
                            :uploads {:data ::uploads}}
                     args (-> state
                              (new*)
@@ -149,9 +150,9 @@
 
               (testing "renders with the resource"
                 (let [[attrs upload btn] (-> ::upload
-                                              (resource)
-                                              (test.dom/query-one views.res/resource)
-                                              (rest))]
+                                             (resource)
+                                             (test.dom/query-one views.res/resource)
+                                             (rest))]
                   (is (:disabled attrs))
                   (is (= upload ::upload))
                   (is (-> btn

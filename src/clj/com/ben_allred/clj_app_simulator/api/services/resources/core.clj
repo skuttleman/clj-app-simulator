@@ -1,12 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.api.services.resources.core
   (:refer-clojure :exclude [get])
-  (:require [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [clojure.set :as set]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns])
-  (:import (java.util Date)))
+  (:require
+    [clojure.set :as set]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.fns :as fns]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids])
+  (:import
+    (java.util Date)))
 
 (defonce ^:private uploads (atom {}))
 

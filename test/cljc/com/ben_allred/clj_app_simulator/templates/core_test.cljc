@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.core-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]))
 
 (defn ^:private ul [value]
   [:ul

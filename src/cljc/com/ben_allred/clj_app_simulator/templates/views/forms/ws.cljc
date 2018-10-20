@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.ws
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
-                       [reagent.core :as r]])
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+               [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
+               [reagent.core :as r]])
     [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
     [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]

@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.forms.core
-  (:refer-clojure :exclude [reset! update-in assoc-in])
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [reagent.core :as r]
-            [reagent.ratom :as ratom]))
+  (:refer-clojure :exclude [assoc-in reset! update-in])
+  (:require
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [reagent.core :as r]
+    [reagent.ratom :as ratom]))
 
 (defn ^:private only-dirty [errors dirty-fields]
   (reduce (fn [err path]
@@ -17,13 +18,13 @@
    (create model nil))
   ([model validator]
    (let [current (r/atom model)]
-     {:initial (r/atom model)
-      :dirty-fields (r/atom #{})
+     {:initial       (r/atom model)
+      :dirty-fields  (r/atom #{})
       :filter-dirty? (r/atom true)
-      :current current
-      :errors  (if validator
-                 (ratom/make-reaction #(validator @current))
-                 (delay nil))})))
+      :current       current
+      :errors        (if validator
+                       (ratom/make-reaction #(validator @current))
+                       (delay nil))})))
 
 (defn initial-model [{:keys [initial]}]
   @initial)

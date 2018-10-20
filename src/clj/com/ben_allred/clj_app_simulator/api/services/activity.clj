@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.api.services.activity
-  (:require [com.ben-allred.clj-app-simulator.utils.json :as json]
-            [immutant.web.async :as web.async]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-            [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
-            [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.core.async :as async]
+    [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
+    [com.ben-allred.clj-app-simulator.utils.json :as json]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+    [immutant.web.async :as web.async]))
 
 (def ^:private emitter (emitter/new))
 

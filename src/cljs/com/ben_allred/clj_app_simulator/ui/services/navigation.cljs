@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.navigation
-  (:require [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [pushy.core :as pushy]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
+  (:require
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [pushy.core :as pushy]))
 
 (defn ^:private namify [[k v]]
   [k (str (keywords/safe-name v))])
@@ -35,7 +36,7 @@
   ([page] (navigate* history page nil))
   ([page params]
    (navigate* history page params)
-    nil))
+   nil))
 
 (defn go-to! [path]
   (set! (.-pathname (.-location js/window)) path)
@@ -45,4 +46,4 @@
   ([page] (nav-and-replace* history page nil))
   ([page params]
    (nav-and-replace* history page params)
-    nil))
+   nil))

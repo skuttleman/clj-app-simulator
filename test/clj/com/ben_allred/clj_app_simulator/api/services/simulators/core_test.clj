@@ -1,18 +1,19 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.core-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
-            [compojure.core :as c]
-            [integration.utils.http :as test.http]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
+    [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [compojure.core :as c]
+    [integration.utils.http :as test.http]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"

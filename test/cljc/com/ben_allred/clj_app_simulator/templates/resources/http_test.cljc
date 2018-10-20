@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.http-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.templates.resources.http :as resources]
-            [com.ben-allred.formation.core :as f]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.resources.http :as resources]
+    [com.ben-allred.formation.core :as f]
+    [test.utils.spies :as spies]))
 
 (defn ^:private pred [_ msg]
   (condp re-find msg

@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.middleware-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit sims->sim-test
   (testing "(sims->sim)"

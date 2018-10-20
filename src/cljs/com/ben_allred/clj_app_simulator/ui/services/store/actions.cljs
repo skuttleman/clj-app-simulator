@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.actions
-  (:require [com.ben-allred.clj-app-simulator.services.http :as http]
-            [cljs.core.async :as async]
-            [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.services.files :as files]))
+  (:require
+    [cljs.core.async :as async]
+    [com.ben-allred.clj-app-simulator.services.files :as files]
+    [com.ben-allred.clj-app-simulator.services.http :as http]
+    [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private ->event [type value]
   (if (vector? type)

@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.core
-  (:require [clojure.set :as set]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+  (:require
+    [clojure.set :as set]
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (declare render)
 

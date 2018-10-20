@@ -1,14 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.file
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [com.ben-allred.clj-app-simulator.templates.resources.file :as resources]
-            [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.templates.resources.file :as resources]
+    [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private with-attrs [attrs form path]
   (shared.views/with-attrs attrs form path tr/model->view tr/view->model))

@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.navigation-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [test.utils.spies :as spies]
-            [pushy.core :as pushy]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
+    [pushy.core :as pushy]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit navigate*-test
   (testing "(navigate*)"

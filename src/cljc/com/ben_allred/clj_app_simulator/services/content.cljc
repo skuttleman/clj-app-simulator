@@ -1,23 +1,21 @@
 (ns com.ben-allred.clj-app-simulator.services.content
-  (:require [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+  (:require
+    #?(:clj [com.ben-allred.clj-app-simulator.api.services.streams :as streams])
+            [#?(:clj clojure.edn :cljs cljs.reader) :as edn]
             [com.ben-allred.clj-app-simulator.utils.json :as json]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]
             [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            #?(:clj  [clojure.edn :as edn]
-               :cljs [cljs.reader :as edn]))
-  #?(:clj (:import [java.io InputStream])))
+            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+            [com.ben-allred.clj-app-simulator.utils.transit :as transit])
+  #?(:clj
+     (:import
+       (java.io InputStream))))
 
 (defn ^:private with-headers [request header-keys type]
   (update request :headers (partial merge (zipmap header-keys (repeat type)))))
 
-(defn ^:private input-stream? [value]
-  #?(:clj  (instance? InputStream value)
-     :cljs false))
-
 (defn ^:private maybe-slurp [value]
-  (if (input-stream? value)
-    #?(:clj (slurp value)
-       :cljs value)
+  (if #?(:clj (streams/input-stream? value) :cljs true)
+    #?(:clj (slurp value))
     value))
 
 (defn ^:private when-not-string [body f]
@@ -61,7 +59,7 @@
       (maps/update-maybe :body when-not-string transit/stringify)
       (with-headers header-keys "application/transit"))
 
-    (and (not (input-stream? (:body data)))
+    (and #?(:clj (not (streams/input-stream? (:body data))))
          (or (not accept) (re-find #"\*/\*" accept) (json? accept)))
     (->
       (maps/update-maybe :body when-not-string json/stringify)

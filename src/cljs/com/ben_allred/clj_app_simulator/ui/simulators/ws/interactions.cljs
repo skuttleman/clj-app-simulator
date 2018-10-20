@@ -1,14 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions
-  (:require [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
+    [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 
 (defn update-simulator [form id]

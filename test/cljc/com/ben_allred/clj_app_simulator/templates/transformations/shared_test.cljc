@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.shared-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.templates.transformations.shared :as tr]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.transformations.shared :as tr]))
 
 (deftest ^:unit model->view-test
   (testing "(model->view)"

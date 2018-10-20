@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.utils.maps-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
 (deftest ^:unit update-maybe-test
   (testing "(update-maybe)"

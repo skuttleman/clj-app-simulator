@@ -1,12 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.file
-  (:require [clojure.spec.alpha :as s]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.string :as string]))
+  (:require
+    [clojure.spec.alpha :as s]
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 

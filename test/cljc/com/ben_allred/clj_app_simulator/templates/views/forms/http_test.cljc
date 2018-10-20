@@ -1,17 +1,19 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.http-test
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
-            [com.ben-allred.clj-app-simulator.templates.resources.http :as resources]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]))
+  (:require
+    #?@(:cljs
+        [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+         [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
+         [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.templates.resources.http :as resources]
+    [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"
@@ -409,7 +411,7 @@
         (testing "renders the form"
           (let [component (http.views/sim-create-form)
                 model {:response {:status 200
-                                  :body nil}
+                                  :body   nil}
                        :method   :http/get
                        :path     "/"
                        :delay    0}]

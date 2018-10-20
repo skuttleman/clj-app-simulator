@@ -1,10 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.utils.dates
   (:refer-clojure :exclude [format])
   #?(:clj
-           (:import (java.time Instant ZoneId)
-                    (java.util Date)
-                    (java.time.format DateTimeFormatter))
-     :cljs (:require [cljsjs.moment])))
+     (:import
+       (java.time Instant ZoneId)
+       (java.time.format DateTimeFormatter)
+       (java.util Date))
+     :cljs
+     (:require
+       [cljsjs.moment])))
 
 (def ^:private default-format
   #?(:clj  "EEE MMM d, YYYY 'at' h:mm a"

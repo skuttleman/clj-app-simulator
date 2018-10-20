@@ -1,16 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.routes-test
-  (:require [clojure.test :refer [are deftest is testing]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [compojure.core :as c]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [integration.utils.http :as test.http]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond])
-  (:import [java.io ByteArrayInputStream]))
+  (:require
+    [clojure.test :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [compojure.core :as c]
+    [integration.utils.http :as test.http]
+    [test.utils.spies :as spies])
+  (:import
+    (java.io ByteArrayInputStream)))
 
 (defn ^:private find-by-method-and-path [routes method path]
   (->> routes
@@ -40,8 +42,8 @@
                                   ::env
                                   :simulators/receive
                                   {:simulator {:id ::id :config ::config}
-                                   :request ::request-2
-                                   ::extra ::things})))))))
+                                   :request   ::request-2
+                                   ::extra    ::things})))))))
 
 (deftest ^:unit http-sim-route-test
   (testing "(http-sim-route)"
@@ -104,9 +106,9 @@
 (deftest ^:unit delete-sim-test
   (testing "(delete-sim)"
     (let [details-spy (spies/constantly {:id       ::id
-                                                  :config   ::config
-                                                  :details  ::details
-                                                  :requests ::requests})
+                                         :config   ::config
+                                         :details  ::details
+                                         :requests ::requests})
           identifier-spy (spies/constantly ::identifier)
           publish-spy (spies/create)
           delete-spy (spies/create)]
@@ -388,7 +390,7 @@
 (deftest ^:unit http-routes-test
   (testing "(http-routes)"
     (let [details-spy (spies/constantly {:config {:method ::method :path "/some/path"}
-                                                  :id     "some-id"})
+                                         :id     "some-id"})
           get-sim-spy (spies/constantly ::get-sim)
           delete-sim-spy (spies/constantly ::delete-sim)
           patch-sim-spy (spies/constantly ::patch-sim)

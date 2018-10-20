@@ -1,13 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.ui.app-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.app :as app]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
-            [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
-            [com.ben-allred.clj-app-simulator.ui.views.main :as main]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.templates.views.core :as views]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.ui.app :as app]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.ui.views.components.modal :as modal]
+    [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
+    [com.ben-allred.clj-app-simulator.ui.views.main :as main]
+    [test.utils.spies :as spies]))
 
 (defn ^:private state []
   {:page             {:handler :component}

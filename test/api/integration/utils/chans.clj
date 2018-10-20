@@ -1,6 +1,7 @@
 (ns integration.utils.chans
-  (:require [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.core.async :as async]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn flush!
   ([chan]
@@ -17,7 +18,7 @@
 
 (defn timeout-take!
   ([chan]
-    (timeout-take! chan 100))
+   (timeout-take! chan 100))
   ([chan ms]
    (let [[value] (async/alts!! [chan (async/go
                                        (async/<! (async/timeout ms))

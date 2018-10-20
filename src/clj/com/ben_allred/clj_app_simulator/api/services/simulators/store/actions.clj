@@ -1,9 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.actions
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.clj-app-simulator.services.content :as content]
-            [immutant.web.async :as web.async])
-  (:import [java.util Date]))
+  (:require
+    [com.ben-allred.clj-app-simulator.services.content :as content]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [immutant.web.async :as web.async])
+  (:import
+    (java.util Date)))
 
 (defn ^:private prepare [request]
   (content/prepare request #{:content-type :accept} (get-in request [:headers :accept])))

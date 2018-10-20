@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.services.navigation-test
-  (:require [bidi.bidi :as bidi]
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.utils.query-params :as qp]
-            [test.utils.spies :as spies]))
+  (:require
+    [bidi.bidi :as bidi]
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.utils.query-params :as qp]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit match-route*-test
   (testing "(match-route*)"

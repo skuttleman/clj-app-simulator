@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals
-  (:require [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (defn sim-iterate
   ([label m class]

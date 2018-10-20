@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.toast-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.ui.views.components.toast :as toast]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit toast-test
   (testing "(toast)"

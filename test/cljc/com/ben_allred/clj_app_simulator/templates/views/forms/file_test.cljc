@@ -1,20 +1,21 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.file-test
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-                       [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-                       [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]])
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [com.ben-allred.clj-app-simulator.templates.resources.file :as resources]
-            [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]))
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+               [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+               [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+               [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]])
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.templates.resources.file :as resources]
+    [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"

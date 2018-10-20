@@ -1,14 +1,15 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.core
   (:refer-clojure :exclude [set!])
-  (:require [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
-            [compojure.core :as c]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
+  (:require
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.ws :as ws.sim]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [compojure.core :as c]))
 
 (def ^:private validators [#'http.sim/valid?
                            #'ws.sim/valid?

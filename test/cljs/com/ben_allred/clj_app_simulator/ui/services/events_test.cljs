@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.events-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.events :as events]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.services.events :as events]))
 
 (deftest ^:unit code->key-test
   (testing "(code->key)"

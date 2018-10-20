@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.core
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private header-tab [handler page display]
   (let [tag (if (= handler page) :span :a)]

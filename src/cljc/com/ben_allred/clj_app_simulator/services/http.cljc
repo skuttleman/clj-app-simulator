@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.services.http
   (:refer-clojure :exclude [get])
-  (:require [#?(:clj clojure.core.async :cljs cljs.core.async) :as async]
-            [kvlt.chan :as kvlt]
-            [com.ben-allred.clj-app-simulator.services.content :as content]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.set :as set]))
+  (:require
+    [#?(:clj clojure.core.async :cljs cljs.core.async) :as async]
+    [clojure.set :as set]
+    [com.ben-allred.clj-app-simulator.services.content :as content]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [kvlt.chan :as kvlt]))
 
 (def ^:private content-type
   #?(:clj  "application/json"

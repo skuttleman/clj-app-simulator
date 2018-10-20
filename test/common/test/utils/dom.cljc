@@ -1,9 +1,10 @@
 (ns test.utils.dom
   (:refer-clojure :exclude [contains?])
-  (:require [clojure.set :as set]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.set :as set]
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn ^:private tag->map [tag & [attrs :as args]]
   (if (fn? tag)
@@ -62,9 +63,9 @@
   ([tree event]
    (simulate-event tree event #?(:clj nil :cljs (js/Event. (name event)))))
   ([tree event event-data]
-   #?(:clj  (throw (UnsupportedOperationException.))
-      :cljs (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
-              (f event-data)))))
+    #?(:clj  (throw (UnsupportedOperationException.))
+       :cljs (when-let [f (get (attrs tree) (keywords/join "-" [:on event]))]
+               (f event-data)))))
 
 (defn contains? [tree item]
   (if (vector? item)

@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.middleware
-  (:require [com.ben-allred.clj-app-simulator.utils.colls :as colls]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
+  (:require
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
 
 (defn sims->sim [_]
   (fn [next]

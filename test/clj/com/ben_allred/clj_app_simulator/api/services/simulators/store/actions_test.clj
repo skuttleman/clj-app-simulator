@@ -1,11 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.actions-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [test.utils.date-time :as test.dt]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.content :as content]
-            [immutant.web.async :as web.async])
-  (:import [java.util Date]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.services.content :as content]
+    [immutant.web.async :as web.async]
+    [test.utils.date-time :as test.dt]
+    [test.utils.spies :as spies])
+  (:import
+    (java.util Date)))
 
 (deftest ^:unit init-test
   (testing "(init)"

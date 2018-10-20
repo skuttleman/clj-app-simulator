@@ -1,10 +1,11 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.activity-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.ws :as ws]
-            [com.ben-allred.clj-app-simulator.services.env :as env]
-            [com.ben-allred.clj-app-simulator.utils.transit :as transit]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.env :as env]
+    [com.ben-allred.clj-app-simulator.services.ws :as ws]
+    [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]
+    [com.ben-allred.clj-app-simulator.utils.transit :as transit]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit sub-test
   (testing "(sub)"

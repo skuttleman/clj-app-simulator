@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.events
-  (:require [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (def code->key
   {13 :enter

@@ -1,17 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.ws-test
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]])
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
-            [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]))
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+               [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]])
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
+    [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"

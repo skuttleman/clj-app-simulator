@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.services.navigation
-  (:require [bidi.bidi :as bidi]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-            [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
+  (:require
+    [bidi.bidi :as bidi]
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
 
 (defn ^:private namify [[k v]]
   [k (str (keywords/safe-name v))])

@@ -1,9 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.resources
-  (:require [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
-            [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
+    [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))
 
 (defn resource [{:keys [id] :as upload}]
   [views.res/resource

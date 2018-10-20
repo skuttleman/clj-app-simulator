@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.resources
-  (:require [com.ben-allred.clj-app-simulator.utils.dates :as dates]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [com.ben-allred.clj-app-simulator.utils.dates :as dates]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn resource [delete-attrs {:keys [filename timestamp]} replace-btn]
   [:li.resource

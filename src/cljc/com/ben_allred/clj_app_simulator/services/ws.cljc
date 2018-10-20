@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.services.ws
-  (:require [#?(:clj gniazdo.core :cljs com.ben-allred.clj-app-simulator.ui.services.ws-impl) :as ws*]
-            [com.ben-allred.clj-app-simulator.utils.query-params :as qp]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [#?(:clj gniazdo.core :cljs com.ben-allred.clj-app-simulator.ui.services.ws-impl) :as ws*]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
 
 (defn connect [url & {:keys [on-open on-close on-msg on-err query-params to-string to-clj]
                       :or   {on-open   identity

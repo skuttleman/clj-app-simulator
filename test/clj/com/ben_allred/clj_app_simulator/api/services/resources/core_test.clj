@@ -1,11 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.resources.core-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-            [com.ben-allred.clj-app-simulator.api.services.streams :as streams])
-  (:import (java.util Date)))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
+    [test.utils.spies :as spies])
+  (:import
+    (java.util Date)))
 
 (deftest ^:unit upload!-test
   (testing "(upload!)"
@@ -84,18 +86,18 @@
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"
-    (let [uploads (atom {::env {111 {:filename     ::file-3
-                                     :content-type ::content-type
-                                     :timestamp    789
-                                     :file ::file-111}
-                                222 {:filename     ::file-1
-                                     :content-type ::content-type
-                                     :timestamp    123
-                                     :file ::file-222}
-                                333 {:filename     ::file-2
-                                     :content-type ::content-type
-                                     :timestamp    456
-                                     :file ::file-333}}
+    (let [uploads (atom {::env       {111 {:filename     ::file-3
+                                           :content-type ::content-type
+                                           :timestamp    789
+                                           :file         ::file-111}
+                                      222 {:filename     ::file-1
+                                           :content-type ::content-type
+                                           :timestamp    123
+                                           :file         ::file-222}
+                                      333 {:filename     ::file-2
+                                           :content-type ::content-type
+                                           :timestamp    456
+                                           :file         ::file-333}}
                          ::other-env {444 {}}})
           publish-spy (spies/create)
           delete-spy (spies/create)]
@@ -204,7 +206,7 @@
   (testing "(has-upload?)"
     (let [uuid-spy (spies/create identity)]
       (with-redefs [uuids/->uuid uuid-spy
-                    resources/uploads (atom {::env {111 ::file-111}
+                    resources/uploads (atom {::env   {111 ::file-111}
                                              ::env-2 {222 ::file-222}})]
         (testing "returns found item"
           (is (true? (resources/has-upload? 111)))

@@ -1,5 +1,5 @@
 (ns test.utils.spies
-  (:refer-clojure :exclude [reset! constantly]))
+  (:refer-clojure :exclude [constantly reset!]))
 
 (defn ^:private find-override [overrides args]
   (->> overrides

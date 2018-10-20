@@ -1,7 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.utils.json
-  #?(:clj (:require [jsonista.core :as jsonista]
-                    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-                    [com.ben-allred.clj-app-simulator.utils.logging :as log])))
+  #?(:clj
+     (:require
+       [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+       [com.ben-allred.clj-app-simulator.utils.logging :as log]
+       [jsonista.core :as jsonista])))
 
 (def ^:private mapper
   #?(:clj  (jsonista/object-mapper

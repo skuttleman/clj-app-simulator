@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.http
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.simulators.http.interactions :as interactions]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
     [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
     [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
     [com.ben-allred.clj-app-simulator.templates.fields :as fields]

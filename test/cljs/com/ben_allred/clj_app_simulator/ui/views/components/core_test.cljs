@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.core-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is are]]
-            [test.utils.dom :as test.dom]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
-            [com.ben-allred.clj-app-simulator.templates.views.core :as views]))
+  (:require
+    [clojure.test :as t :refer-macros [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (defn ^:private available [data]
   {:status :available :data data})

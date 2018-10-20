@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.templates.resources.file
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.templates.resources.shared :as shared.resources]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
-            [com.ben-allred.formation.core :as f]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.templates.resources.shared :as shared.resources]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
+    [com.ben-allred.formation.core :as f]))
 
 (def statuses shared.resources/statuses)
 

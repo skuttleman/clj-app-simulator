@@ -1,7 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers
-  (:require [com.ben-allred.collaj.reducers :as collaj.reducers]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.collaj.reducers :as collaj.reducers]))
 
 (defn ^:private http-config*
   ([] nil)

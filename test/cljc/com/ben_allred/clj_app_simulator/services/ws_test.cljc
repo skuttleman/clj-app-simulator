@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.services.ws-test
-  (:require [#?(:clj gniazdo.core :cljs com.ben-allred.clj-app-simulator.ui.services.ws-impl) :as ws*]
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.ws :as ws]
-            [test.utils.spies :as spies]))
+  (:require
+    [#?(:clj gniazdo.core :cljs com.ben-allred.clj-app-simulator.ui.services.ws-impl) :as ws*]
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.ws :as ws]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit connect-test
   (testing "(connect)"

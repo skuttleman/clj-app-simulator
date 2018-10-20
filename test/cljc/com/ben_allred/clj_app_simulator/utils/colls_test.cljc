@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.utils.colls-test
   (:refer-clojure :exclude [list?])
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]))
 
 
 (def ^:private list? (some-fn clojure.core/list? seq?))

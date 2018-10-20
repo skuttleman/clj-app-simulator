@@ -1,8 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.api.services.middleware
-  (:require [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.services.content :as content])
-  (:import [java.util Date]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.services.content :as content]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log])
+  (:import
+    (java.util Date)))
 
 (defn ^:private resource? [uri]
   (or (= "/" uri) (re-find #"(^/js|^/css|^/images|^/favicon)" uri)))

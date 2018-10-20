@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.fields
-  (:require #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
+    [com.ben-allred.clj-app-simulator.utils.fns :as fns]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (def ^:private empty-value (str ::empty))
 

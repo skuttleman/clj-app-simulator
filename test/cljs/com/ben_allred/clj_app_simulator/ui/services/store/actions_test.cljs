@@ -1,11 +1,12 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.actions-test
-  (:require [clojure.test :as t :refer-macros [are async deftest is testing]]
-            [cljs.core.async :as async]
-            [com.ben-allred.clj-app-simulator.services.http :as http]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.services.files :as files]))
+  (:require
+    [cljs.core.async :as async]
+    [clojure.test :as t :refer-macros [are async deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.files :as files]
+    [com.ben-allred.clj-app-simulator.services.http :as http]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit request*-test
   (testing "(request*)"
@@ -159,7 +160,7 @@
         (testing "disconnects the web socket"
           (let [result ((actions/disconnect 123 456) [dispatch-spy])]
             (is (spies/called-with? dispatch-spy [:simulators.disconnect/request]))
-            (is (spies/called-with? http-spy "/api/simulators/123" {:body {:action :simulators.ws/disconnect
+            (is (spies/called-with? http-spy "/api/simulators/123" {:body {:action    :simulators.ws/disconnect
                                                                            :socket-id 456}}))
             (is (spies/called-with? request-spy
                                     ::request

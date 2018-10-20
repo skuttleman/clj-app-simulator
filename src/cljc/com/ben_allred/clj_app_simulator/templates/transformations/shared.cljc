@@ -1,11 +1,12 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.shared
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.formation.core :as f]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]
+    [com.ben-allred.formation.core :as f]))
 
 (def source->model*
   [#(update % :delay fns/or 0)

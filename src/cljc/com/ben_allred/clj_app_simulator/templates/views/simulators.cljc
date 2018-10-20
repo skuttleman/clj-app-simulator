@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.simulators
-  (:require [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.services.navigation :as nav*]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]))
 
 (defn ^:private organize [simulators]
   (->> simulators

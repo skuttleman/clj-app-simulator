@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.http-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit source->model-test
   (testing "(source->model)"

@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.activity
-  (:require [com.ben-allred.clj-app-simulator.utils.transit :as transit]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.services.ws :as ws]
-            [com.ben-allred.clj-app-simulator.services.env :as env]))
+  (:require
+    [com.ben-allred.clj-app-simulator.services.env :as env]
+    [com.ben-allred.clj-app-simulator.services.ws :as ws]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.transit :as transit]))
 
 (defn ^:private on-msg [dispatch {:keys [event data]}]
   (case event

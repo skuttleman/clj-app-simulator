@@ -1,24 +1,27 @@
 (ns com.ben-allred.clj-app-simulator.api.server
   (:gen-class)
-  (:use compojure.core)
-  (:require [clojure.tools.nrepl.server :as nrepl]
-            [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
-            [com.ben-allred.clj-app-simulator.api.services.html :as html]
-            [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
-            [com.ben-allred.clj-app-simulator.services.env :as env]
-            [com.ben-allred.clj-app-simulator.utils.colls :as colls]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [compojure.handler :refer [site]]
-            [compojure.route :as route]
-            [immutant.web :as web]
-            [ring.middleware.multipart-params.temp-file :as temp-file]
-            [ring.middleware.reload :refer [wrap-reload]])
-  (:import (clojure.lang IPersistentVector)))
+  (:require
+    [clojure.tools.nrepl.server :as nrepl]
+    [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
+    [com.ben-allred.clj-app-simulator.api.services.html :as html]
+    [com.ben-allred.clj-app-simulator.api.services.middleware :as middleware]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.core :as simulators]
+    [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.clj-app-simulator.services.env :as env]
+    [com.ben-allred.clj-app-simulator.utils.colls :as colls]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [compojure.core :refer [ANY DELETE GET POST PUT context defroutes]]
+    [compojure.handler :refer [site]]
+    [compojure.response :refer [Renderable]]
+    [compojure.route :as route]
+    [immutant.web :as web]
+    [ring.middleware.multipart-params.temp-file :as temp-file]
+    [ring.middleware.reload :refer [wrap-reload]])
+  (:import
+    (clojure.lang IPersistentVector)))
 
-(extend-protocol compojure.response/Renderable
+(extend-protocol Renderable
   IPersistentVector
   (render [this _]
     (respond/with this)))

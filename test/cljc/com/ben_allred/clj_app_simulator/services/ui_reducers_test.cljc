@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.services.ui-reducers-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]))
 
 (deftest ^:unit page-test
   (testing "(page)"

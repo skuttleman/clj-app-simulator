@@ -1,13 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.resources-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
-            [test.utils.dom :as test.dom]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.views.resources :as views.res]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
+    [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+    [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit resource-test
   (testing "(resource)"

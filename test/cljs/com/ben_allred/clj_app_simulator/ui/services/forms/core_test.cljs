@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.forms.core-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+    [test.utils.spies :as spies]))
 
 (deftest create-test
   (testing "(create)"

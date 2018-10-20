@@ -1,15 +1,16 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.main
-  (:require [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-            [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
-            [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
-            [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
-            [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
-            [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
-            [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.views.core :as views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.file :as file.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.http :as http.views]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.ws :as ws.views]
+    [com.ben-allred.clj-app-simulator.templates.views.simulators :as views.sim]
+    [com.ben-allred.clj-app-simulator.ui.services.navigation :as nav]
+    [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]
+    [com.ben-allred.clj-app-simulator.ui.views.resources :as resources]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
 (defn root [{:keys [simulators uploads]}]
   [views/root

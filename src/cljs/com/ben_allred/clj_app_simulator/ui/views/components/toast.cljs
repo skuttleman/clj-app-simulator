@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.views.components.toast
-  (:require [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-            [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.templates.core :as templates]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.core :as templates]
+    [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (defn toast [messages]
   [:div.toast-container

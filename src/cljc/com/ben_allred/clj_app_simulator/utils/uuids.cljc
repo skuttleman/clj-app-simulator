@@ -1,5 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.utils.uuids
-  #?(:clj (:import [java.util UUID])))
+  #?(:clj
+     (:import
+       (java.util UUID))))
 
 (defn ->uuid [v]
   (when v

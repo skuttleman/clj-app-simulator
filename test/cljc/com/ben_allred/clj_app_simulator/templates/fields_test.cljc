@@ -1,9 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.templates.fields-test
-  (:require #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
-            [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [test.utils.spies :as spies]
-            [test.utils.dom :as test.dom]))
+  (:require
+    #?(:cljs [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom])
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [test.utils.dom :as test.dom]
+    [test.utils.spies :as spies]))
 
 (defn ^:private render [component & args]
   (let [[ff & more] (apply component args)]

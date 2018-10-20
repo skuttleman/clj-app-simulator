@@ -1,9 +1,12 @@
 (ns com.ben-allred.clj-app-simulator.services.emitter-test
-  (:require #?@(:clj  [[clojure.test :as t :refer [deftest testing is]]
-                       [test.utils.async :refer [async]]]
-                :cljs [[cljs.test :as t :refer [deftest testing is async]]])
-            [clojure.core.async :as async]
-            [com.ben-allred.clj-app-simulator.services.emitter :as emitter]))
+  (:require
+    #?@(:clj
+        [[clojure.test :as t :refer [deftest is testing]]
+         [test.utils.async :refer [async]]]
+        :cljs
+        [[cljs.test :as t :refer [async deftest is testing]]])
+         [clojure.core.async :as async]
+         [com.ben-allred.clj-app-simulator.services.emitter :as emitter]))
 
 (defn ^:private init []
   [[(emitter/new)

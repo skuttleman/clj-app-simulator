@@ -1,9 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.services.emitter
-  (:require #?@(:clj  [[clojure.core.async :as async]
-                       [clojure.core.async.impl.protocols :as impl]]
-                :cljs [[cljs.core.async :as async :include-macros true]
-                       [cljs.core.async.impl.protocols :as impl]])
-                       [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.core.async :as async :include-macros true]
+    [clojure.core.async.impl.protocols :as impl]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defprotocol IEmitter
   (on [this env chan] [this env event chan])

@@ -1,10 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.utils.logging
-  (:require [taoensso.timbre :as logger :include-macros true]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [clojure.string :as string]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]
-            [com.ben-allred.clj-app-simulator.utils.colors :as colors]
-            [kvlt.core :refer [quiet!]]))
+  (:require
+    [clojure.string :as string]
+    [com.ben-allred.clj-app-simulator.utils.colors :as colors]
+    [kvlt.core :refer [quiet!]]
+    [taoensso.timbre :as logger :include-macros true]))
 
 (defmacro debug [& args]
   `(logger/debug ~@args))

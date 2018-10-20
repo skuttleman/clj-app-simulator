@@ -1,20 +1,21 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.file-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [test.utils.spies :as spies]))
 
 (defn ^:private simulator
   ([] (simulator {:method   :file/get
                   :path     "/some/path"
                   :delay    123
-                  :response {:status 200
-                             :file ::123
+                  :response {:status  200
+                             :file    ::123
                              :headers {:header "some-header"}}}))
   ([config]
    (let [resources-spy (spies/constantly true)
@@ -118,7 +119,7 @@
       (let [[sim] (simulator {:method   :file/post
                               :path     "/some/:param/url/:id/action"
                               :response {:status 204
-                                         :file ::123}})]
+                                         :file   ::123}})]
         (let [result (common/identifier sim)]
           (is (= [:post "/some/*/url/*/action"] result)))))))
 

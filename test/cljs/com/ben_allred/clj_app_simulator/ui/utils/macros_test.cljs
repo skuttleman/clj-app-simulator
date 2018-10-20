@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.utils.macros-test
-  (:require [clojure.test :as t :refer-macros [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
-            [test.utils.spies :as spies]))
+  (:require
+    [clojure.test :as t :refer-macros [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.ui.utils.macros :as macros :include-macros true]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit after-test
   (testing "(after)"

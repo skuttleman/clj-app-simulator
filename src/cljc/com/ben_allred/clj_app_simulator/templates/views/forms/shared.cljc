@@ -1,8 +1,9 @@
 (ns com.ben-allred.clj-app-simulator.templates.views.forms.shared
-  (:require #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
-                       [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as interactions]])
-            [com.ben-allred.clj-app-simulator.templates.fields :as fields]
-            [com.ben-allred.clj-app-simulator.utils.dates :as dates]))
+  (:require
+    #?@(:cljs [[com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as interactions]])
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.utils.dates :as dates]))
 
 (defn with-attrs [attrs form path model->view view->model]
   #?(:clj  (assoc attrs :value (get-in form path))

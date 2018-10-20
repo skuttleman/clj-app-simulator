@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.utils.keywords-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]))
 
 (deftest ^:unit safe-name-test
   (testing "(safe-name)"

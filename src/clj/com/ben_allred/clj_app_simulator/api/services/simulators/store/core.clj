@@ -1,12 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.store.core
   (:refer-clojure :exclude [delay])
-  (:require [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
-            [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-            [com.ben-allred.collaj.core :as collaj]
-            [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
+  (:require
+    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.reducers :as reducers]
+    [com.ben-allred.clj-app-simulator.api.services.streams :as streams]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.collaj.core :as collaj]
+    [com.ben-allred.collaj.enhancers :as collaj.enhancers]))
 
 (defn ^:private with-file [response env]
   (if-let [resource (resources/get env (:file response))]

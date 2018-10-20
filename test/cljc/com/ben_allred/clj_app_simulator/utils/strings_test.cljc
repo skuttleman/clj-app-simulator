@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.utils.strings-test
-  (:require [clojure.test :as t :refer [deftest testing is are]]
-            [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+  (:require
+    [clojure.test :as t :refer [are deftest is testing]]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
 
 (deftest ^:unit trim-to-nil-test
   (testing "(trim-to-nil)"

@@ -1,13 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.http-test
-  (:require [clojure.test :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
-            [test.utils.spies :as spies]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
-            [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
-            [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+  (:require
+    [clojure.test :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
+    [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [test.utils.spies :as spies]))
 
 (defn ^:private simulator
   ([] (simulator {:method   :http/get
@@ -18,7 +19,7 @@
    (let [dispatch (spies/create)
          get-state (spies/constantly ::state)
          spy (spies/constantly {:dispatch  dispatch
-                                         :get-state get-state})]
+                                :get-state get-state})]
      (with-redefs [store/http-store spy]
        [(http.sim/->HttpSimulator ::env ::id config) spy config dispatch get-state]))))
 
@@ -32,7 +33,7 @@
         (let [[sim] (simulator)]
           (doseq [protocol [common/IIdentify common/IReceive common/IReset
                             common/IRoute common/IPartiallyReset]]
-           (is (satisfies? protocol sim))))))
+            (is (satisfies? protocol sim))))))
 
     (testing "when config is invalid"
       (testing "returns nil"

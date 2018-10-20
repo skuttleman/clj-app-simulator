@@ -1,5 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.utils.keywords
-  (:require [clojure.string :as string]))
+  (:require
+    [clojure.string :as string]))
 
 (defn safe-name [v]
   (if (keyword? v)

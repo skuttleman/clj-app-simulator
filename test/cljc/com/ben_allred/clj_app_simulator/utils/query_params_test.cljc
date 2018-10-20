@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.utils.query-params-test
-  (:require [clojure.test :as t :refer [deftest testing is]]
-            [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
+  (:require
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.utils.query-params :as qp]))
 
 (deftest ^:unit parse-test
   (testing "(parse)"

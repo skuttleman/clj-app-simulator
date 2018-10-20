@@ -1,7 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.http.interactions
-  (:require [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-            [com.ben-allred.clj-app-simulator.utils.logging :as log]
-            [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]))
+  (:require
+    [com.ben-allred.clj-app-simulator.templates.transformations.http :as tr]
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 
 (defn update-simulator [form id]
   (shared.interactions/update-simulator form tr/model->source id))
