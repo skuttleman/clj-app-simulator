@@ -95,7 +95,9 @@
                     actions/show-toast toast-spy
                     forms/verify! verify-spy
                     forms/errors errors-spy
-                    forms/current-model model-spy]
+                    forms/current-model model-spy
+                    forms/syncing? (constantly ::syncing)
+                    shared.interactions/resetter (constantly identity)]
         (testing "handles the request"
           (((interactions/send-message ::form ::simulator-id ::socket-id) hide-spy) ::event)
           (is (spies/called-with? action-spy ::simulator-id ::socket-id ::message))
@@ -150,10 +152,10 @@
                           (first)
                           (filter vector?)
                           (into [:div]))
-                send-button (test.dom/query-one tree :.button.is-info)
-                cancel-button (test.dom/query-one tree :.cancel-button)]
+                send-button (test.dom/query-one tree shared.views/sync-button :.send-button)
+                cancel-button (test.dom/query-one tree shared.views/sync-button :.cancel-button)]
             (testing "has a cancel button"
-              (is (test.dom/query-one cancel-button :button)))
+              (is cancel-button))
 
             (testing "has a send button"
               (is (-> send-button

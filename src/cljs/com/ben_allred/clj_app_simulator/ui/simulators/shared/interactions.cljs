@@ -17,6 +17,11 @@
            (store/dispatch))
       body)))
 
+(defn resetter [f form & args]
+  (fn [body]
+    (apply f form args)
+    body))
+
 (defn do-request
   ([request]
    (do-request request identity))
@@ -40,10 +45,10 @@
                          (model->source)
                          (actions/update-simulator id)
                          (store/dispatch))
-                    (comp (fn [_]
-                            (forms/reset! form current-model))
+                    (comp (resetter forms/reset! form current-model)
                           (toaster :success "The simulator has been updated"))
-                    (toaster :error "The simulator could not be updated"))
+                    (comp (resetter forms/ready! form)
+                          (toaster :error "The simulator could not be updated")))
         (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
 
 (defn clear-requests [type id]
@@ -89,8 +94,10 @@
                                    (:id)
                                    (assoc {} :id)
                                    (nav/nav-and-replace! :details))
+                          (resetter forms/reset! form current-model)
                           (toaster :success "The simulator has been created"))
-                    (toaster :error "The simulator could not be created"))
+                    (comp (resetter forms/ready! form)
+                          (toaster :error "The simulator could not be created")))
         (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
 
 (defn show-delete-modal [id]

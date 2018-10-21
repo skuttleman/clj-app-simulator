@@ -11,6 +11,10 @@
     (testing "returns map when map does not contain key"
       (is (= {:a 4 :b nil} (maps/update-maybe {:a 4 :b nil} :b assoc :c :d))))))
 
+(deftest ^:unit assoc-maybe-test
+  (testing "(assoc-maybe)"
+    (is (= {:a 1 :b 2 :c 3 :d 4 :e nil} (maps/assoc-maybe {:a 1 :c 3 :d nil :e nil} :a nil :b 2 :d 4 :f nil)))))
+
 (deftest ^:unit map-kv-test
   (testing "(map-kv)"
     (testing "updates keys and values"

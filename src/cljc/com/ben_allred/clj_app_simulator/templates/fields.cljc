@@ -37,7 +37,7 @@
                     error])])])]
           body)))
 
-(defn select [{:keys [on-change value class-name to-view to-model] :as attrs} options]
+(defn select [{:keys [disabled on-change value class-name to-view to-model] :as attrs} options]
   (let [to-view (or to-view identity)
         to-model (or to-model identity)
         available? (set (map first options))]
@@ -48,8 +48,8 @@
        :value      (if (available? value)
                      (to-view value)
                      empty-value)
-       #?@(:clj  [:disabled true]
-           :cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
+       :disabled   #?(:clj true :cljs disabled)
+       #?@(:cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
       (for [[option label attrs] (cond->> options
                                    (not (available? value)) (cons [empty-value "Choose…" {:disabled true}]))
             :let [option (to-view option)]]
@@ -57,7 +57,7 @@
          (assoc attrs :value option :key (str option))
          label])]]))
 
-(defn textarea [{:keys [on-change value class-name to-view to-model] :as attrs}]
+(defn textarea [{:keys [disabled on-change value class-name to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)
         to-model (or to-model identity)]
     [form-field
@@ -65,11 +65,11 @@
      [:textarea.textarea
       {:value      (to-view value)
        :class-name class-name
-       #?@(:clj  [:disabled true]
-           :cljs [:on-change (comp on-change to-model dom/target-value)])}
+       :disabled #?(:clj true :cljs disabled)
+       #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}
       #?(:clj (to-view value))]]))
 
-(defn input [{:keys [on-change value class-name type to-view to-model] :as attrs}]
+(defn input [{:keys [disabled on-change value class-name type to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)
         to-model (or to-model identity)]
     [form-field
@@ -78,10 +78,10 @@
       {:value      (to-view value)
        :class-name class-name
        :type       (or type :text)
-       #?@(:clj  [:disabled true]
-           :cljs [:on-change (comp on-change to-model dom/target-value)])}]]))
+       :disabled #?(:clj true :cljs disabled)
+       #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}]]))
 
-(defn header [{:keys [value on-change to-view to-model] :as attrs}]
+(defn header [{:keys [disabled value on-change to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)
         to-model (or to-model identity)
         [k v] (to-view value)]
@@ -90,12 +90,12 @@
      [:div.header-field
       [:input.input.header-key
        {:value k
-        #?@(:clj  [:disabled true]
-            :cljs [:on-change #(on-change (to-model [(dom/target-value %) v]))])}]
+        :disabled #?(:clj true :cljs disabled)
+        #?@(:cljs [:on-change #(on-change (to-model [(dom/target-value %) v]))])}]
       [:input.input.header-value
        {:value v
-        #?@(:clj  [:disabled true]
-            :cljs [:on-change #(on-change (to-model [k (dom/target-value %)]))])}]]]))
+        :disabled #?(:clj true :cljs disabled)
+        #?@(:cljs [:on-change #(on-change (to-model [k (dom/target-value %)]))])}]]]))
 
 (defn multi [{:keys [key-fn value new-fn change-fn errors class-name] :as attrs} component]
   [form-field

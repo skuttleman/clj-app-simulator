@@ -7,10 +7,46 @@
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
     [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
+
+(deftest ^:unit toaster-test
+  (testing "(toaster)"
+    (let [show-toast-spy (spies/constantly ::action)
+          dispatch-spy (spies/create)]
+      (with-redefs [actions/show-toast show-toast-spy
+                    store/dispatch dispatch-spy]
+        (let [toast (shared.interactions/toaster ::level ::default-message)]
+          (testing "returns a function that returns the body"
+            (is (= ::body (toast ::body))))
+
+          (testing "when the body has a message"
+            (spies/reset! show-toast-spy dispatch-spy)
+            (toast {:message ::some-message})
+
+            (testing "toasts the message"
+              (is (spies/called-with? show-toast-spy ::level ::some-message))
+              (is (spies/called-with? dispatch-spy ::action))))
+
+          (testing "when the body has no message"
+            (spies/reset! show-toast-spy dispatch-spy)
+            (toast {})
+
+            (testing "toasts the default message"
+              (is (spies/called-with? show-toast-spy ::level ::default-message))
+              (is (spies/called-with? dispatch-spy ::action)))))))))
+
+(deftest ^:unit resetter-test
+  (testing "(resetter)"
+    (let [spy (spies/create)
+          reset (shared.interactions/resetter spy ::form ::arg-1 ::arg-2 ::arg-3)
+          result (reset ::body)]
+      (testing "applies f with args"
+        (is (spies/called-with? spy ::form ::arg-1 ::arg-2 ::arg-3)))
+
+      (testing "returns the body"
+        (is (= ::body result))))))
 
 (deftest ^:unit do-request-test
   (testing "(do-request)"
@@ -182,7 +218,8 @@
           action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
           nav-spy (spies/create)
-          request-spy (spies/create)]
+          request-spy (spies/create)
+          resetter-spy (spies/create (constantly identity))]
       (with-redefs [forms/current-model (constantly ::model)
                     forms/errors error-spy
                     forms/verify! (constantly nil)
@@ -190,7 +227,8 @@
                     actions/create-simulator action-spy
                     store/dispatch dispatch-spy
                     nav/nav-and-replace! nav-spy
-                    shared.interactions/do-request request-spy]
+                    shared.interactions/do-request request-spy
+                    shared.interactions/resetter resetter-spy]
         (testing "when form is submittable"
           (spies/reset! prevent-spy request-spy source-spy action-spy dispatch-spy nav-spy)
           ((shared.interactions/create-simulator ::form source-spy) ::event)
@@ -205,6 +243,8 @@
                 (is (spies/called-with? source-spy ::model))
                 (is (spies/called-with? action-spy ::source))
                 (is (spies/called-with? dispatch-spy ::action))
+                (is (spies/called-with? resetter-spy forms/reset! ::form ::model))
+                (is (spies/called-with? resetter-spy forms/ready! ::form))
                 (is (= ::dispatch request)))
 
               (testing "handles success"

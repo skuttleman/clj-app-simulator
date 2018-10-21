@@ -15,26 +15,32 @@
        (let [assoc-spy (spies/create)
              current-model-spy (spies/constantly {:some {:path ::value}})
              errors-spy (spies/constantly {:some {:path ::errors}})
+             sync-spy (spies/constantly ::syncing)
              model->view {:some {:path ::to-view}}
              view->model {:some {:path ::to-model}}]
          (with-redefs [forms/assoc-in assoc-spy
                        forms/current-model current-model-spy
-                       forms/display-errors errors-spy]
+                       forms/display-errors errors-spy
+                       forms/syncing? sync-spy]
            (testing "builds attrs"
-             (let [{:keys [on-change value to-view to-model errors]}
+             (let [{:keys [on-change value to-view to-model errors disabled]}
                    (shared.views/with-attrs {:some ::attrs}
                                             ::form
                                             [:some :path]
                                             model->view
                                             view->model)]
                (on-change ::new-value)
+
                (is (spies/called-with? assoc-spy ::form [:some :path] ::new-value))
                (is (spies/called-with? current-model-spy ::form))
+               (is (spies/called-with? sync-spy ::form))
+               (is (spies/called-with? errors-spy ::form))
+
                (is (= ::value value))
                (is (= ::to-view to-view))
                (is (= ::to-model to-model))
-               (is (spies/called-with? errors-spy ::form))
-               (is (= ::errors errors)))))))))
+               (is (= ::errors errors))
+               (is (= ::syncing disabled)))))))))
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"

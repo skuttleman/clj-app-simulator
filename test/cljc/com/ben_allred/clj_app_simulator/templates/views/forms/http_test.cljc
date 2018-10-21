@@ -72,10 +72,12 @@
   (testing "(headers-field)"
     (let [update-spy (spies/create)
           current-spy (spies/constantly {:response {:headers ::headers}})
-          error-spy (spies/constantly {:response {:headers ::errors}})]
+          error-spy (spies/constantly {:response {:headers ::errors}})
+          syncing-spy (spies/constantly ::syncing)]
       (with-redefs [#?@(:cljs [forms/update-in update-spy
                                forms/current-model current-spy
-                               forms/display-errors error-spy])]
+                               forms/display-errors error-spy
+                               forms/syncing? syncing-spy])]
         (let [root (http.views/headers-field ::form)
               multi (test.dom/query-one root fields/multi)
               attrs (test.dom/attrs multi)]
@@ -195,7 +197,7 @@
                (testing "and when resetting the simulator"
                  (testing "dispatches an action"
                    (is (-> edit-form
-                           (test.dom/query-one :.reset-button)
+                           (test.dom/query-one shared.views/sync-button :.reset-button)
                            (test.dom/attrs)
                            (:on-click)
                            (= ::reset)))
@@ -217,7 +219,7 @@
 
                    (testing "has a disabled save button"
                      (is (-> edit-form
-                             (test.dom/query-one :.save-button)
+                             (test.dom/query-one shared.views/sync-button :.save-button)
                              (test.dom/attrs)
                              (:disabled))))))
 
@@ -235,7 +237,7 @@
 
                    (testing "has a disabled save button"
                      (is (-> edit-form
-                             (test.dom/query-one :.save-button)
+                             (test.dom/query-one shared.views/sync-button :.save-button)
                              (test.dom/attrs)
                              (:disabled))))))
 
@@ -255,7 +257,7 @@
 
                    (testing "has an enabled save button"
                      (is (-> edit-form
-                             (test.dom/query-one :.save-button)
+                             (test.dom/query-one shared.views/sync-button :.save-button)
                              (test.dom/attrs)
                              (:disabled)
                              (not)))))))))))))
@@ -385,7 +387,7 @@
                     (= ::href))))
 
           (testing "renders a save button"
-            (let [button (test.dom/query-one form :.save-button)
+            (let [button (test.dom/query-one form shared.views/sync-button)
                   attrs (test.dom/attrs button)]
               (is button)
               (is #?(:clj  (:disabled attrs)
@@ -400,7 +402,7 @@
                  (is (spies/called-with? errors-spy ::form))
                  (is (spies/called-with? create-spy ::form))
                  (is (-> root
-                         (test.dom/query-one :.save-button)
+                         (test.dom/query-one shared.views/sync-button)
                          (test.dom/attrs)
                          (:disabled)))))))))))
 

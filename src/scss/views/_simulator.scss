@@ -1,8 +1,11 @@
 .simulator {
+    .info {
+        cursor: help;
+    }
+
     .requests {
         .request {
             padding-left: 8px;
-            cursor: pointer;
             color: $blue;
         }
     }

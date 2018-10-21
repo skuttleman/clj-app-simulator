@@ -10,6 +10,9 @@
     (apply update m k f f-args)
     m))
 
+(defn assoc-maybe [m & kvs]
+  (into m (comp (partition-all 2) (filter (comp some? second))) kvs))
+
 (defn map-kv [key-fn val-fn m]
   (->> m
        (map (fn [[k v]] [(key-fn k) (val-fn v)]))

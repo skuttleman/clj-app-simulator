@@ -74,10 +74,12 @@
   (testing "(headers-field)"
     (let [update-spy (spies/create)
           current-spy (spies/constantly {:response {:headers ::headers}})
-          error-spy (spies/constantly {:response {:headers ::errors}})]
+          error-spy (spies/constantly {:response {:headers ::errors}})
+          syncing-spy (spies/constantly ::syncing)]
       (with-redefs [#?@(:cljs [forms/update-in update-spy
                                forms/current-model current-spy
-                               forms/display-errors error-spy])]
+                               forms/display-errors error-spy
+                               forms/syncing? syncing-spy])]
         (let [root (file.views/headers-field ::form)
               multi (test.dom/query-one root fields/multi)
               attrs (test.dom/attrs multi)]

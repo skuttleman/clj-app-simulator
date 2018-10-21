@@ -4,19 +4,31 @@
     [clojure.set :as set]
     [clojure.string :as string]
     [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+
+(defn ^:private extract-classes
+  ([attrs]
+   (extract-classes attrs nil))
+  ([attrs classes]
+   (->> [(:class-name attrs) (:class attrs)]
+        (concat (string/split (str classes) #"\."))
+        (transduce (comp (map (comp strings/trim-to-nil keywords/safe-name))
+                         (filter some?)
+                         (mapcat (comp #(string/split % #"\s") keywords/safe-name)))
+                   conj
+                   #{}))))
 
 (defn ^:private tag->map [tag & [attrs :as args]]
   (if (fn? tag)
-    {:component tag
-     :args      args}
+    (-> attrs
+        (select-keys #{:id})
+        (maps/assoc-maybe :classes (extract-classes attrs))
+        (merge {:component tag
+                :args      args}))
     (let [[_ tag id classes] (re-find #"([^\#\.]+)?(\#[^\.]+)?(\..*)?" (name tag))
-          class-name (->> (string/split (string/join " " (map keywords/safe-name [(:class-name attrs)
-                                                                                  (:class attrs)]))
-                                        #"\s")
-                          (string/join "."))
-          classes (->> (string/split (str classes "." class-name) #"\.")
-                       (transduce (comp (map string/trim) (filter seq)) conj #{}))]
+          classes (extract-classes attrs classes)]
       (cond-> {}
         (seq classes) (assoc :classes classes)
         tag (assoc :tag tag)
@@ -46,8 +58,11 @@
     (cond->> matches
       (and (sequential? tree) (node-matches? tree selector)) (cons tree))))
 
-(defn query-one [tree selector]
-  (first (query-all tree selector)))
+(defn query-one
+  ([tree component selector]
+   (query-one (into [:div] (query-all tree selector)) component))
+  ([tree selector]
+   (first (query-all tree selector))))
 
 (defn render [[elem & args :as tree]]
   (if (fn? elem)

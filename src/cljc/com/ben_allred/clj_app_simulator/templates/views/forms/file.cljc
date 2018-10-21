@@ -72,15 +72,21 @@
    [headers-field form]
    [file-field form uploads]
    [:div.button-row
-    [:button.button.is-info.save-button
-     {:disabled #?(:clj true :cljs (or (forms/display-errors form)
-                                       (not (forms/changed? form))))}
-     "Save"]
-    [:button.button.is-warning.reset-button
-     {:type :button
-      #?@(:clj  [:disabled true]
-          :cljs [:on-click (interactions/reset-simulator form id)])}
-     "Reset"]]])
+    [shared.views/sync-button
+     {:form       form
+      :text       "Save"
+      :sync-text  "Saving"
+      :class-name "is-info save-button"
+      :disabled   #?(:clj true :cljs (or (forms/display-errors form)
+                                         (not (forms/changed? form))))}]
+    [shared.views/sync-button
+     {:form       form
+      :text       "Reset"
+      :sync-text  "Resetting"
+      :type       :button
+      :class-name "is-warning reset-button"
+      :disabled   #?(:clj true :cljs false)
+      #?@(:cljs [:on-click (interactions/reset-simulator form id)])}]]])
 
 (defn sim-edit-form [{:keys [id] :as sim} uploads]
   (let [model (tr/sim->model sim)
@@ -125,9 +131,12 @@
    [headers-field form]
    [file-field form uploads]
    [:div.button-row
-    [:button.button.is-info.save-button
-     {:disabled #?(:clj true :cljs (forms/display-errors form))}
-     "Save"]
+    [shared.views/sync-button
+     {:form       form
+      :text       "Save"
+      :sync-text  "Saving"
+      :disabled   #?(:clj true :cljs (forms/display-errors form))
+      :class-name "is-info save-button"}]
     [:a.button.is-warning.reset-button
      {:href (nav*/path-for :home)}
      "Cancel"]]])
