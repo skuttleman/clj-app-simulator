@@ -6,11 +6,8 @@
 
 (def get
   #?(:clj  environ/env
-     :cljs {:host     (.-host (.-location js/window))
-            :protocol (if (re-find #"https" (.-protocol (.-location js/window)))
-                        :https
-                        :http)}))
-
-(def dev?
-  #?(:clj  (not= "production" (get :ring-env))
-     :cljs (boolean (re-find #"localhost" (get :host)))))
+     :cljs (-> {:host     (.-host (.-location js/window))
+                :protocol (if (re-find #"https" (.-protocol (.-location js/window)))
+                            :https
+                            :http)}
+               (merge (js->clj (aget js/window "ENV") :keywordize-keys true)))))

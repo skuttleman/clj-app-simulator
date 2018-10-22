@@ -1,5 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.ui.services.store.core
   (:require
+    [com.ben-allred.clj-app-simulator.services.env :as env]
     [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]
     [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]
     [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
@@ -10,14 +11,15 @@
 
 (defonce ^:private store
   (activity/sub
-    (collaj/create-custom-store
-      r/atom
-      reducers/root
-      collaj.enhancers/with-fn-dispatch
-      (collaj/apply-middleware mw/sims->sim)
-      (collaj.enhancers/with-log-middleware
-        (partial js/console.log "Action dispatched:")
-        (partial js/console.log "New state:")))))
+    (apply collaj/create-custom-store
+           r/atom
+           reducers/root
+           collaj.enhancers/with-fn-dispatch
+           (collaj/apply-middleware mw/sims->sim)
+           (cond-> nil
+             (env/get :dev?) (conj (collaj.enhancers/with-log-middleware
+                                     (partial js/console.log "Action dispatched:")
+                                     (partial js/console.log "New state:")))))))
 
 (def get-state (:get-state store))
 

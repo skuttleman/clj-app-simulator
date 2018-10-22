@@ -99,6 +99,7 @@
   [(partial web/stop (run app env))])
 
 (defn -dev [& {:as env}]
+  (alter-var-root #'env/get assoc :dev? true)
   (let [server (run #'app env)
         nrepl-port (server-port env :nrepl-port 7000)
         repl-server (nrepl/start-server :port nrepl-port)]
