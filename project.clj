@@ -63,7 +63,9 @@
                         :compiler     {:output-to     "resources/public/js/compiled/app.js"
                                        :main          com.ben-allred.clj-app-simulator.ui.app
                                        :optimizations :advanced
-                                       :pretty-print  false}}]}
+                                       :pretty-print  false
+                                       :language-in   :ecmascript6
+                                       :language-out  :ecmascript5}}]}
   :figwheel {:css-dirs   ["resources/public/css"]
              :nrepl-port 7888}
   :sass {:src              "src/scss"

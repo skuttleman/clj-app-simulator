@@ -85,7 +85,7 @@
   (let [port (server-port env :port 3000)
         server (web/run app {:port port})
         runtime (Runtime/getRuntime)]
-    (->> ^Runnable (fn [] (resources/clear! env))
+    (->> ^Runnable (fn [] (resources/clear! (env*)))
          (Thread.)
          (.addShutdownHook runtime))
     (println "Server is listening on port" port)
