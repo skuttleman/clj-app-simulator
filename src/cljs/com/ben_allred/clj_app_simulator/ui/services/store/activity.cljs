@@ -6,18 +6,20 @@
     [com.ben-allred.clj-app-simulator.utils.transit :as transit]))
 
 (defn ^:private on-msg [dispatch {:keys [event data]}]
-  (case event
-    :simulators/init (dispatch [:simulators.fetch-all/succeed {:simulators data}])
-    :simulators/receive (dispatch [:simulators.activity/receive data])
-    :simulators/add (dispatch [:simulators.activity/add {:simulator data}])
-    :simulators/delete (dispatch [:simulators.activity/delete data])
-    :simulators/reset (dispatch [:simulators.activity/reset {:simulator data}])
-    :simulators.http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
-    :simulators.ws/reset-messages (dispatch [:simulators.activity/reset-requests {:simulator data}])
-    :simulators/change (dispatch [:simulators.activity/change {:simulator data}])
-    :simulators.ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
-    :simulators.ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
-    (js/console.log [:UNKNOWN-WS event data])))
+  (let [type (case event
+               :simulators/init (dispatch [:simulators.fetch-all/succeed {:simulators data}])
+               :simulators/receive (dispatch [:simulators.activity/receive data])
+               :simulators/add (dispatch [:simulators.activity/add {:simulator data}])
+               :simulators/delete (dispatch [:simulators.activity/delete data])
+               :simulators/reset (dispatch [:simulators.activity/reset {:simulator data}])
+               :simulators.http/reset-requests (dispatch [:simulators.activity/reset-requests {:simulator data}])
+               :simulators.ws/reset-messages (dispatch [:simulators.activity/reset-requests {:simulator data}])
+               :simulators/change (dispatch [:simulators.activity/change {:simulator data}])
+               :simulators.ws/connect (dispatch [:simulators.activity/connect {:simulator data}])
+               :simulators.ws/disconnect (dispatch [:simulators.activity/disconnect {:simulator data}])
+               ::unknown)]
+    (when (and (= ::unknown type) (env/get :dev?))
+      (js/console.log [:activity/unknown event data]))))
 
 (defn ^:private reconnect [dispatch]
   (let [host (env/get :host)

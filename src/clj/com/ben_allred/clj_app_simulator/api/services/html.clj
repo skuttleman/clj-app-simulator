@@ -39,7 +39,7 @@
   (let [type (get-in state [:page :query-params :type])
         [component input] (case (keyword type)
                             :ws [ws.views/sim-create-form]
-                            :file [file.views/sim-create-form (:uploads state)]
+                            :file [file.views/sim-create-form (:resources state)]
                             [http.views/sim-create-form])]
     [views/new
      state
@@ -48,7 +48,7 @@
        [component])
      [views/spinner]]))
 
-(defn ^:private details [{:keys [page simulators uploads]}]
+(defn ^:private details [{:keys [page simulators resources]}]
   (let [id (uuids/->uuid (get-in page [:route-params :id]))
         data (:data simulators)]
     [views/details
@@ -59,7 +59,7 @@
                                    (case
                                      :http [http.views/sim]
                                      :ws [ws.views/sim]
-                                     :file [file.views/sim (:data uploads)]
+                                     :file [file.views/sim (:data resources)]
                                      (constantly nil)))]
          (cond-> [component simulator]
            input (conj input)))
@@ -84,7 +84,7 @@
      [:span.file-icon
       [:i.fa.fa-upload]]]
     resource
-    (get-in state [:uploads :data])
+    (get-in state [:resources :data])
     [views/spinner]]])
 
 (def ^:private app-attrs
@@ -140,9 +140,9 @@
 
 (defn hydrate [page env]
   (let [{:keys [dispatch get-state]} (collaj/create-store ui-reducers/root)
-        uploads (resources/list-files env)
+        resources (resources/list-files env)
         [_ {:keys [simulators]}] (simulators/details env)]
-    (dispatch [:files.fetch-all/succeed {:uploads uploads}])
+    (dispatch [:files.fetch-all/succeed {:resources resources}])
     (dispatch [:simulators/clear])
     (doseq [simulator simulators]
       (dispatch [:simulators.fetch-one/succeed {:simulator simulator}]))

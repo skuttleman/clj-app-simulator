@@ -41,8 +41,8 @@
           show-spy (spies/constantly ::on-click)]
       (with-redefs [interactions/upload-resources upload-spy
                     interactions/show-delete-modal show-spy]
-        (let [[_ attrs upload-btn res uploads] (-> (resources/root [::upload])
-                                                   (test.dom/query-one views.res/resources))]
+        (let [[_ attrs upload-btn res resources] (-> (resources/root [::resource])
+                                                     (test.dom/query-one views.res/resources))]
           (testing "has an :on-click attr"
             (is (spies/called-with? show-spy "Delete All Resources" "all resources" actions/delete-uploads))
             (is (= ::on-click (:on-click attrs)))
@@ -58,7 +58,7 @@
             (is (= res resources/resource)))
 
           (testing "passes the uploads"
-            (is (= uploads [::upload])))
+            (is (= resources [::resource])))
 
           (testing "when the uploads are empty"
             (let [[_ attrs] (-> (resources/root [])

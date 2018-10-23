@@ -5,21 +5,21 @@
     [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
     [com.ben-allred.clj-app-simulator.ui.views.components.core :as components]))
 
-(defn resource [{:keys [id] :as upload}]
+(defn resource [{:keys [id] :as resource}]
   [views.res/resource
    {:on-click (interactions/show-delete-modal "Delete Resource" "this resource" (actions/delete-upload id))}
-   upload
+   resource
    [components/upload
     {:on-change  (partial interactions/replace-resource id)
      :class-name "is-warning"
      :multiple   false}]])
 
-(defn root [uploads]
+(defn root [resources]
   [views.res/resources
-   {:disabled (empty? uploads)
+   {:disabled (empty? resources)
     :on-click (interactions/show-delete-modal "Delete All Resources" "all resources" actions/delete-uploads)}
    [components/upload
     {:on-change  interactions/upload-resources
      :class-name "is-primary"}]
    resource
-   uploads])
+   resources])

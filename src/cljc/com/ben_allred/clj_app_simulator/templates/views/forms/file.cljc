@@ -47,11 +47,11 @@
        (dissoc :on-change))
    fields/header])
 
-(defn file-field [form uploads]
+(defn file-field [form resources]
   [fields/select
    (-> {:label "File"}
        (with-attrs form [:response :file]))
-   (->> uploads
+   (->> resources
         (map (juxt :id :filename))
         (sort-by second))])
 
@@ -61,7 +61,7 @@
        (with-attrs form [:method]))
    resources/file-methods])
 
-(defn sim-edit-form* [id form uploads]
+(defn sim-edit-form* [id form resources]
   [:form.simulator-edit
    #?(:cljs {:on-submit (interactions/update-simulator form id)})
    [name-field form]
@@ -70,7 +70,7 @@
    [status-field form]
    [delay-field form]
    [headers-field form]
-   [file-field form uploads]
+   [file-field form resources]
    [:div.button-row
     [shared.views/sync-button
      {:form       form
@@ -88,20 +88,20 @@
       :disabled   #?(:clj true :cljs false)
       #?@(:cljs [:on-click (interactions/reset-simulator form id)])}]]])
 
-(defn sim-edit-form [{:keys [id] :as sim} uploads]
+(defn sim-edit-form [{:keys [id] :as sim} resources]
   (let [model (tr/sim->model sim)
         model' (cond-> model
-                 (not (contains? (set (map :id uploads)) (get-in model [:response :file])))
+                 (not (contains? (set (map :id resources)) (get-in model [:response :file])))
                  (update :response dissoc :file))
         form #?(:clj  model'
                 :cljs (forms/create model' resources/validate-existing))]
-    (fn [_simulator uploads]
-      [sim-edit-form* id form uploads])))
+    (fn [_simulator resources]
+      [sim-edit-form* id form resources])))
 
-(defn sim [{:keys [config requests id] :as simulator} uploads]
+(defn sim [{:keys [config requests id] :as simulator} resources]
   [:div.simulator
    [views.sim/sim-details simulator]
-   [sim-edit-form simulator uploads]
+   [sim-edit-form simulator resources]
    [:h3.title.is-4 "Requests:"]
    [:ul.requests
     (for [request (sort-by :timestamp > requests)]
@@ -118,7 +118,7 @@
         :cljs {:on-click (shared.interactions/show-delete-modal id)})
      "Delete Simulator"]]])
 
-(defn sim-create-form* [form uploads]
+(defn sim-create-form* [form resources]
   [:form.simulator-create
    #?(:cljs {:on-submit (interactions/create-simulator form)})
    [method-field form]
@@ -129,7 +129,7 @@
    [status-field form]
    [delay-field form]
    [headers-field form]
-   [file-field form uploads]
+   [file-field form resources]
    [:div.button-row
     [shared.views/sync-button
      {:form       form
@@ -141,13 +141,13 @@
      {:href (nav*/path-for :home)}
      "Cancel"]]])
 
-(defn sim-create-form [_uploads]
+(defn sim-create-form [_resources]
   (let [model {:path     "/"
                :delay    0
                :method   :file/get
                :response {:status 200}}
         form #?(:clj  model
                 :cljs (forms/create model resources/validate-new))]
-    (fn [uploads]
+    (fn [resources]
       [:div.simulator
-       [sim-create-form* form uploads]])))
+       [sim-create-form* form resources]])))

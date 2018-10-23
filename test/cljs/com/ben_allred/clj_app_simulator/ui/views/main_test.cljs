@@ -46,7 +46,7 @@
         (testing "when there are uploads"
           (spies/reset! path-for-spy)
           (let [root (-> {:simulators {:status ::status :data ::data}
-                          :uploads    {:data [::file-1 ::file-2]}}
+                          :resources    {:data [::file-1 ::file-2]}}
                          (main/root)
                          (test.dom/query-one views/root))]
             (testing "has file option in the create menu"
@@ -133,14 +133,14 @@
 
 (deftest ^:unit resources-test
   (testing "(resources)"
-    (let [root (-> {:uploads ::uploads}
+    (let [root (-> {:resources ::resources}
                    (main/resources)
                    (test.dom/query-one views/resources))]
       (testing "renders the root component with status"
-        (let [[_ component uploads] (test.dom/query-one root components/with-status)]
+        (let [[_ component resources] (test.dom/query-one root components/with-status)]
           (is (= resources/root
                  component))
-          (is (= ::uploads uploads)))))))
+          (is (= ::resources resources)))))))
 
 (defn run-tests []
   (t/run-tests))

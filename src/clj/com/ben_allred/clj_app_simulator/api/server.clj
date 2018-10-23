@@ -42,6 +42,7 @@
         (->> (get-in request [:params :files])
              (colls/force-sequential)
              (resources/upload! (env*))
+             (assoc {} :resources)
              (conj [:created])))
       (PUT "/:resource-id" request
         (let [{:keys [resource-id file]} (:params request)]
@@ -49,7 +50,7 @@
                (resources/upload! (env*) resource-id)
                (conj [:ok]))))
       (GET "/" []
-        [:ok {:uploads (resources/list-files (env*))}])
+        [:ok {:resources (resources/list-files (env*))}])
       (DELETE "/" []
         (resources/clear! (env*))
         [:no-content])

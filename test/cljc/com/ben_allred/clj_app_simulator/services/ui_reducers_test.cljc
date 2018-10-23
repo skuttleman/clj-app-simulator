@@ -125,34 +125,34 @@
     (testing "returns unchanged state for any random action"
       (is (= ::same-state (reducers/toasts ::same-state [:any-random-action ::ignored]))))))
 
-(deftest ^:unit uploads-test
-  (testing "(uploads)"
+(deftest ^:unit resources-test
+  (testing "(resources)"
     (testing "has default state"
-      (is (= {:status :init :data []} (reducers/uploads))))
+      (is (= {:status :init :data []} (reducers/resources))))
 
     (testing "handles :files.fetch-all/fail"
       (is (= {:status :failed :data ::data}
-             (reducers/uploads {:status :available :data ::data}
+             (reducers/resources {:status :available :data ::data}
                                [:files.fetch-all/fail]))))
 
     (testing "handles :files.fetch-all/request"
       (is (= {:status :pending :data ::data}
-             (reducers/uploads {:status :available :data ::data}
+             (reducers/resources {:status :available :data ::data}
                                [:files.fetch-all/request]))))
 
     (testing "handles :files.upload/succeed"
       (is (= {:status :available :data [::file-1 ::file-2 ::file-3 ::file-4]}
-             (reducers/uploads {:status :pending :data [::file-1 ::file-2]}
-                               [:files.upload/succeed [::file-3 ::file-4]]))))
+             (reducers/resources {:status :pending :data [::file-1 ::file-2]}
+                               [:files.upload/succeed {:resources [::file-3 ::file-4]}]))))
 
     (testing "handles :files.fetch-all/succeed"
       (is (= {:status :available :data [::file-3 ::file-4]}
-             (reducers/uploads {:status :pending :data [::file-1 ::file-2]}
-                               [:files.fetch-all/succeed {:uploads [::file-3 ::file-4]}]))))
+             (reducers/resources {:status :pending :data [::file-1 ::file-2]}
+                               [:files.fetch-all/succeed {:resources [::file-3 ::file-4]}]))))
 
     (testing "returns unchanged state for any random action"
       (is (= {:status ::some-status :data ::same-state}
-             (reducers/uploads {:status ::some-status :data ::same-state} [:any-random-action ::ignored]))))))
+             (reducers/resources {:status ::some-status :data ::same-state} [:any-random-action ::ignored]))))))
 
 (defn run-tests []
   (t/run-tests))

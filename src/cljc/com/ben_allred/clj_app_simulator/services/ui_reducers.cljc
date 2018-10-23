@@ -74,7 +74,7 @@
          :simulators.activity/delete (dissoc state id)
          (simulators-reducer state action))))))
 
-(def uploads
+(def resources
   (with-status
     {:pending   #{:files.fetch-all/request}
      :available #{:files.fetch-all/succeed :files.upload/succeed :files.replace/succeed
@@ -84,12 +84,12 @@
       ([] [])
       ([state [type data]]
        (case type
-         :files.upload/succeed (into state data)
+         :files.upload/succeed (into state (:resources data))
          :files.replace/succeed (colls/replace-by :id data state)
          :files.delete/succeed (vec (remove (comp #{(:id data)} :id) state))
          :files.delete-all/succeed []
-         :files.fetch-all/succeed (:uploads data)
+         :files.fetch-all/succeed (:resources data)
          state)))))
 
 (def root
-  (collaj.reducers/combine (maps/->map page modal toasts simulators uploads)))
+  (collaj.reducers/combine (maps/->map page modal toasts simulators resources)))

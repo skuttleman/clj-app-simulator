@@ -12,19 +12,19 @@
     [com.ben-allred.clj-app-simulator.utils.simulators :as utils.sims]
     [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]))
 
-(defn root [{:keys [simulators uploads]}]
+(defn root [{:keys [simulators resources]}]
   [views/root
    [:div.button-row
     [components/menu
      {:items (cond->> [[:http "HTTP Simulator"] [:ws "WS Simulator"]]
-               (seq (:data uploads)) (cons [:file "File Server"])
+               (seq (:data resources)) (cons [:file "File Server"])
                :always (map (fn [[type label]]
                               {:href  (nav/path-for :new {:query-params {:type type}})
                                :label label})))}
      [:button.button "Create"]]]
    [views.sim/simulators (:data simulators)]])
 
-(defn details [{:keys [page simulators uploads]}]
+(defn details [{:keys [page simulators resources]}]
   (let [id (uuids/->uuid (get-in page [:route-params :id]))
         data (:data simulators)]
     [views/details
@@ -35,7 +35,7 @@
                                    (case
                                      :http [http.views/sim]
                                      :ws [ws.views/sim]
-                                     :file [file.views/sim uploads]
+                                     :file [file.views/sim resources]
                                      [views/spinner]))
              detail (assoc simulators :data simulator)]
          (cond-> [components/with-status component detail]
@@ -47,7 +47,7 @@
         [component input] (case (keyword type)
                             :ws [ws.views/sim-create-form]
                             :http [http.views/sim-create-form]
-                            :file [file.views/sim-create-form (:uploads state)]
+                            :file [file.views/sim-create-form (:resources state)]
                             nil)]
     (if component
       [views/new
@@ -57,6 +57,6 @@
          [component])]
       (nav/nav-and-replace! :new {:query-params {:type :http}}))))
 
-(defn resources [{:keys [uploads]}]
+(defn resources [{:keys [resources]}]
   [views/resources
-   [components/with-status resources/root uploads]])
+   [components/with-status resources/root resources]])

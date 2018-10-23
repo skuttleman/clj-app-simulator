@@ -4,7 +4,6 @@
     [com.ben-allred.clj-app-simulator.services.ui-reducers :as reducers]
     [com.ben-allred.clj-app-simulator.ui.services.store.activity :as activity]
     [com.ben-allred.clj-app-simulator.ui.services.store.middleware :as mw]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
     [com.ben-allred.collaj.core :as collaj]
     [com.ben-allred.collaj.enhancers :as collaj.enhancers]
     [reagent.core :as r]))

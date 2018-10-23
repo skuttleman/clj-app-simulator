@@ -18,7 +18,7 @@
       delete-attrs
       "Delete"]]]])
 
-(defn resources [delete-attrs upload-btn resource uploads & children]
+(defn resources [delete-attrs upload-btn resource resources & children]
   (into [:div
          [:div.button-row
           (conj upload-btn "Upload")
@@ -26,7 +26,7 @@
            [:button.button.is-danger
             delete-attrs
             "Delete All"]]]
-         (if (seq uploads)
+         (if (seq resources)
            [:ul.resources
             (for [upload (sort-by (juxt :timestamp :filename)
                                   (fn [[ts1 f1] [ts2 f2]]
@@ -34,7 +34,7 @@
                                       (if (zero? ts)
                                         (compare f1 f2)
                                         (* -1 ts))))
-                                  uploads)]
+                                  resources)]
               ^{:key (str (:id upload))}
               [resource upload])]
            [:p "There are no uploaded resources. Once you have uploaded a

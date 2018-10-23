@@ -24,6 +24,7 @@
         result (file->data [id file'])]
     (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
     result))
+
 (defn ^:private add! [env key idfn]
   (comp (map #(upload* env (idfn) %))
         (fns/each (partial activity/publish env key))))

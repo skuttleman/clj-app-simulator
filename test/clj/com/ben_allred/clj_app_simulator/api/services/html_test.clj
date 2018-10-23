@@ -55,14 +55,14 @@
 
             (testing "and when the type is file"
               (let [state {:page    {:query-params {:type "file"}}
-                           :uploads {:data ::uploads}}
+                           :resources {:data ::resources}}
                     args (-> state
                              (new*)
                              (test.dom/query-one views/new)
                              (rest))]
                 (testing "renders the file create form"
                   (is (= args
-                         [state [file.views/sim-create-form ::uploads] [views/spinner]])))))
+                         [state [file.views/sim-create-form ::resources] [views/spinner]])))))
 
             (testing "and when there is any other type"
               (let [state {:page {:query-params {:type ::type}}}
@@ -82,7 +82,7 @@
                 (let [simulator {:config ::config :data ::data}
                       state {:page       {:route-params {:id ::id}}
                              :simulators {:data {::uuid simulator}}
-                             :uploads    {:data ::uploads}}]
+                             :resources    {:data ::resources}}]
                   (testing "and when the simulator is type :http"
                     (spies/respond-with! config-spy (constantly "http"))
                     (testing "renders the view"
@@ -117,7 +117,7 @@
                         (is (spies/called-with? uuid-spy ::id))
                         (is (spies/called-with? config-spy ::config))
                         (is (= args
-                               [[file.views/sim simulator ::uploads] [views/spinner]]))))))
+                               [[file.views/sim simulator ::resources] [views/spinner]]))))))
 
                 (testing "and when the simulator is not found"
                   (spies/respond-with! uuid-spy ::missing-uuid)
@@ -132,7 +132,7 @@
                       (is (= spinner [views/spinner]))))))))
 
           (testing "when rendering a resources component"
-            (let [state {:uploads {:data ::data}}
+            (let [state {:resources {:data ::data}}
                   [resources' delete-attrs btn resource data spinner]
                   (-> state
                       (resources)
@@ -225,7 +225,7 @@
           dispatch-spy (spies/create)
           get-state-spy (spies/constantly {:some :state})
           create-store-spy (spies/constantly {:dispatch dispatch-spy :get-state get-state-spy})
-          list-files-spy (spies/constantly ::uploads)
+          list-files-spy (spies/constantly ::resources)
           details-spy (spies/constantly [nil {:simulators [::sim-1 ::sim-2 ::sim-3]}])]
       (with-redefs [html/build-tree build-spy
                     html/tree->html html-spy
@@ -246,7 +246,7 @@
             (is (spies/called-with? details-spy ::env)))
 
           (testing "calls dispatch to setup state"
-            (is (spies/called-with? dispatch-spy [:files.fetch-all/succeed {:uploads ::uploads}]))
+            (is (spies/called-with? dispatch-spy [:files.fetch-all/succeed {:resources ::resources}]))
             (is (spies/called-with-times? dispatch-spy 1 [:simulators/clear]))
             (is (-> dispatch-spy
                     (spies/with-order [:simulators/clear])

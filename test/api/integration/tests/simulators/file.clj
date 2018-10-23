@@ -38,7 +38,7 @@
 
             (testing "and when getting a list of resources"
               (let [[_ body :as response] (test.http/get "/api/resources" content-type)
-                    results (set (map (juxt :id :filename) (:uploads body)))]
+                    results (set (map (juxt :id :filename) (:resources body)))]
                 (testing "includes the uploaded resource"
                   (is (test.http/success? response))
                   (is (contains? results [id-1 "sample.txt"])))
@@ -53,7 +53,7 @@
 
                     (testing "and when getting a list of resources"
                       (let [[_ body :as response] (test.http/get "/api/resources" content-type)
-                            results (set (map (juxt :id :filename) (:uploads body)))]
+                            results (set (map (juxt :id :filename) (:resources body)))]
                         (testing "includes both resources"
                           (is (test.http/success? response))
                           (is (contains? results [id-1 "sample.txt"]))
@@ -70,7 +70,7 @@
                             (let [[_ body :as response] (test.http/get "/api/resources" content-type)]
                               (testing "returns an empty list"
                                 (is (test.http/success? response))
-                                (is (empty? (:uploads body)))))))))))))))
+                                (is (empty? (:resources body)))))))))))))))
 
         (testing "when uploading two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
@@ -87,7 +87,7 @@
 
             (testing "and when getting a list of resources"
               (let [[_ body :as response] (test.http/get "/api/resources" content-type)
-                    results (set (map (juxt :id :filename) (:uploads body)))]
+                    results (set (map (juxt :id :filename) (:resources body)))]
                 (testing "returns both resources"
                   (is (test.http/success? response))
                   (is (contains? results [id-1 "sample.txt"]))
@@ -103,7 +103,7 @@
 
                     (testing "and when getting a list of resources"
                       (let [[_ body :as response] (test.http/get "/api/resources" content-type)
-                            results (set (map (juxt :id :filename) (:uploads body)))]
+                            results (set (map (juxt :id :filename) (:resources body)))]
                         (is (test.http/success? response))
 
                         (testing "includes the resource that was not deleted"
