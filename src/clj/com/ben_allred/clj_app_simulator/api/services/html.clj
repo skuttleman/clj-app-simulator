@@ -73,7 +73,8 @@
    [:button.button.is-warning.file-cta
     {:disabled true}
     [:span.file-icon
-     [:i.fa.fa-upload]]]])
+     [:i.fa.fa-upload]
+     "Upload"]]])
 
 (defn ^:private resources [state]
   [views/resources
@@ -82,7 +83,8 @@
     [:button.button.is-primary.file-cta
      {:disabled true}
      [:span.file-icon
-      [:i.fa.fa-upload]]]
+      [:i.fa.fa-upload]]
+     "Upload"]
     resource
     (get-in state [:resources :data])
     [views/spinner]]])

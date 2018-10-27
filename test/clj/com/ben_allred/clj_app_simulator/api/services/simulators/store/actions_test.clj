@@ -18,29 +18,32 @@
   (testing "(receive)"
     (let [prepare-spy (spies/create (comp first vector))]
       (with-redefs [content/prepare prepare-spy]
-        (testing "cleans request"
-          (let [actual (actions/receive {:extra        ::extra
-                                         :stuff        ::stuff
-                                         :socket-id    ::socket-id
-                                         :headers      {"some" ::headers "accept" ::accept}
-                                         :timestamp    ::timestamp
-                                         :body         ::body
-                                         :query-params {"some" ::query-params}
-                                         :route-params ::route-params})
-                expected {:headers      {:some ::headers :accept ::accept}
-                          :body         ::body
-                          :query-params {:some ::query-params}
-                          :route-params ::route-params
-                          :socket-id    ::socket-id}]
-            (is (spies/called-with? prepare-spy expected #{:content-type :accept} ::accept))
-            (is (= expected (dissoc (second actual) :timestamp)))
+        (let [actual (actions/receive {:extra        ::extra
+                                       :stuff        ::stuff
+                                       :socket-id    ::socket-id
+                                       :headers      {"some" ::headers "accept" ::accept}
+                                       :timestamp    ::timestamp
+                                       :body         ::body
+                                       :query-params {"some" ::query-params}
+                                       :route-params ::route-params})
+              expected {:headers      {:some ::headers :accept ::accept}
+                        :body         ::body
+                        :query-params {:some ::query-params}
+                        :route-params ::route-params
+                        :socket-id    ::socket-id}]
+          (testing "cleans request"
+            (is (spies/called-with? prepare-spy (spies/matcher #(= (dissoc % :id) expected)) #{:content-type :accept} ::accept))
+            (is (= expected (dissoc (second actual) :timestamp :id))))
 
-            (testing "wraps cleaned request in a tuple"
-              (is (= :simulators/receive (first actual))))
+          (testing "adds an id"
+            (is (uuid? (:id (second actual)))))
 
-            (testing "adds timestamp"
-              (let [timestamp (:timestamp (second (actions/receive {})))]
-                (is (test.dt/date-within timestamp (Date.) 10))))))))))
+          (testing "wraps cleaned request in a tuple"
+            (is (= :simulators/receive (first actual))))
+
+          (testing "adds timestamp"
+            (let [timestamp (:timestamp (second (actions/receive {})))]
+              (is (test.dt/date-within timestamp (Date.) 10)))))))))
 
 (deftest ^:unit change-test
   (testing "(change)"

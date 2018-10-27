@@ -1,6 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.services.emitter
   (:require
-    [clojure.core.async :as async :include-macros true]
+    [clojure.core.async :as async #?@(:cljs [:include-macros true])]
     [clojure.core.async.impl.protocols :as impl]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]))
 

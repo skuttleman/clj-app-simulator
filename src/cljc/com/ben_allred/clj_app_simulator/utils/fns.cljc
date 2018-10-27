@@ -21,7 +21,7 @@
       val
       (clojure.core/or val (recur more)))))
 
-(defn each
+(defn each!
   ([f!]
    (fn [rf]
      (fn

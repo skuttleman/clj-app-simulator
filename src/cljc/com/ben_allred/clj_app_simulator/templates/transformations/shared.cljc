@@ -1,8 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.shared
   (:require
     [clojure.string :as string]
-    [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.fns :as fns #?@(:cljs [:include-macros true])]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log #?@(:cljs [:include-macros true])]
     [com.ben-allred.clj-app-simulator.utils.maps :as maps]
     [com.ben-allred.clj-app-simulator.utils.numbers :as nums]
     [com.ben-allred.clj-app-simulator.utils.strings :as strings]

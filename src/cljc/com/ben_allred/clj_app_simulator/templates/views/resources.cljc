@@ -12,7 +12,7 @@
      "Uploaded "
      [:span.resource-timestamp (dates/format timestamp)]]]
    [:div.button-row.buttons-right
-    (conj replace-btn "Replace")
+    replace-btn
     [:div
      [:button.button.is-danger
       delete-attrs
@@ -21,7 +21,7 @@
 (defn resources [delete-attrs upload-btn resource resources & children]
   (into [:div
          [:div.button-row
-          (conj upload-btn "Upload")
+          upload-btn
           [:div
            [:button.button.is-danger
             delete-attrs

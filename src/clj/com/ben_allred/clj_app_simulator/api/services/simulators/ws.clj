@@ -13,7 +13,7 @@
 
 (s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
 
-(s/def ::method (s/conformer (comp #(or % ::s/invalid) #{:ws} keyword)))
+(s/def ::method (s/conformer (comp #(or % ::s/invalid) #{:ws/ws} keyword)))
 
 (s/def :ws/ws-simulator (s/keys :req-un [::path ::method]))
 
@@ -32,8 +32,8 @@
   (let [{:keys [dispatch]} store
         socket-id (uuids/random)]
     (dispatch (actions/connect socket-id ws))
-    (activity/publish env :simulators.ws/connect (assoc (common/details simulator)
-                                                        :socket-id socket-id))))
+    (activity/publish env :simulators.ws/connect {:simulator (common/details simulator)
+                                                  :socket-id socket-id})))
 
 (defn on-message [simulator request store ws message]
   (let [{:keys [get-state]} store
@@ -43,15 +43,14 @@
                                   :query-params query-params
                                   :route-params route-params
                                   :socket-id    socket-id
-                                  :message-id   (uuids/random)
                                   :body         message}))))
 
 (defn on-close [env simulator _ store ws _]
   (let [{:keys [dispatch get-state]} store]
     (when-let [socket-id (actions/find-socket-id (get-state) ws)]
       (dispatch (actions/remove-socket socket-id))
-      (activity/publish env :simulators.ws/disconnect (assoc (common/details simulator)
-                                                             :socket-id socket-id)))))
+      (activity/publish env :simulators.ws/disconnect {:simulator (common/details simulator)
+                                                       :socket-id socket-id}))))
 
 (defn ->WsSimulator [env id config]
   (when-let [{:keys [path method] :as config} (conform-to :ws/ws-simulator config)]
@@ -68,7 +67,7 @@
         common/IReceive
         (receive! [this request]
           (dispatch (actions/receive request))
-          (routes.sim/receive env this (select-keys request #{:socket-id :message-id})))
+          (routes.sim/receive env this))
         (received [_]
           (store/requests (get-state)))
 
@@ -94,7 +93,7 @@
         common/IPartiallyReset
         (partially-reset! [_ type]
           (case type
-            :messages (dispatch actions/reset-messages)))
+            :ws/requests (dispatch actions/reset-messages)))
 
         common/ICommunicate
         (connect! [this {:keys [websocket?] :as request}]

@@ -46,7 +46,7 @@
 (defn add [env config]
   (if-let [simulator (make-simulator! env config)]
     (let [sim (common/details simulator)]
-      (activity/publish env :simulators/add sim)
+      (activity/publish env :simulators/add {:simulator sim})
       [:created {:simulator sim}])
     [:bad-request {:message "error creating simulator"}]))
 
@@ -56,15 +56,16 @@
       (do
         (sims/clear! env)
         (let [sims (->> configs
-                        (map (comp common/details (partial make-simulator! env))))]
+                        (map (comp common/details (partial make-simulator! env)))
+                        (assoc {} :simulators))]
           (activity/publish env :simulators/init sims)
-          [:created {:simulators sims}]))
+          [:created sims]))
       [:bad-request {:message "one or more invalid simulators"}])))
 
 (defn reset-all! [env]
   (let [sims (simulator-configs env)]
     (dorun (map common/reset! sims))
-    (activity/publish env :simulators/reset-all (map common/details sims)))
+    (activity/publish env :simulators/reset-all {:simulators (map common/details sims)}))
   [:no-content])
 
 (defn routes [env]

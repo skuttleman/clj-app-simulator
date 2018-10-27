@@ -1,6 +1,7 @@
 (ns com.ben-allred.clj-app-simulator.api.server
   (:gen-class)
   (:require
+    [clojure.spec.alpha :as s]
     [clojure.tools.nrepl.server :as nrepl]
     [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
     [com.ben-allred.clj-app-simulator.api.services.html :as html]
@@ -48,6 +49,7 @@
         (let [{:keys [resource-id file]} (:params request)]
           (->> file
                (resources/upload! (env*) resource-id)
+               (assoc {} :resource)
                (conj [:ok]))))
       (GET "/" []
         [:ok {:resources (resources/list-files (env*))}])
@@ -101,6 +103,7 @@
 
 (defn -dev [& {:as env}]
   (alter-var-root #'env/get assoc :dev? true)
+  (s/check-asserts true)
   (let [server (run #'app env)
         nrepl-port (server-port env :nrepl-port 7000)
         repl-server (nrepl/start-server :port nrepl-port)]

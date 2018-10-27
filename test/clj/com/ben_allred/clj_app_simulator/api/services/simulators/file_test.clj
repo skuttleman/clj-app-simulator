@@ -144,14 +144,14 @@
   (testing "(->FileSimulator.reset-requests)"
     (testing "resets simulator's requests"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/partially-reset! sim :requests)
+        (common/partially-reset! sim :file/requests)
         (is (spies/called-with? dispatch actions/reset-requests))))))
 
 (deftest ^:unit ->FileSimulator.reset-response-test
   (testing "(->FileSimulator.reset-response)"
     (testing "resets simulator's response"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/partially-reset! sim :response)
+        (common/partially-reset! sim :file/response)
         (is (spies/called-with? dispatch actions/reset-response))))))
 
 (deftest ^:unit ->FileSimulator.change-test

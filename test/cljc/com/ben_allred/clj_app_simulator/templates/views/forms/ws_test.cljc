@@ -42,9 +42,9 @@
                     #?@(:cljs [interactions/show-send-modal send-spy
                                interactions/show-ws-modal show-spy
                                interactions/disconnect disconnect-spy])]
-        (let [messages [{:body :body-1 :timestamp :timestamp-1 :message-id :message-id-1}
-                        {:body :body-2 :timestamp :timestamp-2 :message-id :message-id-2}
-                        {:body :body-3 :timestamp :timestamp-3 :message-id :message-id-3}]]
+        (let [messages [{:id :id-1 :body :body-1 :timestamp :timestamp-1 :message-id :message-id-1}
+                        {:id :id-2 :body :body-2 :timestamp :timestamp-2 :message-id :message-id-2}
+                        {:id :id-3 :body :body-3 :timestamp :timestamp-3 :message-id :message-id-3}]]
           (testing "when there are messages"
             (let [root (ws.views/socket ::simulator-id "socket-id" messages true)
                   msg-trees (test.dom/query-all root :.ws-message)
@@ -54,7 +54,7 @@
                       :let [tree (nth msg-trees idx)
                             num (inc idx)]]
                 (testing (str "has message " num)
-                  (is (= (str ":message-id-" num) (:key (test.dom/attrs tree))))
+                  (is (= (str ":id-" num) (:key (test.dom/attrs tree))))
                   (is (spies/called-with? format-spy (keyword (str "timestamp-" num))))
                   (is (test.dom/contains? tree (keyword (str "timestamp-" num))))
                   (is (test.dom/contains? tree (keyword (str "body-" num)))))
@@ -373,7 +373,7 @@
     (let [form-spy (spies/constantly ::form)]
       (with-redefs [#?@(:cljs [forms/create form-spy])]
         (let [component (ws.views/sim-create-form)
-              model {:method :ws :path "/"}]
+              model {:method :ws/ws :path "/"}]
           #?(:cljs
              (testing "creates a form"
                (is (spies/called-with? form-spy model resources/validate-new))))

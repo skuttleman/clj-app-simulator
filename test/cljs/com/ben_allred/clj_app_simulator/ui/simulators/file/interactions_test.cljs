@@ -2,11 +2,11 @@
   (:require
     [clojure.test :as t :refer [deftest is testing]]
     [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
+    [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
     [com.ben-allred.clj-app-simulator.ui.simulators.file.interactions :as interactions]
     [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
 
@@ -83,36 +83,66 @@
     (let [replace-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::request)
           toaster-spy (spies/create (fn [level _] level))
-          request-spy (spies/create)]
+          resetter-spy (spies/create (fn [f & _] f))
+          request-spy (spies/create)
+          sync-spy (spies/create)
+          model-spy (spies/constantly ::model)]
       (with-redefs [actions/upload-replace replace-spy
                     store/dispatch dispatch-spy
                     shared.interactions/toaster toaster-spy
-                    shared.interactions/do-request request-spy]
+                    shared.interactions/resetter resetter-spy
+                    shared.interactions/do-request request-spy
+                    forms/current-model model-spy
+                    forms/sync! sync-spy
+                    forms/reset! :reset!
+                    forms/ready! :ready!]
         (testing "replaces a resource"
-          (interactions/replace-resource ::id ::files)
+          ((interactions/replace-resource ::form ::id) ::files)
+          (is (spies/called-with? model-spy ::form))
+          (is (spies/called-with? sync-spy ::form (spies/matcher any?)))
           (is (spies/called-with? replace-spy ::id ::files))
           (is (spies/called-with? dispatch-spy ::action))
-          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (is (spies/called-with? resetter-spy :reset! ::form ::model))
+          (is (spies/called-with? resetter-spy :ready! ::form))
           (is (spies/called-with? toaster-spy :error (spies/matcher string?)))
-          (is (spies/called-with? request-spy ::request :success :error)))))))
+          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (let [[request success-fn error-fn] (first (spies/calls request-spy))]
+            (is (= ::request request))
+            (is (= ::reset (success-fn {:success {:reset! ::reset}})))
+            (is (= ::ready (error-fn {:error {:ready! ::ready}})))))))))
 
 (deftest ^:unit upload-resources-test
   (testing "(upload-resources)"
-    (let [upload-spy (spies/constantly ::action)
+    (let [replace-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::request)
           toaster-spy (spies/create (fn [level _] level))
-          request-spy (spies/create)]
-      (with-redefs [actions/upload upload-spy
+          resetter-spy (spies/create (fn [f & _] f))
+          request-spy (spies/create)
+          sync-spy (spies/create)
+          model-spy (spies/constantly ::model)]
+      (with-redefs [actions/upload replace-spy
                     store/dispatch dispatch-spy
                     shared.interactions/toaster toaster-spy
-                    shared.interactions/do-request request-spy]
-        (testing "uploads resources"
-          (interactions/upload-resources ::files)
-          (is (spies/called-with? upload-spy ::files))
+                    shared.interactions/resetter resetter-spy
+                    shared.interactions/do-request request-spy
+                    forms/current-model model-spy
+                    forms/sync! sync-spy
+                    forms/reset! :reset!
+                    forms/ready! :ready!]
+        (testing "replaces a resource"
+          ((interactions/upload-resources ::form) ::files)
+          (is (spies/called-with? model-spy ::form))
+          (is (spies/called-with? sync-spy ::form (spies/matcher any?)))
+          (is (spies/called-with? replace-spy ::files))
           (is (spies/called-with? dispatch-spy ::action))
-          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (is (spies/called-with? resetter-spy :reset! ::form ::model))
+          (is (spies/called-with? resetter-spy :ready! ::form))
           (is (spies/called-with? toaster-spy :error (spies/matcher string?)))
-          (is (spies/called-with? request-spy ::request :success :error)))))))
+          (is (spies/called-with? toaster-spy :success (spies/matcher string?)))
+          (let [[request success-fn error-fn] (first (spies/calls request-spy))]
+            (is (= ::request request))
+            (is (= ::reset (success-fn {:success {:reset! ::reset}})))
+            (is (= ::ready (error-fn {:error {:ready! ::ready}})))))))))
 
 (defn run-tests []
   (t/run-tests))

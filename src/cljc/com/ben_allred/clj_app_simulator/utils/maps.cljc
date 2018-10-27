@@ -44,13 +44,12 @@
 
 (defn walk [m f]
   (when m
-    (let [m' (meta m)]
-      (cond-> (into {}
-                    (map (fn [[k v]]
-                           (let [v' (if (map? v) (walk v f) v)]
-                             (f k v'))))
-                    m)
-        m' (with-meta m')))))
+    (-> (into {}
+              (map (fn [[k v]]
+                     (let [v' (if (map? v) (walk v f) v)]
+                       (f k v'))))
+              m)
+        (with-meta (meta m)))))
 
 (defn onto
   ([k]

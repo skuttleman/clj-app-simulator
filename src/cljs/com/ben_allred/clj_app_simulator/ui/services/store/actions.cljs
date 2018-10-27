@@ -40,11 +40,11 @@
         (http/post {:body {:simulator simulator}})
         (request* dispatch :simulators.create/succeed :simulators.create/fail))))
 
-(defn clear-requests [action id]
+(defn clear-requests [id type]
   (fn [[dispatch]]
     (dispatch [:simulators.clear-requests/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action action}})
+        (http/patch {:body {:action :simulators/reset :type type}})
         (request* dispatch :simulators.clear-requests/succeed :simulators.clear-requests/fail))))
 
 (defn reset-simulator [id]

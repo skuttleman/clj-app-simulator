@@ -4,7 +4,9 @@
     [#?(:clj clojure.core.async :cljs cljs.core.async) :as async]
     [clojure.set :as set]
     [com.ben-allred.clj-app-simulator.services.content :as content]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.clj-app-simulator.utils.logging :as log #?@(:cljs [:include-macros true])]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
     [kvlt.chan :as kvlt]))
 
 (def ^:private content-type

@@ -76,12 +76,12 @@
 
       (testing "when given a :ws simulator"
         (let [root (-> state
-                       (assoc-in [:simulators :data id :config :method] :ws)
+                       (assoc-in [:simulators :data id :config :method] :ws/ws)
                        (main/details)
                        (test.dom/query-one views/details))
               [_ & args] (test.dom/query-one root components/with-status)]
           (testing "renders the component"
-            (is (= [ws.views/sim {:status ::status :data {:config {:method :ws :path "/path"} ::and ::things}}]
+            (is (= [ws.views/sim {:status ::status :data {:config {:method :ws/ws :path "/path"} ::and ::things}}]
                    args)))))
 
       (testing "when the simulator has an unknown method"

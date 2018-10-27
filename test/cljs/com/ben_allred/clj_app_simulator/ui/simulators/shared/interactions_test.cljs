@@ -143,7 +143,7 @@
           ((shared.interactions/clear-requests :http ::id) ::event)
           (let [[request] (first (spies/calls request-spy))]
             (testing "dispatches an action"
-              (is (spies/called-with? action-spy :simulators.http/reset-requests ::id))
+              (is (spies/called-with? action-spy ::id :http/requests))
               (is (spies/called-with? dispatch-spy ::action))
               (is (= ::dispatch request)))))
 
@@ -152,7 +152,7 @@
           ((shared.interactions/clear-requests :ws ::id) ::event)
           (let [[request] (first (spies/calls request-spy))]
             (testing "dispatches an action"
-              (is (spies/called-with? action-spy :simulators.ws/reset-messages ::id))
+              (is (spies/called-with? action-spy ::id :ws/requests))
               (is (spies/called-with? dispatch-spy ::action))
               (is (= ::dispatch request)))))))))
 

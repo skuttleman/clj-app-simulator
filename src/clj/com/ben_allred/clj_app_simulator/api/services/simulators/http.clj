@@ -91,5 +91,5 @@
         common/IPartiallyReset
         (partially-reset! [_ type]
           (case type
-            :requests (dispatch actions/reset-requests)
-            :response (dispatch actions/reset-response)))))))
+            :http/requests (dispatch actions/reset-requests)
+            :http/response (dispatch actions/reset-response)))))))

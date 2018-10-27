@@ -32,47 +32,8 @@
             (let [[url] (first (spies/calls ws-spy))]
               (is (= url "ws://some-host:123/api/simulators/activity"))))
 
-          (testing "dispatches on :simulators/init"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators/init :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.fetch-all/succeed {:simulators ::data}])))
-
-          (testing "dispatches on :simulators/receive"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators/receive :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/receive ::data])))
-
-          (testing "dispatches on :simulators/add"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators/add :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/add {:simulator ::data}])))
-
-          (testing "dispatches on :simulators/delete"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators/delete :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/delete ::data])))
-
-          (testing "dispatches on :simulators.http/reset-requests"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators.http/reset-requests :data ::simulator})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/reset-requests {:simulator ::simulator}])))
-
-          (testing "dispatches on :simulators/change"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators/change :data ::simulator})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/change {:simulator ::simulator}])))
-
-          (testing "dispatches on :simulators.ws/connect"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators.ws/connect :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/connect {:simulator ::data}])))
-
-          (testing "dispatches on :simulators.ws/disconnect"
-            (spies/reset! dispatch-spy)
-            (on-msg {:event :simulators.ws/disconnect :data ::data})
-            (is (spies/called-with? dispatch-spy [:simulators.activity/disconnect {:simulator ::data}])))
-
           (testing "returns the store"
             (is (= result store))))))))
 
-(defn run-tests [] (t/run-tests))
+(defn run-tests []
+  (t/run-tests))

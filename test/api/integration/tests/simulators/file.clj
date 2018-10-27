@@ -31,9 +31,9 @@
           (let [response (test.http/upload "/api/resources" content-type "sample.txt")]
             (is (test.http/success? response)))
 
-          (let [{:keys [event] {id-1 :id filename-1 :filename} :data} (chans/timeout-take! chan)]
+          (let [{:keys [event] {{id-1 :id filename-1 :filename} :resource} :data} (chans/<⏰!! chan)]
             (testing "publishes an event"
-              (is (= :resources/add (keyword event)))
+              (is (= :resources/put (keyword event)))
               (is (= "sample.txt" filename-1)))
 
             (testing "and when getting a list of resources"
@@ -46,9 +46,9 @@
                 (testing "and when uploading a second resource"
                   (test.http/upload "/api/resources" content-type "sample2.txt")
 
-                  (let [{:keys [event] {id-2 :id filename-2 :filename} :data} (chans/timeout-take! chan)]
+                  (let [{:keys [event] {{id-2 :id filename-2 :filename} :resource} :data} (chans/<⏰!! chan)]
                     (testing "publishes an event"
-                      (is (= :resources/add (keyword event)))
+                      (is (= :resources/put (keyword event)))
                       (is (= "sample2.txt" filename-2)))
 
                     (testing "and when getting a list of resources"
@@ -62,7 +62,7 @@
                         (testing "and when deleting all resources"
                           (is (test.http/success? (test.http/delete "/api/resources" content-type)))
 
-                          (let [{:keys [event]} (chans/timeout-take! chan)]
+                          (let [{:keys [event]} (chans/<⏰!! chan)]
                             (testing "publishes an event"
                               (is (= :resources/clear (keyword event)))))
 
@@ -75,14 +75,14 @@
         (testing "when uploading two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
 
-          (let [{event-1 :event data-1 :data} (chans/timeout-take! chan)
-                {event-2 :event data-2 :data} (chans/timeout-take! chan)
+          (let [{event-1 :event {data-1 :resource} :data} (chans/<⏰!! chan)
+                {event-2 :event {data-2 :resource} :data} (chans/<⏰!! chan)
                 id-1 (:id (first (filter (comp #{"sample.txt"} :filename) [data-1 data-2])))
                 id-2 (:id (first (filter (comp #{"sample2.txt"} :filename) [data-1 data-2])))]
 
             (testing "publishes an event for each file"
-              (is (= :resources/add (keyword event-1)))
-              (is (= :resources/add (keyword event-2)))
+              (is (= :resources/put (keyword event-1)))
+              (is (= :resources/put (keyword event-2)))
               (is (and id-1 id-2)))
 
             (testing "and when getting a list of resources"
@@ -96,10 +96,10 @@
                 (testing "and when deleting one resource"
                   (test.http/delete (str "/api/resources/" id-1) content-type)
 
-                  (let [{:keys [event data]} (chans/timeout-take! chan)]
+                  (let [{:keys [event data]} (chans/<⏰!! chan)]
                     (testing "publishes an event"
                       (is (= :resources/remove (keyword event)))
-                      (is (= {:filename "sample.txt" :id id-1} (select-keys data #{:filename :id}))))
+                      (is (= {:filename "sample.txt" :id id-1} (select-keys (:resource data) #{:filename :id}))))
 
                     (testing "and when getting a list of resources"
                       (let [[_ body :as response] (test.http/get "/api/resources" content-type)
@@ -126,8 +126,8 @@
                                 :to-clj (content-type->parser content-type))]
         (testing "when saving two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
-          (let [{data-1 :data} (chans/timeout-take! chan)
-                {data-2 :data} (chans/timeout-take! chan)
+          (let [{{data-1 :resource} :data} (chans/<⏰!! chan)
+                {{data-2 :resource} :data} (chans/<⏰!! chan)
                 id-1 (:id (first (filter (comp #{"sample.txt"} :filename) [data-1 data-2])))
                 id-2 (:id (first (filter (comp #{"sample2.txt"} :filename) [data-1 data-2])))]
             (testing "publishes an event for each file"
@@ -137,9 +137,10 @@
                                                           content-type
                                                           {:body {:simulators [{:method   :file/get
                                                                                 :path     "/some/file"
-                                                                                :response {:status 202 :file id-1}}]}})]
+                                                                                :response {:status 202 :file id-1}}]}})
+                    simulator-id (:id (first (get-in body [:simulators])))]
                 (testing "publishes an event"
-                  (let [{:keys [event]} (chans/timeout-take! chan)]
+                  (let [{:keys [event]} (chans/<⏰!! chan)]
                     (is (= :simulators/init (keyword event)))))
 
                 (testing "returns a success response"
@@ -153,21 +154,21 @@
                       (is (= body (slurp "test/fixtures/sample.txt")))))
 
                   (testing "publishes an event"
-                    (let [{:keys [event data]} (chans/timeout-take! chan)]
+                    (let [{:keys [event data]} (chans/<⏰!! chan)]
                       (is (= :simulators/receive (keyword event)))
                       (is (= {:some "qp"} (get-in data [:request :query-params])))))
 
                   (testing "and when updating the file-id for the simulator"
-                    (let [response (test.http/patch "/api/simulators/get/some/file"
+                    (let [response (test.http/patch (str "/api/simulators/" simulator-id)
                                                     content-type
                                                     {:body {:action :simulators/change
                                                             :config {:response {:file id-2}}}})]
                       (is (test.http/success? response)))
 
                     (testing "publishes an event"
-                      (let [{:keys [event data]} (chans/timeout-take! chan)]
+                      (let [{:keys [event data]} (chans/<⏰!! chan)]
                         (is (= :simulators/change (keyword event)))
-                        (is (= id-2 (get-in data [:config :response :file])))))
+                        (is (= id-2 (get-in data [:simulator :config :response :file])))))
 
                     (testing "and when making a request to the file simulator"
                       (let [[_ body :as response] (test.http/get "/simulators/some/file?some=new-qp" "text/plain")]
@@ -176,7 +177,7 @@
                           (is (= body (slurp "test/fixtures/sample2.txt")))))
 
                       (testing "publishes an event"
-                        (let [{:keys [event data]} (chans/timeout-take! chan)]
+                        (let [{:keys [event data]} (chans/<⏰!! chan)]
                           (is (= :simulators/receive (keyword event)))
                           (is (= {:some "new-qp"} (get-in data [:request :query-params])))))
 
@@ -184,7 +185,7 @@
                         (test.http/upload-put (str "/api/resources/" id-2) content-type "sample3.txt")
 
                         (testing "publishes an event"
-                          (let [{{:keys [id filename]} :data event :event} (chans/timeout-take! chan)]
+                          (let [{{{:keys [id filename]} :resource} :data event :event} (chans/<⏰!! chan)]
                             (is (= id id-2))
                             (is (= "sample3.txt" filename))
                             (is (= :resources/put (keyword event))))
@@ -196,23 +197,23 @@
                                 (is (= body (slurp "test/fixtures/sample3.txt"))))
 
                               (testing "publishes an event"
-                                (let [{:keys [event data]} (chans/timeout-take! chan)]
+                                (let [{:keys [event data]} (chans/<⏰!! chan)]
                                   (is (= :simulators/receive (keyword event)))
                                   (is (empty? (get-in data [:request :query-params])))))))))
 
                       (testing "and when deleting the resource"
                         (test.http/delete (str "/api/resources/" id-2) content-type)
 
-                        (let [{:keys [event data]} (chans/timeout-take! chan)]
+                        (let [{:keys [event data]} (chans/<⏰!! chan)]
                           (testing "publishes an event"
                             (is (= :resources/remove (keyword event)))
-                            (is (= {:filename "sample3.txt" :id id-2} (select-keys data #{:filename :id}))))
+                            (is (= {:filename "sample3.txt" :id id-2} (select-keys (:resource data) #{:filename :id}))))
 
                           (testing "and when making a request to the file simulator"
                             (let [[_ _ status] (test.http/get "/simulators/some/file" "text/plain")]
 
                               (testing "publishes an event"
-                                (let [{:keys [event]} (chans/timeout-take! chan)]
+                                (let [{:keys [event]} (chans/<⏰!! chan)]
                                   (is (= :simulators/receive (keyword event)))))
 
                               (testing "returns :not-found"

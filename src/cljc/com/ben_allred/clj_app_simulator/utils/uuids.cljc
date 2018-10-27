@@ -3,6 +3,10 @@
      (:import
        (java.util UUID))))
 
+(defn uuid-str? [s]
+  (and (string? s)
+       (boolean (re-matches #"[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}" s))))
+
 (defn ->uuid [v]
   (when v
     (if (uuid? v)

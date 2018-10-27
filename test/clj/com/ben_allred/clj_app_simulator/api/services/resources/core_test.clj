@@ -28,16 +28,16 @@
                 state (::env @uploads)]
 
             (testing "publishes an event for file-2"
-              (is (= :resources/add event-1))
+              (is (= :resources/put event-1))
               (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
-                     (dissoc data-1 :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-1))))))
+                     (dissoc (:resource data-1) :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-1 [:resource :timestamp]))))))
 
             (testing "publishes an event for file-3"
-              (is (= :resources/add event-2))
+              (is (= :resources/put event-2))
               (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
-                     (dissoc data-2 :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data-2))))))
+                     (dissoc (:resource data-2) :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-2 [:resource :timestamp]))))))
 
             (testing "has file-1"
               (is (= ::file-1 (get-in state [111 :file]))))
@@ -71,8 +71,8 @@
             (testing "publishes an event for file-3"
               (is (= :resources/put event))
               (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 111}
-                     (dissoc data :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (:timestamp data))))))
+                     (dissoc (:resource data) :timestamp)))
+              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data [:resource :timestamp]))))))
 
             (testing "has file-3"
               (is (= ::file-3 (get-in state [111 :file]))))
@@ -149,7 +149,7 @@
                     (get-in [::env 222])
                     (dissoc :file)
                     (assoc :id 222)
-                    (= data)))))
+                    (= (:resource data))))))
 
         (testing "when deleting a resource that does not exist"
           (reset! uploads upload-data)

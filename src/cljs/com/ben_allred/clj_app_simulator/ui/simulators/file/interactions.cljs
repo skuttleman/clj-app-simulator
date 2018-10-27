@@ -1,10 +1,10 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.file.interactions
   (:require
     [com.ben-allred.clj-app-simulator.templates.transformations.file :as tr]
+    [com.ben-allred.clj-app-simulator.ui.services.forms.core :as forms]
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]))
+    [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]))
 
 (defn update-simulator [form id]
   (shared.interactions/update-simulator form tr/model->source id))
@@ -35,14 +35,26 @@
         [:button.button.cancel-button
          "Cancel"]))))
 
-(defn replace-resource [id files]
-  (shared.interactions/do-request
-    (store/dispatch (actions/upload-replace id files))
-    (shared.interactions/toaster :success "The resource has been replaced")
-    (shared.interactions/toaster :error "The resource could not be replaced")))
+(defn replace-resource [form id]
+  (fn [files]
+    (let [current-model (forms/current-model form)]
+      (forms/sync! form (gensym))
+      (shared.interactions/do-request
+        (store/dispatch (actions/upload-replace id files))
+        (comp (shared.interactions/resetter forms/reset! form current-model)
+              (shared.interactions/toaster :success "The resource has been replaced"))
+        (comp (shared.interactions/resetter forms/ready! form)
+              (shared.interactions/toaster :error "The resource could not be replaced"))))))
 
-(defn upload-resources [files]
-  (shared.interactions/do-request
-    (store/dispatch (actions/upload files))
-    (shared.interactions/toaster :success "The resources have been uploaded and are available for use in a file simulator")
-    (shared.interactions/toaster :error "The resources could not be uploaded")))
+(defn upload-resources [form]
+  (fn [files]
+    (let [current-model (forms/current-model form)]
+      (forms/sync! form (gensym))
+      (shared.interactions/do-request
+        (store/dispatch (actions/upload files))
+        (comp (shared.interactions/resetter forms/reset! form current-model)
+              (shared.interactions/toaster :success
+                                           "The resources have been uploaded and are available for use in a file simulator"))
+        (comp (shared.interactions/resetter forms/ready! form)
+              (shared.interactions/toaster :error
+                                           "The resources could not be uploaded"))))))

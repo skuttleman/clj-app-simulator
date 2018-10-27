@@ -1,6 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.api.services.activity
   (:require
     [clojure.core.async :as async]
+    [clojure.spec.alpha :as s]
+    [com.ben-allred.clj-app-simulator.api.utils.specs :as specs]
     [com.ben-allred.clj-app-simulator.services.emitter :as emitter]
     [com.ben-allred.clj-app-simulator.utils.json :as json]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
@@ -29,5 +31,21 @@
          :on-close (fn [_ _]
                      (async/close! chan))}))))
 
+(def ^:private event->spec
+  {:resources/put ::specs/resource-item
+   :resources/remove ::specs/resource-item
+   :simulators/change ::specs/details-simulator
+   :simulators/delete ::specs/details-simulator
+   :simulators/add ::specs/details-simulator
+   :simulators/init ::specs/details-simulators
+   :simulators/receive ::specs/request-details
+   :simulators/reset-all ::specs/details-simulators
+   :simulators/reset ::specs/details-simulator
+   :simulators.ws/connect ::specs/socket-simulator
+   :simulators.ws/disconnect ::specs/socket-simulator})
+
 (defn publish [env event data]
+  (some-> event
+          (event->spec)
+          (s/assert data))
   (emitter/publish emitter env event data))

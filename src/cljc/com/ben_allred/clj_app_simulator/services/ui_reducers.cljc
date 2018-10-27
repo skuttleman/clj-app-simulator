@@ -2,7 +2,7 @@
   (:require
     [com.ben-allred.clj-app-simulator.utils.colls :as colls]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
-    [com.ben-allred.clj-app-simulator.utils.maps :as maps :include-macros true]
+    [com.ben-allred.clj-app-simulator.utils.maps :as maps #?@(:cljs [:include-macros true])]
     [com.ben-allred.collaj.reducers :as collaj.reducers]))
 
 (defn ^:private with-status [m reducer]
@@ -48,16 +48,16 @@
     (comp :id :simulator second)
     (fn
       ([] nil)
-      ([state [type {:keys [simulator request message-id]}]]
+      ([state [type {:keys [simulator socket-id request]}]]
        (case type
-         :simulators.activity/receive (update state :requests (fnil conj []) (assoc request :message-id message-id))
+         :simulators.activity/receive (update state :requests (fnil conj []) request)
          :simulators.activity/reset-requests (assoc state :requests [])
          :simulators.activity/change (assoc state :config (:config simulator))
          :simulators.activity/reset (assoc state :config (:config simulator))
          :simulators.fetch-one/succeed simulator
          :simulators.activity/add simulator
-         :simulators.activity/connect (update state :sockets (fnil conj #{}) (:socket-id simulator))
-         :simulators.activity/disconnect (update state :sockets (fnil disj #{}) (:socket-id simulator))
+         :simulators.activity/connect (update state :sockets (fnil conj #{}) socket-id)
+         :simulators.activity/disconnect (update state :sockets (fnil disj #{}) socket-id)
          state)))))
 
 (def simulators
@@ -68,10 +68,10 @@
      :failed    #{:simulators.fetch-all/fail :simulators.fetch-one/fail}}
     (fn
       ([] (simulators-reducer))
-      ([state [type {id :id} :as action]]
+      ([state [type {:keys [simulator]} :as action]]
        (case type
          :simulators/clear (simulators-reducer)
-         :simulators.activity/delete (dissoc state id)
+         :simulators.activity/delete (dissoc state (:id simulator))
          (simulators-reducer state action))))))
 
 (def resources

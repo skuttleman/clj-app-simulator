@@ -3,6 +3,7 @@
     [com.ben-allred.clj-app-simulator.services.content :as content]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [com.ben-allred.clj-app-simulator.utils.maps :as maps]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
     [immutant.web.async :as web.async])
   (:import
     (java.util Date)))
@@ -12,7 +13,8 @@
 
 (defn ^:private clean [request]
   (-> request
-      (select-keys [:body :query-params :route-params :headers :socket-id :message-id])
+      (select-keys [:body :query-params :route-params :headers :socket-id])
+      (assoc :id (uuids/random))
       (update :headers (partial maps/map-keys keyword))
       (update :query-params (partial maps/map-keys keyword))
       (prepare)

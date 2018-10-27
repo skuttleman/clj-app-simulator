@@ -150,7 +150,7 @@
           (spies/reset! make-spy details-spy publish-spy)
           (let [result (simulators/add ::env ::config)]
             (testing "publishes an event"
-              (is (spies/called-with? publish-spy ::env :simulators/add ::details)))
+              (is (spies/called-with? publish-spy ::env :simulators/add {:simulator ::details})))
 
             (testing "returns a the simulator's details"
               (is (test.http/success? (respond/with result)))
@@ -193,9 +193,9 @@
               (is (spies/called-with? publish-spy
                                       ::env
                                       :simulators/init
-                                      [{:details [::simulator ::env ::cfg-1]}
-                                       {:details [::simulator ::env ::cfg-2]}
-                                       {:details [::simulator ::env ::cfg-3]}])))
+                                      {:simulators [{:details [::simulator ::env ::cfg-1]}
+                                                    {:details [::simulator ::env ::cfg-2]}
+                                                    {:details [::simulator ::env ::cfg-3]}]})))
 
             (testing "returns the simulators' details"
               (is (test.http/success? (respond/with result)))
@@ -245,8 +245,8 @@
             (is (spies/called-with? publish-spy
                                     ::env
                                     :simulators/reset-all
-                                    [[::details ::sim-1]
-                                     [::details ::sim-2]]))
+                                    {:simulators [[::details ::sim-1]
+                                                  [::details ::sim-2]]}))
             (is (spies/called-with? details-spy ::sim-1))
             (is (spies/called-with? details-spy ::sim-2)))
 

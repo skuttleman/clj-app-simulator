@@ -3,7 +3,7 @@
     [clojure.string :as string]
     [com.ben-allred.clj-app-simulator.utils.colors :as colors]
     [kvlt.core :refer [quiet!]]
-    [taoensso.timbre :as logger :include-macros true]))
+    [taoensso.timbre :as logger #?@(:cljs [:include-macros true])]))
 
 (defmacro debug [& args]
   `(logger/debug ~@args))

@@ -1,7 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.templates.transformations.file
   (:require
     [com.ben-allred.clj-app-simulator.templates.transformations.shared :as shared.tr]
-    [com.ben-allred.clj-app-simulator.utils.fns :as fns :include-macros true]
     [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
     [com.ben-allred.formation.core :as f]))
 

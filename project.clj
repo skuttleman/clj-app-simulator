@@ -35,7 +35,8 @@
                  [ring/ring-json "0.3.1"]
                  [stylefruits/gniazdo "1.0.1"]]
 
-  :plugins [[lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
+  :plugins [[com.jakemccrary/lein-test-refresh "0.23.0"]
+            [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
             [lein-cooper "1.2.2"]
             [lein-figwheel "0.5.14"]
             [lein-sass "0.5.0"]]

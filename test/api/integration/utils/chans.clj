@@ -16,9 +16,9 @@
          (recur (async/<! chan)))))
    nil))
 
-(defn timeout-take!
+(defn <⏰!!
   ([chan]
-   (timeout-take! chan 100))
+   (<⏰!! chan 100))
   ([chan ms]
    (let [[value] (async/alts!! [chan (async/go
                                        (async/<! (async/timeout ms))

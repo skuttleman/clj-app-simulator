@@ -139,14 +139,14 @@
   (testing "(->HttpSimulator.reset-requests)"
     (testing "resets simulator's requests"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/partially-reset! sim :requests)
+        (common/partially-reset! sim :http/requests)
         (is (spies/called-with? dispatch actions/reset-requests))))))
 
 (deftest ^:unit ->HttpSimulator.reset-response-test
   (testing "(->HttpSimulator.reset-response)"
     (testing "resets simulator's response"
       (let [[sim _ _ dispatch] (simulator)]
-        (common/partially-reset! sim :response)
+        (common/partially-reset! sim :http/response)
         (is (spies/called-with? dispatch actions/reset-response))))))
 
 (deftest ^:unit ->HttpSimulator.change-test

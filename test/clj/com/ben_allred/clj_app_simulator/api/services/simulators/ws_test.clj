@@ -12,7 +12,7 @@
     [test.utils.spies :as spies]))
 
 (defn ^:private simulator
-  ([] (simulator {:method :ws
+  ([] (simulator {:method :ws/ws
                   :path   "/some/path"}))
   ([config]
    (let [dispatch (spies/create)
@@ -26,22 +26,22 @@
   (testing "(valid?)"
     (testing "recognizes valid configs"
       (are [config] (ws.sim/valid? config)
-        {:path "/some/path" :method :ws}
-        {:path "/" :method "ws"}
-        {:path "/:id" :method :ws}
-        {:path "/some/path" :method :ws}
-        {:path "/this/:is/also/:valid" :method "ws"}))
+        {:path "/some/path" :method :ws/ws}
+        {:path "/" :method "ws/ws"}
+        {:path "/:id" :method :ws/ws}
+        {:path "/some/path" :method :ws/ws}
+        {:path "/this/:is/also/:valid" :method "ws/ws"}))
 
     (testing "recognizes invalid configs"
       (are [config] (not (ws.sim/valid? config))
         {}
         {:path "/valid/path"}
-        {:method :ws}
+        {:method :ws/ws}
         {:path nil :method nil}
         {:path "" :method :ws}
         {:path "/" :method :method}
-        {:path "/$$$" :method :ws}
-        {:path "/path/" :method :ws}
+        {:path "/$$$" :method :ws/ws}
+        {:path "/path/" :method :ws/ws}
         {:path ::path :method ::method}))))
 
 (deftest ^:unit on-open-test
@@ -63,17 +63,15 @@
 
           (testing "publishes an event"
             (is (spies/called-with? details-spy ::simulator))
-            (is (spies/called-with? publish-spy ::env :simulators.ws/connect {::some ::details :socket-id uuid}))))))))
+            (is (spies/called-with? publish-spy ::env :simulators.ws/connect {:simulator {::some ::details} :socket-id uuid}))))))))
 
 (deftest ^:unit on-message-test
   (testing "(on-message)"
     (let [find-socket-spy (spies/constantly ::socket-id)
           receive-spy (spies/create)
-          get-state-spy (spies/constantly ::state)
-          uuid-spy (spies/constantly ::uuid)]
+          get-state-spy (spies/constantly ::state)]
       (with-redefs [actions/find-socket-id find-socket-spy
-                    common/receive! receive-spy
-                    uuids/random uuid-spy]
+                    common/receive! receive-spy]
         (testing "when the socket-id is found"
           (spies/reset! find-socket-spy receive-spy get-state-spy)
           (ws.sim/on-message ::simulator
@@ -84,14 +82,12 @@
           (testing "receives the request"
             (is (spies/called? get-state-spy))
             (is (spies/called-with? find-socket-spy ::state ::ws))
-            (is (spies/called-with? uuid-spy))
             (is (spies/called-with? receive-spy
                                     ::simulator
                                     {:headers      ::headers
                                      :query-params ::query-params
                                      :route-params ::route-params
                                      :socket-id    ::socket-id
-                                     :message-id   ::uuid
                                      :body         ::message}))))
 
         (testing "when the socket-id is not found"
@@ -131,7 +127,7 @@
             (is (spies/called-with? publish-spy
                                     ::env
                                     :simulators.ws/disconnect
-                                    {::some ::details :socket-id ::socket-id}))))
+                                    {:simulator {::some ::details} :socket-id ::socket-id}))))
 
         (testing "when the socket-id is not found"
           (spies/reset! find-socket-spy get-state-spy action-spy dispatch-spy publish-spy details-spy)
@@ -191,7 +187,7 @@
             (common/receive! sim request)
             (is (spies/called-with? action-spy request))
             (is (spies/called-with? dispatch ::action))
-            (is (spies/called-with? receive-spy ::env sim {:socket-id ::socket-id :message-id ::message-id}))))))))
+            (is (spies/called-with? receive-spy ::env sim))))))))
 
 (deftest ^:unit ->WsSimulator.requests-test
   (testing "(->WsSimulator.requests)"
@@ -218,10 +214,10 @@
 (deftest ^:unit ->WsSimulator.identifier-test
   (testing "(->WsSimulator.identifier)"
     (testing "returns unique identifier"
-      (let [[sim] (simulator {:method :ws
+      (let [[sim] (simulator {:method :ws/ws
                               :path   "/some/:param"})]
         (let [result (common/identifier sim)]
-          (is (= [:ws "/some/*"] result)))))))
+          (is (= [:ws/ws "/some/*"] result)))))))
 
 (deftest ^:unit ->WsSimulator.reset-test
   (testing "(->WsSimulator.reset)"
@@ -255,7 +251,7 @@
 (deftest ^:unit ->WsSimulator.reset-messages-test
   (testing "(->WsSimulator.reset-messages)"
     (let [[sim _ _ dispatch] (simulator)]
-      (common/partially-reset! sim :messages)
+      (common/partially-reset! sim :ws/requests)
       (is (spies/called-with? dispatch actions/reset-messages)))))
 
 (deftest ^:unit ->WsSimulator.connect-test

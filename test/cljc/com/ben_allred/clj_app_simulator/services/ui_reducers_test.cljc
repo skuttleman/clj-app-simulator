@@ -69,9 +69,9 @@
              (reducers/simulators {:data {123 ::data}} [:simulators.fetch-all/fail ::reason]))))
 
     (testing "handles :simulators.activity/receive"
-      (is (= {:status :available :data {999 {:id 999 :requests [{:id 123} {:id 456 :message-id ::message-id}] :other ::stuff}}}
+      (is (= {:status :available :data {999 {:id 999 :requests [{:id 123} {:id 456}] :other ::stuff}}}
              (reducers/simulators {:data {999 {:id 999 :other ::stuff :requests [{:id 123}]}}}
-                                  [:simulators.activity/receive {:simulator {:id 999} :request {:id 456} :message-id ::message-id}]))))
+                                  [:simulators.activity/receive {:simulator {:id 999} :request {:id 456}}]))))
 
     (testing "handles :simulators.activity/add"
       (is (= {:status :available :data {123 ::simulator 456 {:id 456 ::other ::stuff}}}
@@ -81,7 +81,7 @@
     (testing "handles :simulators.activity/delete"
       (is (= {:status :available :data {123 ::simulator-1}}
              (reducers/simulators {:data {123 ::simulator-1 456 ::simulator-2}}
-                                  [:simulators.activity/delete {:id 456}]))))
+                                  [:simulators.activity/delete {:simulator {:id 456}}]))))
 
     (testing "handles :simulators.activity/reset-requests"
       (is (= {:status :available :data {123 {:id 123 ::some ::data :requests []}}}
@@ -93,13 +93,13 @@
       (is (= {:status :available :data {123 {:id 123 :sockets #{999} ::some ::data}}}
              (reducers/simulators {:data {123 {:id 123 ::some ::data}} :status :available}
                                   [:simulators.activity/connect
-                                   {:simulator {:id 123 :socket-id 999}}]))))
+                                   {:simulator {:id 123} :socket-id 999}]))))
 
     (testing "handles :simulators.activity/disconnect"
       (is (= {:status :available :data {123 {:id 123 :sockets #{} ::some ::data}}}
              (reducers/simulators {:data {123 {:id 123 ::some ::data :sockets #{999}}} :status :available}
                                   [:simulators.activity/disconnect
-                                   {:simulator {:id 123 :socket-id 999}}]))))
+                                   {:simulator {:id 123} :socket-id 999}]))))
 
     (testing "returns unchanged state for any random action"
       (is (= {:data {123 ::data}}

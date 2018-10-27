@@ -103,9 +103,9 @@
       (with-redefs [http/patch http-spy
                     actions/request* request-spy]
         (testing "clears the simulator"
-          (let [result ((actions/clear-requests ::action 12345) [dispatch-spy])]
+          (let [result ((actions/clear-requests 12345 ::action) [dispatch-spy])]
             (is (spies/called-with? dispatch-spy [:simulators.clear-requests/request]))
-            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action ::action}}))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators/reset :type ::action}}))
             (is (spies/called-with? request-spy
                                     ::request
                                     dispatch-spy

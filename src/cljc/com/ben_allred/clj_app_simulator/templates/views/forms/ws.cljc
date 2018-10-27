@@ -32,9 +32,9 @@
      (when (empty? requests)
        [:span.ws-messages.no-messages "no messages"])
      [:ul.ws-messages
-      (for [{:keys [body timestamp message-id] :as msg} requests]
+      (for [{:keys [body timestamp id] :as msg} requests]
         [:li.ws-message
-         {:key (str message-id)}
+         {:key (str id)}
          [:div.ws-content.info
           #?(:cljs {:on-click (interactions/show-ws-modal msg)})
           [:p.ws-body body]
@@ -139,7 +139,7 @@
      "Cancel"]]])
 
 (defn sim-create-form []
-  (let [model {:method :ws
+  (let [model {:method :ws/ws
                :path   "/"}
         form #?(:clj  model
                 :cljs (forms/create model resources/validate-new))]

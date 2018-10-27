@@ -5,7 +5,6 @@
     (java.io File InputStream)
     (org.apache.commons.io FileUtils)))
 
-
 (defn open-input-stream [file]
   (when (instance? File file)
     (FileUtils/openInputStream ^File file)))

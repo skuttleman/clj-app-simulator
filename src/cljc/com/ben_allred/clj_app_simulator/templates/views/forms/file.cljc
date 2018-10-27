@@ -111,7 +111,7 @@
     [:button.button.is-danger.clear-button
      #?(:clj  {:disabled true}
         :cljs {:disabled (empty? requests)
-               :on-click (shared.interactions/clear-requests :http id)})
+               :on-click (shared.interactions/clear-requests :file id)})
      "Clear Requests"]
     [:button.button.is-danger.delete-button
      #?(:clj  {:disabled true}

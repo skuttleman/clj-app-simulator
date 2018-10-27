@@ -2,7 +2,6 @@
   (:require
     [com.ben-allred.clj-app-simulator.templates.core :as templates]
     [com.ben-allred.clj-app-simulator.templates.views.core :as views]
-    [com.ben-allred.clj-app-simulator.ui.utils.dom :as dom]
     [com.ben-allred.clj-app-simulator.utils.colls :as colls]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [reagent.core :as r]))
@@ -48,20 +47,41 @@
        (assoc attrs :on-click #(swap! open? not) :open? @open?)
        button])))
 
-(defn upload [{:keys [class-name on-change multiple] :or {multiple true}} & children]
-  [:div.file
-   {:class-name class-name}
-   [:label.label
-    [:input.file-input
-     {:type      :file
-      :on-change #(let [target (.-target %)
-                        files (.-files target)]
-                    (on-change (for [i (range (.-length files))]
-                                 (aget files i)))
-                    (set! (.-files target) nil)
-                    (set! (.-value target) nil))
-      :multiple  multiple}]
-    [:span.file-cta
-     [:span.file-icon
-      [:i.fa.fa-upload]]
-     (into [:span.file-label] children)]]])
+(defn upload [_attrs]
+  (let [key (name (gensym))]
+    (fn [{:keys [class-name on-change single? sync-fn static-content persisting-content]
+          :or   {sync-fn (constantly nil)}}]
+      (if (sync-fn)
+        [:button.is-disabled.label.button.file-cta
+         {:class-name class-name
+          :key        key
+          :disabled   true}
+         [:span
+          {:style {:display :flex :align-items :center}}
+          [:span.file-icon
+           [:i.fa.fa-upload]]
+          [:span.is-disabled
+           {:style    {:display :flex :align-items :center}
+            :disabled true}
+           persisting-content
+           [:span
+            {:style {:margin-left "10px"}}
+            [views/spinner]]]]]
+        [:div.file
+         {:class-name class-name
+          :key        key}
+         [:label.label
+          [:input.file-input
+           {:type      :file
+            :on-change #(let [target (.-target %)
+                              files (.-files target)]
+                          (on-change (for [i (range (.-length files))]
+                                       (aget files i)))
+                          (set! (.-files target) nil)
+                          (set! (.-value target) nil))
+            :multiple  (not single?)}]
+          [:span.button.file-cta
+           [:span.file-icon
+            [:i.fa.fa-upload]]
+           [:span.file-label
+            static-content]]]]))))

@@ -53,11 +53,10 @@
 
 (defn clear-requests [type id]
   (fn [_]
-    (let [[name action] (case type
-                          :http ["requests" :simulators.http/reset-requests]
-                          :ws ["messages" :simulators.ws/reset-messages]
-                          nil)]
-      (do-request (store/dispatch (actions/clear-requests action id))
+    (let [name (if (= type :ws)
+                 "messages"
+                 "requests")]
+      (do-request (store/dispatch (actions/clear-requests id (keyword type :requests)))
                   (toaster :success (str "The " name " have been cleared"))
                   (toaster :error (str "The " name " could not be cleared"))))))
 
