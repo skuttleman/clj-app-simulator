@@ -1,7 +1,7 @@
 (ns integration.utils.chans
   (:require
     [clojure.core.async :as async]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log]))
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (defn flush!
   ([chan]

@@ -4,8 +4,8 @@
     [clojure.core.async :as async]
     [clojure.java.io :as io]
     [clojure.test :refer :all]
-    [com.ben-allred.clj-app-simulator.services.files :as files]
-    [com.ben-allred.clj-app-simulator.services.http :as http]
+    [com.ben-allred.app-simulator.services.files :as files]
+    [com.ben-allred.app-simulator.services.http :as http]
     [integration.config :as cfg]))
 
 (defn ^:private request* [method path content-type request]

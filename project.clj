@@ -1,9 +1,9 @@
-(defproject com.ben-allred/clj-app-simulator "0.1.0-SNAPSHOT"
+(defproject com.ben-allred/app-simulator "0.1.0-SNAPSHOT"
   :description "Application simulator"
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
-  :main com.ben-allred.clj-app-simulator.api.server
-  :aot [com.ben-allred.clj-app-simulator.api.server]
+  :main com.ben-allred.app-simulator.api.server
+  :aot [com.ben-allred.app-simulator.api.server]
   :min-lein-version "2.6.1"
 
   :dependencies [[bidi "2.1.3"]
@@ -41,8 +41,8 @@
             [lein-figwheel "0.5.14"]
             [lein-sass "0.5.0"]]
 
-  :jar-name "clj-app-simulator.jar"
-  :uberjar-name "clj-app-simulator-standalone.jar"
+  :jar-name "app-simulator.jar"
+  :uberjar-name "app-simulator-standalone.jar"
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
   :test-paths ["test/clj" "test/cljs" "test/cljc" "test/api" "test/common"]
   :test-selectors {:focused     :focused
@@ -51,8 +51,8 @@
 
   :cljsbuild {:builds [{:id           "dev"
                         :source-paths ["src/cljs" "src/cljc" "test/cljs" "test/cljc" "test/common"]
-                        :figwheel     {:on-jsload "com.ben-allred.clj-app-simulator.ui.tests/on-reload"}
-                        :compiler     {:main                 com.ben-allred.clj-app-simulator.ui.tests
+                        :figwheel     {:on-jsload "com.ben-allred.app-simulator.ui.tests/on-reload"}
+                        :compiler     {:main                 com.ben-allred.app-simulator.ui.tests
                                        :asset-path           "/js/compiled/out"
                                        :output-to            "resources/public/js/compiled/app.js"
                                        :output-dir           "resources/public/js/compiled/out"
@@ -62,7 +62,7 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :jar          true
                         :compiler     {:output-to     "resources/public/js/compiled/app.js"
-                                       :main          com.ben-allred.clj-app-simulator.ui.app
+                                       :main          com.ben-allred.app-simulator.ui.app
                                        :optimizations :advanced
                                        :pretty-print  false
                                        :language-in   :ecmascript6
@@ -79,7 +79,7 @@
   :profiles {:dev     {:dependencies  [[binaryage/devtools "0.9.4"]
                                        [figwheel-sidecar "0.5.14"]
                                        [com.cemerick/piggieback "0.2.2"]]
-                       :main          com.ben-allred.clj-app-simulator.api.server/-dev
+                       :main          com.ben-allred.app-simulator.api.server/-dev
                        :source-paths  ["src/clj" "src/cljs" "src/cljc" "dev"]
                        :plugins       [[cider/cider-nrepl "0.16.0"]]
                        :clean-targets ^{:protect false :replace true} ["resources/public/js"

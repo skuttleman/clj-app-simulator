@@ -3,10 +3,10 @@
   (:require
     [clojure.set :as set]
     [clojure.string :as string]
-    [com.ben-allred.clj-app-simulator.utils.keywords :as keywords]
-    [com.ben-allred.clj-app-simulator.utils.logging :as log]
-    [com.ben-allred.clj-app-simulator.utils.maps :as maps]
-    [com.ben-allred.clj-app-simulator.utils.strings :as strings]))
+    [com.ben-allred.app-simulator.utils.keywords :as keywords]
+    [com.ben-allred.app-simulator.utils.logging :as log]
+    [com.ben-allred.app-simulator.utils.maps :as maps]
+    [com.ben-allred.app-simulator.utils.strings :as strings]))
 
 (defn ^:private extract-classes
   ([attrs]

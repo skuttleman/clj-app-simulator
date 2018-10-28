@@ -1,6 +1,6 @@
 (ns user
   (:require
-    [com.ben-allred.clj-app-simulator.services.env :as env]
+    [com.ben-allred.app-simulator.services.env :as env]
     [figwheel-sidecar.repl-api :as f]))
 
 (defn cljs-repl []

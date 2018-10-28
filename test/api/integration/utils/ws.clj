@@ -1,6 +1,6 @@
 (ns integration.utils.ws
   (:require
-    [com.ben-allred.clj-app-simulator.services.ws :as ws]
+    [com.ben-allred.app-simulator.services.ws :as ws]
     [integration.config :as cfg]))
 
 (defn connect [path & opts]
