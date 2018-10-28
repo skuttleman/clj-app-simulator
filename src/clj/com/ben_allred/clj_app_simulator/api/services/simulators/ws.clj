@@ -1,32 +1,18 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.ws
   (:require
-    [clojure.spec.alpha :as s]
+    [clojure.string :as string]
     [com.ben-allred.clj-app-simulator.api.services.activity :as activity]
     [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.api.utils.specs :as specs]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
-    [clojure.string :as string]
     [immutant.web.async :as web.async]))
 
-(s/def ::path (partial re-matches #"/|(/:?[A-Za-z-_0-9]+)+"))
-
-(s/def ::method (s/conformer (comp #(or % ::s/invalid) #{:ws/ws} keyword)))
-
-(s/def :ws/ws-simulator (s/keys :req-un [::path ::method]))
-
-(defn ^:private conform-to [spec config]
-  (let [conformed (s/conform spec config)]
-    (when-not (= :clojure.spec.alpha/invalid conformed)
-      conformed)))
-
 (defn valid? [config]
-  (try
-    (s/valid? :ws/ws-simulator config)
-    (catch Throwable _
-      false)))
+  (specs/valid? :simulator.ws/config config))
 
 (defn on-open [env simulator _ store ws]
   (let [{:keys [dispatch]} store
@@ -53,7 +39,7 @@
                                                        :socket-id socket-id}))))
 
 (defn ->WsSimulator [env id config]
-  (when-let [{:keys [path method] :as config} (conform-to :ws/ws-simulator config)]
+  (when-let [{:keys [path method] :as config} (specs/conform :simulator.ws/config config)]
     (let [{:keys [dispatch get-state] :as store} (store/ws-store)
           id-path (string/replace path #":[^/]+" "*")]
       (dispatch (actions/init config))
@@ -84,7 +70,10 @@
           (dispatch actions/disconnect-all)
           (dispatch actions/reset))
         (reset! [_ config]
-          (dispatch (actions/change (dissoc config :path :method))))
+          (if-let [config (specs/conform :simulator.ws.change/config config)]
+            (dispatch (actions/change (dissoc config :method :path)))
+            (throw (ex-info "config does not conform to spec"
+                            {:problems (specs/explain :simulator.ws.change/config config)}))))
 
         common/IRoute
         (routes [this]
@@ -93,7 +82,8 @@
         common/IPartiallyReset
         (partially-reset! [_ type]
           (case type
-            :ws/requests (dispatch actions/reset-messages)))
+            :ws/requests (dispatch actions/reset-messages)
+            :ws/config (dispatch actions/reset-config)))
 
         common/ICommunicate
         (connect! [this {:keys [websocket?] :as request}]

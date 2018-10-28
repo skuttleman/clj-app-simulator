@@ -20,7 +20,8 @@
             uuid-spy (spies/create)]
         (with-redefs [resources/uploads uploads
                       activity/publish publish-spy
-                      uuids/random uuid-spy]
+                      uuids/random uuid-spy
+                      streams/file? (constantly true)]
           (spies/returning! uuid-spy 222 333)
           (let [result (resources/upload! ::env [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
                                                  {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
@@ -63,7 +64,8 @@
         (with-redefs [resources/uploads uploads
                       activity/publish publish-spy
                       uuids/->uuid identity
-                      streams/delete delete-spy]
+                      streams/delete delete-spy
+                      streams/file? (constantly true)]
           (let [result (resources/upload! ::env 111 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3})
                 [_ event data] (first (spies/calls publish-spy))
                 state (::env @uploads)]
@@ -82,7 +84,32 @@
 
             (testing "returns added file"
               (is (= (dissoc result :timestamp)
-                     {:filename ::filename-3 :content-type ::content-type-3 :id 111})))))))))
+                     {:filename ::filename-3 :content-type ::content-type-3 :id 111})))))))
+
+    (testing "when the upload is not a file"
+      (let [initial {111 {:filename     ::filename-1
+                          :file         ::file-1
+                          :content-type ::content-type-1
+                          :timestamp    123}}
+            uploads (atom {::env initial})
+            publish-spy (spies/create)
+            uuid-spy (spies/create)]
+        (with-redefs [resources/uploads uploads
+                      activity/publish publish-spy
+                      uuids/random uuid-spy
+                      streams/file? (constantly false)]
+          (spies/returning! uuid-spy 222 333)
+          (let [result (resources/upload! ::env [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
+                                                 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
+                state (::env @uploads)]
+            (testing "publishes no events"
+              (is (spies/never-called? publish-spy)))
+
+            (testing "result is empty"
+              (is (empty? result)))
+
+            (testing "has unchanged state"
+              (is (= initial state)))))))))
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"

@@ -83,11 +83,11 @@
              (reducers/simulators {:data {123 ::simulator-1 456 ::simulator-2}}
                                   [:simulators.activity/delete {:simulator {:id 456}}]))))
 
-    (testing "handles :simulators.activity/reset-requests"
-      (is (= {:status :available :data {123 {:id 123 ::some ::data :requests []}}}
-             (reducers/simulators {:data {123 {:id 123 ::some ::data}}}
-                                  [:simulators.activity/reset-requests
-                                   {:simulator {:id 123 ::some ::data :requests ::requests}}]))))
+    (testing "handles :simulators.activity/reset"
+      (is (= {:status :available :data {123 {:id 123 :config ::config :requests ::requests :sockets ::sockets}}}
+             (reducers/simulators {:data {123 {:id 123 :config ::old-config :requests ::old-requests :sockets ::old-sockets}}}
+                                  [:simulators.activity/reset
+                                   {:simulator {:id 123 :config ::config :requests ::requests :sockets ::sockets}}]))))
 
     (testing "handles :simulators.activity/connect"
       (is (= {:status :available :data {123 {:id 123 :sockets #{999} ::some ::data}}}

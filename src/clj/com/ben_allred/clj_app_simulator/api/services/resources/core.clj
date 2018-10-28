@@ -19,15 +19,17 @@
       (assoc :id id)))
 
 (defn ^:private upload* [env id file]
-  (let [file' (-> file
-                  (set/rename-keys {:tempfile :file})
-                  (assoc :timestamp (Date.)))
-        result (file->data [id file'])]
-    (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
-    result))
+  (when (streams/file? (:tempfile file))
+    (let [file' (-> file
+                    (set/rename-keys {:tempfile :file})
+                    (assoc :timestamp (Date.)))
+          result (file->data [id file'])]
+      (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
+      result)))
 
 (defn ^:private add! [env key idfn]
   (comp (map #(upload* env (idfn) %))
+        (filter some?)
         (fns/each! (comp (partial activity/publish env key)
                          (maps/onto :resource)))))
 

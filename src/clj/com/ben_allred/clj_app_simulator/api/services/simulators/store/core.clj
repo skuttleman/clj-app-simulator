@@ -33,17 +33,12 @@
 
 (defn response [state]
   (-> state
-      (:config)
-      (:current)
-      (:response)
+      (get-in [:config :current :response])
       (maps/update-maybe :headers (partial maps/map-keys name))))
 
 (defn file-response [env state]
   (-> state
-      (:config)
-      (:current)
-      (:response)
-      (update :headers (partial maps/map-keys name))
+      (response)
       (with-file env)))
 
 (def requests :requests)

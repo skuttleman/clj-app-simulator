@@ -182,30 +182,30 @@
               (is (spies/called? hide-spy))
               (is (spies/called-with? nav-spy :home)))))))))
 
-(deftest ^:unit reset-simulator-test
-  (testing "(reset-simulator)"
+(deftest ^:unit reset-config-test
+  (testing "(reset-config)"
     (let [action-spy (spies/constantly ::action)
           dispatch-spy (spies/constantly ::dispatch)
           reset-spy (spies/create)
           model-spy (spies/constantly ::model)
           request-spy (spies/create)]
-      (with-redefs [actions/reset-simulator action-spy
+      (with-redefs [actions/reset-simulator-config action-spy
                     store/dispatch dispatch-spy
                     forms/reset! reset-spy
                     shared.interactions/do-request request-spy]
         (testing "when making the request"
           (spies/reset! action-spy dispatch-spy reset-spy model-spy)
-          ((shared.interactions/reset-simulator ::form model-spy ::id) ::event)
+          ((shared.interactions/reset-config ::form model-spy ::id ::type) ::event)
           (let [[request on-success] (first (spies/calls request-spy))]
             (testing "dispatches an action"
 
-              (is (spies/called-with? action-spy ::id))
+              (is (spies/called-with? action-spy ::id ::type))
               (is (spies/called-with? dispatch-spy ::action))
               (is (= ::dispatch request)))
 
             (testing "handles success"
               (spies/reset! action-spy dispatch-spy reset-spy model-spy)
-              (on-success ::response)
+              (on-success {:simulator ::response})
 
               (is (spies/called-with? model-spy ::response))
               (is (spies/called-with? reset-spy ::form ::model)))))))))

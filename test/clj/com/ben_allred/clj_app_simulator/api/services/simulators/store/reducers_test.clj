@@ -16,6 +16,10 @@
       (is (= {:initial ::initial :current ::initial}
              (reducers/simulator-config {:initial ::initial :current ::current} [:simulators/reset]))))
 
+    (testing "responds to :simulators/reset-config"
+      (is (= {:initial ::initial :current ::initial}
+             (reducers/simulator-config {:initial ::initial :current ::current} [:simulators/reset-config]))))
+
     (testing "responds to :simulators/change"
       (is (= {:current {:a 1 :b 2 :response {:c 3 :d 4}}}
              (reducers/simulator-config {:current {:a 1 :response {:c 3}}}

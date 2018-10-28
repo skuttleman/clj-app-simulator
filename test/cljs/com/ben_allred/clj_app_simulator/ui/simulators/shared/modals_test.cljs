@@ -1,6 +1,8 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.shared.modals-test
   (:require
     [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
+    [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.clj-app-simulator.utils.dates :as dates]
     [com.ben-allred.clj-app-simulator.utils.strings :as strings]
@@ -127,6 +129,16 @@
             (is (spies/called-with? format-spy ::timestamp))
             (is (test.dom/contains? root [:* ::dt-string]))
             (is (test.dom/contains? root [:*.message-body ::body]))))))))
+
+(deftest ^:unit message-editor-test
+  (testing "(message-editor)"
+    (let [with-attrs-spy (spies/create identity)]
+      (with-redefs [shared.views/with-attrs with-attrs-spy]
+        (let [root (modals/message-editor ::form ::model->view ::view->model)
+              input (test.dom/query-one root fields/textarea)]
+          (testing "renders a message field"
+            (is (spies/called-with? with-attrs-spy (spies/matcher map?) ::form [:message] ::model->view ::view->model))
+            (is (= "Message" (:label (test.dom/attrs input))))))))))
 
 (defn run-tests []
   (t/run-tests))

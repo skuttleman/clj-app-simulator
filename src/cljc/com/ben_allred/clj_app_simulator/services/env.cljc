@@ -11,3 +11,6 @@
                             :https
                             :http)}
                (merge (js->clj (aget js/window "ENV") :keywordize-keys true)))))
+
+(defn env* []
+  (keyword (get :ring-env :app)))

@@ -24,6 +24,7 @@
    (case type
      :simulators/init {:initial config :current config}
      :simulators/reset (assoc state :current (:initial state))
+     :simulators/reset-config (assoc state :current (:initial state))
      :simulators/change (-> state
                             (update :current merge (dissoc config :response))
                             (update-in [:current :response] merge (:response config)))

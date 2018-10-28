@@ -71,13 +71,13 @@
                         (toaster :success "The simulator has been deleted"))
                   (toaster :error "The simulator could not be deleted")))))
 
-(defn reset-simulator [form sim->model id]
+(defn reset-config [form sim->model id type]
   (fn [_]
     (do-request
-      (store/dispatch (actions/reset-simulator id))
-      (comp (fns/=>> (sim->model) (forms/reset! form))
-            (toaster :success "The simulator has been reset"))
-      (toaster :error "The simulator could not be reset"))))
+      (store/dispatch (actions/reset-simulator-config id type))
+      (comp (fns/=>> (:simulator) (sim->model) (forms/reset! form))
+            (toaster :success "The simulator's configuration has been reset"))
+      (toaster :error "The simulator's configuration could not be reset"))))
 
 (defn create-simulator [form model->source]
   (fn [e]

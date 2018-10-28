@@ -8,7 +8,7 @@
   (shared.interactions/update-simulator form tr/model->source id))
 
 (defn reset-simulator [form id]
-  (shared.interactions/reset-simulator form tr/sim->model id))
+  (shared.interactions/reset-config form tr/sim->model id :http))
 
 (defn create-simulator [form]
   (shared.interactions/create-simulator form tr/model->source))

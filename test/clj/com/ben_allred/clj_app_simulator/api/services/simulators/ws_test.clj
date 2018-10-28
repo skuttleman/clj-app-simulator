@@ -246,7 +246,10 @@
         (testing "changes changeable config properties"
           (common/reset! sim (assoc config :method ::method :path ::path))
           (is (spies/called-with? change-spy config))
-          (is (spies/called-with? dispatch ::action)))))))
+          (is (spies/called-with? dispatch ::action)))
+
+        (testing "and when the config is invalid"
+          (is (thrown? Throwable (common/reset! sim ::invalid))))))))
 
 (deftest ^:unit ->WsSimulator.reset-messages-test
   (testing "(->WsSimulator.reset-messages)"

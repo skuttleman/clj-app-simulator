@@ -22,10 +22,10 @@
 (deftest ^:unit reset-simulator
   (testing "(reset-simulator)"
     (let [shared-spy (spies/constantly ::handler)]
-      (with-redefs [shared.interactions/reset-simulator shared-spy]
+      (with-redefs [shared.interactions/reset-config shared-spy]
         (testing "resets the simulator"
           (let [handler (interactions/reset-simulator ::form ::id)]
-            (is (spies/called-with? shared-spy ::form tr/sim->model ::id))
+            (is (spies/called-with? shared-spy ::form tr/sim->model ::id :file))
             (is (= handler ::handler))))))))
 
 (deftest ^:unit create-simulator

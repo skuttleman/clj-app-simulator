@@ -2,8 +2,8 @@
   (:require
     [clojure.core.async :as async]
     [clojure.edn :as edn]
-    [clojure.spec.alpha :as s]
     [clojure.test :refer [deftest is testing use-fixtures]]
+    [com.ben-allred.clj-app-simulator.api.utils.specs :as specs]
     [com.ben-allred.clj-app-simulator.utils.json :as json]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [com.ben-allred.clj-app-simulator.utils.transit :as transit]
@@ -32,7 +32,7 @@
   (dissoc sim :response))
 
 (def ^:private sim-mapper
-  (comp #(:config %) #(s/conform :http/http-simulator %)))
+  (comp #(:config %) #(specs/conform :simulator.http/config %)))
 
 (defn ^:privates sims-match? [sims-1 sims-2]
   (= (->> sims-1

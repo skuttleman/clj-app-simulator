@@ -51,9 +51,8 @@
       ([state [type {:keys [simulator socket-id request]}]]
        (case type
          :simulators.activity/receive (update state :requests (fnil conj []) request)
-         :simulators.activity/reset-requests (assoc state :requests [])
          :simulators.activity/change (assoc state :config (:config simulator))
-         :simulators.activity/reset (assoc state :config (:config simulator))
+         :simulators.activity/reset (merge state (select-keys simulator #{:config :requests :sockets}))
          :simulators.fetch-one/succeed simulator
          :simulators.activity/add simulator
          :simulators.activity/connect (update state :sockets (fnil conj #{}) socket-id)
@@ -64,7 +63,7 @@
   (with-status
     {:pending   #{:simulators.fetch-one/request :simulators.fetch-all/request}
      :available #{:simulators.fetch-one/succeed :simulators/clear :simulators.activity/receive
-                  :simulators.activity/add :simulators.activity/delete :simulators.activity/reset-requests}
+                  :simulators.activity/add :simulators.activity/delete :simulators.activity/reset}
      :failed    #{:simulators.fetch-all/fail :simulators.fetch-one/fail}}
     (fn
       ([] (simulators-reducer))

@@ -6,7 +6,6 @@
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
     [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]))
 
@@ -15,7 +14,7 @@
   (shared.interactions/update-simulator form tr/model->source id))
 
 (defn reset-simulator [form id]
-  (shared.interactions/reset-simulator form tr/sim->model id))
+  (shared.interactions/reset-config form tr/sim->model id :ws))
 
 (defn create-simulator [form]
   (shared.interactions/create-simulator form tr/model->source))

@@ -113,17 +113,18 @@
                                     :simulators.clear-requests/fail))
             (is (= result ::result))))))))
 
-(deftest ^:unit reset-simulator-test
-  (testing "(reset-simulator)"
+(deftest ^:unit reset-simulator-config-test
+  (testing "(reset-simulator-config)"
     (let [dispatch-spy (spies/create)
           http-spy (spies/constantly ::request)
           request-spy (spies/constantly ::result)]
       (with-redefs [http/patch http-spy
                     actions/request* request-spy]
         (testing "resets the simulator"
-          (let [result ((actions/reset-simulator 12345) [dispatch-spy])]
+          (let [result ((actions/reset-simulator-config 12345 :type) [dispatch-spy])]
             (is (spies/called-with? dispatch-spy [:simulators.reset/request]))
-            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators/reset}}))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators/reset
+                                                                             :type :type/config}}))
             (is (spies/called-with? request-spy
                                     ::request
                                     dispatch-spy
@@ -179,7 +180,7 @@
         (testing "disconnects all web sockets for a simulator"
           (let [result ((actions/disconnect-all 12345) [dispatch-spy])]
             (is (spies/called-with? dispatch-spy [:simulators.disconnect-all/request]))
-            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators.ws/disconnect-all}}))
+            (is (spies/called-with? http-spy "/api/simulators/12345" {:body {:action :simulators.ws/disconnect}}))
             (is (spies/called-with? request-spy
                                     ::request
                                     dispatch-spy

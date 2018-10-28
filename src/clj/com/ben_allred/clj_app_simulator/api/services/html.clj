@@ -73,8 +73,8 @@
    [:button.button.is-warning.file-cta
     {:disabled true}
     [:span.file-icon
-     [:i.fa.fa-upload]
-     "Upload"]]])
+     [:i.fa.fa-upload]]
+    "Replace"]])
 
 (defn ^:private resources [state]
   [views/resources

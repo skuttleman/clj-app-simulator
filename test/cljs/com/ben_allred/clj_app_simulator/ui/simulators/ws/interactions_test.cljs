@@ -1,7 +1,6 @@
 (ns com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions-test
   (:require
     [clojure.test :as t :refer [deftest is testing]]
-    [com.ben-allred.clj-app-simulator.templates.fields :as fields]
     [com.ben-allred.clj-app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.clj-app-simulator.templates.transformations.ws :as tr]
     [com.ben-allred.clj-app-simulator.templates.views.forms.shared :as shared.views]
@@ -9,7 +8,6 @@
     [com.ben-allred.clj-app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.ui.services.store.core :as store]
     [com.ben-allred.clj-app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.clj-app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.clj-app-simulator.ui.simulators.ws.interactions :as interactions]
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
@@ -26,10 +24,10 @@
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
     (let [reset-spy (spies/constantly ::reset)]
-      (with-redefs [shared.interactions/reset-simulator reset-spy]
+      (with-redefs [shared.interactions/reset-config reset-spy]
         (testing "resets the simulator"
           (let [handler (interactions/reset-simulator ::form ::id)]
-            (is (spies/called-with? reset-spy ::form tr/sim->model ::id))
+            (is (spies/called-with? reset-spy ::form tr/sim->model ::id :ws))
             (is (= ::reset handler))))))))
 
 (deftest ^:unit create-simulator-test
@@ -109,16 +107,6 @@
             (on-success ::result)
             (is (spies/called? hide-spy))
             (is (= :error (on-error ::result)))))))))
-
-(deftest ^:unit message-editor-test
-  (testing "(message-editor)"
-    (let [with-attrs-spy (spies/create identity)]
-      (with-redefs [shared.views/with-attrs with-attrs-spy]
-        (let [root (modals/message-editor ::form ::model->view ::view->model)
-              input (test.dom/query-one root fields/textarea)]
-          (testing "renders a message field"
-            (is (spies/called-with? with-attrs-spy (spies/matcher map?) ::form [:message] ::model->view ::view->model))
-            (is (= "Message" (:label (test.dom/attrs input))))))))))
 
 (deftest ^:unit show-send-modal-test
   (testing "(show-send-modal)"

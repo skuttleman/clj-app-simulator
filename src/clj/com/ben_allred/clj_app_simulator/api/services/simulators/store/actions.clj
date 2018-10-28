@@ -41,6 +41,8 @@
 
 (def reset [:simulators/reset])
 
+(def reset-config [:simulators/reset-config])
+
 (defn change [config]
   [:simulators/change config])
 

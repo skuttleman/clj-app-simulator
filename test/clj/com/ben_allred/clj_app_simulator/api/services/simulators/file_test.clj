@@ -1,13 +1,14 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.file-test
   (:require
-    [clojure.test :refer [deftest is testing]]
-    [com.ben-allred.clj-app-simulator.api.services.resources.core :as resources]
+    [clojure.test :refer [are deftest is testing]]
     [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.clj-app-simulator.api.services.simulators.file :as file.sim]
     [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
+    [com.ben-allred.clj-app-simulator.api.utils.specs :as specs]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
+    [com.ben-allred.clj-app-simulator.utils.uuids :as uuids]
     [test.utils.spies :as spies]))
 
 (defn ^:private simulator
@@ -15,17 +16,60 @@
                   :path     "/some/path"
                   :delay    123
                   :response {:status  200
-                             :file    ::123
+                             :file    (uuids/random)
                              :headers {:header "some-header"}}}))
   ([config]
-   (let [resources-spy (spies/constantly true)
-         dispatch (spies/create)
+   (let [dispatch (spies/create)
          get-state (spies/constantly ::state)
          spy (spies/constantly {:dispatch  dispatch
                                 :get-state get-state})]
-     (with-redefs [store/file-store spy
-                   resources/has-upload? resources-spy]
+     (with-redefs [store/file-store spy]
        [(file.sim/->FileSimulator ::env ::id config) spy config dispatch get-state]))))
+
+(deftest ^:unit valid?-test
+  (testing "(valid?)"
+    (testing "returns true for valid configs"
+      (are [config] (file.sim/valid? config)
+        {:method   :file/get
+         :path     "/some/path"
+         :delay    123
+         :response {:status  200
+                    :file    (uuids/random)
+                    :headers {:header "some-header"}}}
+        {:method   :file/post
+         :path     "/"
+         :response {:status  200
+                    :file    (uuids/random)
+                    :headers {}}}
+        {:method   "file/put"
+         :path     "/:param"
+         :response {:status 404
+                    :file   (str (uuids/random))}}))
+
+    (testing "returns false for invalid config"
+      (are [config] (not (file.sim/valid? config))
+        {:method   :file/post
+         :response {:status 200
+                    :file   (uuids/random)}}
+        {:method   ::get
+         :path     "/"
+         :response {:status 200
+                    :file   (uuids/random)}}
+        {:method   :file/post
+         :path     :/
+         :response {:status 200
+                    :file   (uuids/random)}}
+        {:method   :file/delete
+         :path     "/"
+         :response {:file (uuids/random)}}
+        {:method   :file/put
+         :path     "/"
+         :response {:status 200}}
+        {:method   :file/get
+         :path     "/"
+         :response {:status  201
+                    :file    (uuids/random)
+                    :headers []}}))))
 
 (deftest ^:unit ->FileSimulator-test
   (testing "(->FileSimulator)"
@@ -119,7 +163,7 @@
       (let [[sim] (simulator {:method   :file/post
                               :path     "/some/:param/url/:id/action"
                               :response {:status 204
-                                         :file   ::123}})]
+                                         :file   (uuids/random)}})]
         (let [result (common/identifier sim)]
           (is (= [:post "/some/*/url/*/action"] result)))))))
 
@@ -165,7 +209,7 @@
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))
         (testing "when config is bad"
-          (with-redefs [file.sim/why-not-update? (spies/constantly ::reasons)]
+          (with-redefs [specs/explain (spies/constantly ::reasons)]
             (testing "throws exception"
               (is (thrown? Throwable (common/reset! sim ::bad-config))))
             (testing "explains spec errors"

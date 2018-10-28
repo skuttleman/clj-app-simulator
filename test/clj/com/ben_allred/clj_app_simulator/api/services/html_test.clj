@@ -159,7 +159,7 @@
                           (test.dom/query-one :.button)
                           (test.dom/attrs)
                           (:disabled)))
-                  (is (test.dom/contains? btn "Upload"))))))))
+                  (is (test.dom/contains? btn "Replace"))))))))
 
       (testing "renders toasts"
         (is (-> ::state

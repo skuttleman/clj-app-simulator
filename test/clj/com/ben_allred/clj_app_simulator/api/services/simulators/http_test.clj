@@ -1,12 +1,13 @@
 (ns com.ben-allred.clj-app-simulator.api.services.simulators.http-test
   (:require
-    [clojure.test :refer [deftest is testing]]
+    [clojure.test :refer [are deftest is testing]]
     [com.ben-allred.clj-app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.clj-app-simulator.api.services.simulators.http :as http.sim]
     [com.ben-allred.clj-app-simulator.api.services.simulators.routes :as routes.sim]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.clj-app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.clj-app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.clj-app-simulator.api.utils.specs :as specs]
     [com.ben-allred.clj-app-simulator.utils.logging :as log]
     [test.utils.spies :as spies]))
 
@@ -22,6 +23,47 @@
                                 :get-state get-state})]
      (with-redefs [store/http-store spy]
        [(http.sim/->HttpSimulator ::env ::id config) spy config dispatch get-state]))))
+
+(deftest ^:unit valid?-test
+  (testing "(valid?)"
+    (testing "returns true for valid configs"
+      (are [config] (http.sim/valid? config)
+        {:method   :http/get
+         :path     "/some/path"
+         :delay    123
+         :response {:status  200
+                    :headers {:header "some-header"}}}
+        {:method   :http/post
+         :path     "/"
+         :response {:status  200
+                    :body    nil}}
+        {:method   "http/put"
+         :path     "/:param"
+         :response {:status  404
+                    :body    "a body"
+                    :headers {}}}
+        {:method   :http/delete
+         :path     "/things"
+         :response {:status 204}}))
+
+    (testing "returns false for invalid config"
+      (are [config] (not (http.sim/valid? config))
+        {:method   :http/post
+         :response {:status  200
+                    :headers []}}
+        {:method   :http/patch
+         :path     "/"
+         :response {:status 200
+                    :body   {:some :body}}}
+        {:method   :file/get
+         :path     "/"
+         :response {:status 200}}
+        {:method   :http/delete
+         :path     :/
+         :response {:status 500}}
+        {:method   :http/put
+         :path     "/"
+         :response {:status "200"}}))))
 
 (deftest ^:unit ->HttpSimulator-test
   (testing "(->HttpSimulator)"
@@ -160,7 +202,7 @@
           (is (spies/called-with? change-spy config))
           (is (spies/called-with? dispatch ::action)))
         (testing "when config is bad"
-          (with-redefs [http.sim/why-not-update? (spies/constantly ::reasons)]
+          (with-redefs [specs/explain (spies/constantly ::reasons)]
             (testing "throws exception"
               (is (thrown? Throwable (common/reset! sim ::bad-config))))
             (testing "explains spec errors"

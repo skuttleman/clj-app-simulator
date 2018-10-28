@@ -47,11 +47,11 @@
         (http/patch {:body {:action :simulators/reset :type type}})
         (request* dispatch :simulators.clear-requests/succeed :simulators.clear-requests/fail))))
 
-(defn reset-simulator [id]
+(defn reset-simulator-config [id type]
   (fn [[dispatch]]
     (dispatch [:simulators.reset/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :simulators/reset}})
+        (http/patch {:body {:action :simulators/reset :type (keyword type :config)}})
         (request* dispatch :simulators.reset/succeed :simulators.reset/fail))))
 
 (defn update-simulator [id config]
@@ -72,7 +72,7 @@
   (fn [[dispatch]]
     (dispatch [:simulators.disconnect-all/request])
     (-> (str "/api/simulators/" id)
-        (http/patch {:body {:action :simulators.ws/disconnect-all}})
+        (http/patch {:body {:action :simulators.ws/disconnect}})
         (request* dispatch :simulators.disconnect-all/succeed :simulators.disconnect-all/fail))))
 
 (defn send-message [simulator-id socket-id message]

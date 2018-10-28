@@ -75,6 +75,23 @@
   [_]
   (do ::s/invalid))
 
+(defn conform [spec config]
+  (let [conformed (s/conform spec config)]
+    (when-not (= ::s/invalid conformed)
+      conformed)))
+
+(defn valid? [spec config]
+  (try
+    (s/valid? spec config)
+    (catch Throwable _
+      false)))
+
+(defn explain [spec config]
+  (s/explain-data spec config))
+
+(defn assert! [spec config]
+  (s/assert spec config))
+
 ;; types
 (s/def :type/inst (conformer dates/->inst))
 (s/def :type/named (s/conformer #(cond
@@ -126,33 +143,35 @@
 (s/def :resource/content-type :type/string)
 (s/def :resource/filename :type/string)
 (s/def :resource/resource (s/keys :req-un [:entity/id :resource/filename :entity/timestamp :resource/content-type]))
-(s/def :simulator.change/config (sor :http.change/simulator-config
-                                     :file.change/simulator-config
-                                     :ws.change/simulator-config))
+(s/def :simulator.change/config (sor :simulator.http.change/config
+                                     :simulator.file.change/config
+                                     :simulator.ws.change/config))
 (s/def :simulator.file.change/action (conformer (comp #{:simulators/reset :simulators/change} keyword)))
 (s/def :simulator.file.change/config (s/keys :opt-un [:file.change/response :config/delay]))
-(s/def :simulator.file.change/type (s/nilable (conformer (comp #{:file/requests :file/response} keyword))))
+(s/def :simulator.file.change/type (s/nilable (conformer (comp #{:file/config :file/requests :file/response} keyword))))
 (s/def :simulator.file/config (s/keys :req-un [:file/method :config/path :file/response] :opt-un [:config/delay]))
 (s/def :simulator.file/patch (s/conformer file-patch))
 (s/def :simulator.http.change/action (conformer (comp #{:simulators/reset :simulators/change} keyword)))
 (s/def :simulator.http.change/config (s/keys :opt-un [:http.change/response :config/delay]))
-(s/def :simulator.http.change/type (s/nilable (conformer (comp #{:http/requests :http/response} keyword))))
+(s/def :simulator.http.change/type (s/nilable (conformer (comp #{:http/config :http/requests :http/response} keyword))))
 (s/def :simulator.http/config (s/keys :req-un [:http/method :config/path :http/response] :opt-un [:config/delay]))
 (s/def :simulator.http/patch (s/conformer http-patch))
 (s/def :simulator.ws.change/action (conformer (comp #{:simulators/reset :simulators/change :simulators.ws/disconnect}
                                                     keyword)))
 (s/def :simulator.ws.change/config map?)
 (s/def :simulator.ws.change/socket-id (s/nilable :type/uuid))
-(s/def :simulator.ws.change/type (s/nilable (conformer (comp #{:ws/requests}))))
+(s/def :simulator.ws.change/type (s/nilable (conformer (comp #{:ws/config :ws/requests}))))
 (s/def :simulator.ws/config (s/keys :req-un [:ws/method :config/path]))
 (s/def :simulator.ws/patch (s/conformer ws-patch))
 (s/def :simulator.ws/socket-id :type/uuid)
 (s/def :simulator.ws/sockets (s/coll-of :type/uuid))
 (s/def :simulator/config (sor :http/simulator-config :file/simulator-config :ws/simulator-config))
 (s/def :ws.details/requests (s/coll-of :ws/request))
-(s/def :ws.details/simulator (s/keys :req-un [:entity/id :simulator.ws/config :ws.details/requests :simulator.ws/sockets]))
+(s/def :ws.details/simulator (s/keys :req-un [:entity/id :simulator.ws/config
+                                              :ws.details/requests :simulator.ws/sockets]))
 (s/def :ws/method (conformer (comp #{:ws/ws} keyword)))
-(s/def :ws/request (s/keys :req-un [:entity/id :entity/timestamp :request/query-params :request/route-params :request/headers :simulator.ws/socket-id :request/body]))
+(s/def :ws/request (s/keys :req-un [:entity/id :entity/timestamp :request/query-params :request/route-params
+                                    :request/headers :simulator.ws/socket-id :request/body]))
 (s/def :ws/request-details (s/keys :req-un [:ws.details/simulator :ws/request]))
 
 ;; specs
@@ -160,4 +179,5 @@
 (s/def ::details-simulators (s/keys :req-un [:details/simulators]))
 (s/def ::request-details (sor :http/request-details :file/request-details :ws/request-details))
 (s/def ::resource-item (s/keys :req-un [:resource/resource]))
-(s/def ::socket-simulator (s/keys :req-un [:ws.details/simulator :simulator.ws/socket-id]))
+(s/def ::socket-simulator (s/keys :req-un [:ws.details/simulator]
+                                  :opt-un [:simulator.ws/socket-id]))
