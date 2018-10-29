@@ -6,40 +6,51 @@
     [com.ben-allred.app-simulator.api.services.streams :as streams]
     [com.ben-allred.app-simulator.utils.fns :as fns]
     [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.utils.maps :as maps]
-    [com.ben-allred.app-simulator.utils.uuids :as uuids])
+    [com.ben-allred.app-simulator.utils.uuids :as uuids]
+    [com.ben-allred.app-simulator.api.utils.specs :as specs]
+    [com.ben-allred.app-simulator.api.utils.respond :as respond])
   (:import
     (java.util Date)))
 
 (defonce ^:private uploads (atom {}))
 
-(defn ^:private file->data [[id file]]
-  (-> file
-      (select-keys [:filename :content-type :timestamp])
-      (assoc :id id)))
+(defn ^:private file->data [file]
+  (select-keys file #{:id :filename :content-type :timestamp}))
 
-(defn ^:private upload* [env id file]
-  (when (streams/file? (:tempfile file))
-    (let [file' (-> file
-                    (set/rename-keys {:tempfile :file})
-                    (assoc :timestamp (Date.)))
-          result (file->data [id file'])]
-      (swap! uploads update-in [env id] (comp (constantly file') streams/delete :file))
-      result)))
+(defn ^:private api->file [id-fn]
+  (fn [file]
+    (-> file
+        (set/rename-keys {:tempfile :file})
+        (assoc :timestamp (Date.) :id (id-fn)))))
 
-(defn ^:private add! [env key idfn]
-  (comp (map #(upload* env (idfn) %))
-        (filter some?)
-        (fns/each! (comp (partial activity/publish env key)
-                         (maps/onto :resource)))))
+(defn ^:private validate! [param files]
+  (when (empty? files)
+    (respond/abort! :resources/empty {:param param}))
+  (when-not (every? (partial specs/valid? :resource/upload) files)
+    (respond/abort! :resources/failed-spec
+                    {:files    files
+                     :param    param
+                     :problems (map (partial specs/explain :resource/upload) files)}))
+  files)
+
+(defn ^:private upload* [env id-fn files]
+  (->> files
+       (map (api->file id-fn))
+       (fns/each! #(swap! uploads update-in [env (:id %)] (comp (constantly %) streams/delete :file)))
+       (map file->data)
+       (fns/each! #(activity/publish env :resources/put {:resource %}))
+       (doall)))
 
 (defn upload!
   ([env resource-id file]
    (->> [file]
-        (fns/transv (add! env :resources/put (constantly (uuids/->uuid resource-id))))
+        (validate! "file")
+        (upload* env (constantly (uuids/->uuid resource-id)))
         (first)))
   ([env files]
-   (fns/transv (add! env :resources/put uuids/random) files)))
+   (->> files
+        (validate! "files")
+        (upload* env uuids/random))))
 
 (defn clear! [env]
   (->> (clojure.core/get @uploads env)
@@ -54,11 +65,12 @@
     (when-let [resource (get-in @uploads [env id])]
       (streams/delete (:file resource))
       (swap! uploads update env dissoc id)
-      (activity/publish env :resources/remove {:resource (file->data [id resource])}))))
+      (activity/publish env :resources/remove {:resource (file->data resource)}))))
 
 (defn list-files [env]
   (->> @uploads
        (env)
+       (vals)
        (map file->data)
        (sort-by :timestamp)))
 

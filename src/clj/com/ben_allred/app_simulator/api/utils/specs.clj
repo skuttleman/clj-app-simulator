@@ -2,7 +2,9 @@
   (:require
     [clojure.spec.alpha :as s]
     [com.ben-allred.app-simulator.utils.dates :as dates]
-    [com.ben-allred.app-simulator.utils.uuids :as uuids])
+    [com.ben-allred.app-simulator.utils.uuids :as uuids]
+    [com.ben-allred.app-simulator.api.services.streams :as streams]
+    [com.ben-allred.app-simulator.utils.logging :as log])
   (:import (clojure.lang Named)))
 
 ;; utils
@@ -93,6 +95,7 @@
   (s/assert spec config))
 
 ;; types
+(s/def :type/file streams/file?)
 (s/def :type/inst (conformer dates/->inst))
 (s/def :type/named (s/conformer #(cond
                                    (string? %) %
@@ -143,6 +146,9 @@
 (s/def :resource/content-type :type/string)
 (s/def :resource/filename :type/string)
 (s/def :resource/resource (s/keys :req-un [:entity/id :resource/filename :entity/timestamp :resource/content-type]))
+(s/def :resource.upload/tempfile :type/file)
+(s/def :resource/upload (s/keys :req-un [:resource.upload/tempfile]
+                                :opt-un [:resource/filename :resource/content-type]))
 (s/def :simulator.change/config (sor :simulator.http.change/config
                                      :simulator.file.change/config
                                      :simulator.ws.change/config))
@@ -160,7 +166,7 @@
                                                     keyword)))
 (s/def :simulator.ws.change/config map?)
 (s/def :simulator.ws.change/socket-id (s/nilable :type/uuid))
-(s/def :simulator.ws.change/type (s/nilable (conformer (comp #{:ws/config :ws/requests}))))
+(s/def :simulator.ws.change/type (s/nilable (conformer (comp #{:ws/config :ws/requests} keyword))))
 (s/def :simulator.ws/config (s/keys :req-un [:ws/method :config/path]))
 (s/def :simulator.ws/patch (s/conformer ws-patch))
 (s/def :simulator.ws/socket-id :type/uuid)

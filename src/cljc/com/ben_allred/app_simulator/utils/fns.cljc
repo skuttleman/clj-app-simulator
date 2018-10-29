@@ -33,8 +33,6 @@
   ([f! coll]
    (map (comp first (juxt identity f!)) coll)))
 
-(defn transv [xform coll]
-  (transduce xform conj coll))
-
 (defn intov [xform]
-  (partial transv xform))
+  (fn [coll]
+    (transduce xform conj coll)))

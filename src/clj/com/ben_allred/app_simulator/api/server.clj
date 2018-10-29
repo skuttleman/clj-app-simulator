@@ -26,6 +26,7 @@
 (def ^:private app
   (-> #'routes/base
       (site {:multipart {:store (temp-file/temp-file-store {:expires-in nil})}})
+      (middleware/abortable)
       (middleware/content-type)
       (middleware/log-response)))
 

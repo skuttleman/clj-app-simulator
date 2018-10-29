@@ -13,7 +13,9 @@
     [com.ben-allred.app-simulator.utils.maps :as maps]
     [compojure.core :as c]
     [integration.utils.http :as test.http]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies])
+  (:import
+    (clojure.lang ExceptionInfo)))
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
@@ -110,12 +112,8 @@
         (testing "when a simulator is not created"
           (spies/reset! config-spy add-spy)
           (spies/respond-with! config-spy (constantly nil))
-          (let [result (simulators/make-simulator! ::env ::config)]
-            (testing "does not add the simulator"
-              (is (spies/never-called? add-spy)))
-
-            (testing "returns nil"
-              (is (nil? result)))))))))
+          (testing "throws an exception"
+            (is (thrown? ExceptionInfo (simulators/make-simulator! ::env ::config)))))))))
 
 (deftest ^:unit details-test
   (testing "(details)"
@@ -137,10 +135,12 @@
   (testing "(add)"
     (let [make-spy (spies/constantly ::simulator)
           details-spy (spies/constantly ::details)
-          publish-spy (spies/create)]
+          publish-spy (spies/create)
+          valid-spy (spies/constantly true)]
       (with-redefs [simulators/make-simulator! make-spy
                     common/details details-spy
-                    activity/publish publish-spy]
+                    activity/publish publish-spy
+                    simulators/valid? valid-spy]
         (testing "makes a simulator"
           (spies/reset! make-spy details-spy publish-spy)
           (simulators/add ::env ::config)
@@ -157,15 +157,14 @@
               (is (= {:simulator ::details}
                      (second result))))))
 
-        (testing "when a simulator is not made"
-          (spies/reset! make-spy details-spy publish-spy)
-          (spies/respond-with! make-spy (constantly nil))
-          (let [result (simulators/add ::env ::config)]
-            (testing "does not publish an event"
-              (is (spies/never-called? publish-spy)))
+        (testing "when the simulator is not valid"
+          (spies/reset! publish-spy)
+          (spies/respond-with! valid-spy (constantly false))
+          (testing "throws an exception"
+            (is (thrown? ExceptionInfo (simulators/add ::env ::config))))
 
-            (testing "returns an error"
-              (is (test.http/client-error? (respond/with result))))))))))
+          (testing "does not publish an event"
+            (is (spies/never-called? publish-spy))))))))
 
 (deftest ^:unit set!-test
   (testing "(set!)"
@@ -215,15 +214,11 @@
         (testing "when not all configs are valid"
           (spies/reset! valid-spy clear-spy make-spy details-spy publish-spy)
           (spies/respond-with! valid-spy (constantly false))
-          (let [result (simulators/set! ::env [::config-1 ::config-2])]
-            (testing "does not clear the simulators"
-              (is (spies/never-called? clear-spy)))
+          (testing "throws an exception"
+            (is (thrown? ExceptionInfo (simulators/set! ::env [::config-1 ::config-2]))))
 
-            (testing "does not publish an event"
-              (is (spies/never-called? publish-spy)))
-
-            (testing "returns an error"
-              (is (test.http/client-error? (respond/with result))))))))))
+          (testing "does not publish an event"
+            (is (spies/never-called? publish-spy))))))))
 
 (deftest ^:unit reset-all!-test
   (testing "(reset-all!)"

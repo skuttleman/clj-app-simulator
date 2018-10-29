@@ -7,6 +7,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.http :as http.sim]
     [com.ben-allred.app-simulator.api.services.simulators.simulators :as sims]
     [com.ben-allred.app-simulator.api.services.simulators.ws :as ws.sim]
+    [com.ben-allred.app-simulator.api.utils.respond :as respond]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [compojure.core :as c]))
@@ -35,8 +36,8 @@
          (first))))
 
 (defn make-simulator! [env config]
-  (when-let [simulator (config->?simulator env config)]
-    (sims/add! env simulator)))
+  (or (some->> config (config->?simulator env) (sims/add! env))
+      (respond/abort! :simulators.add/duplicate-sim)))
 
 (defn details [env]
   (->> (simulator-configs env common/details)
@@ -44,23 +45,21 @@
        (conj [:ok])))
 
 (defn add [env config]
-  (if-let [simulator (make-simulator! env config)]
-    (let [sim (common/details simulator)]
-      (activity/publish env :simulators/add {:simulator sim})
-      [:created {:simulator sim}])
-    [:bad-request {:message "error creating simulator"}]))
+  (when-not (valid? config)
+    (respond/abort! :simulators.add/failed-spec))
+  (let [simulator (common/details (make-simulator! env config))]
+    (activity/publish env :simulators/add {:simulator simulator})
+    [:created {:simulator simulator}]))
 
 (defn set! [env configs]
-  (let [invalid-configs (remove valid? configs)]
-    (if (empty? invalid-configs)
-      (do
-        (sims/clear! env)
-        (let [sims (->> configs
-                        (map (comp common/details (partial make-simulator! env)))
-                        (assoc {} :simulators))]
-          (activity/publish env :simulators/init sims)
-          [:created sims]))
-      [:bad-request {:message "one or more invalid simulators"}])))
+  (when (seq (remove valid? configs))
+    (respond/abort! :simulators.init/failed-spec))
+  (sims/clear! env)
+  (let [sims (->> configs
+                  (map (comp common/details (partial make-simulator! env)))
+                  (assoc {} :simulators))]
+    (activity/publish env :simulators/init sims)
+    [:created sims]))
 
 (defn reset-all! [env]
   (let [sims (simulator-configs env)]

@@ -18,7 +18,7 @@ This API is used to add, replace, and delete resources (files) to be used with t
 #### `POST /api/resources`
 
 Upload resources (files). Files should sent with the name `files` (even if there is only one) as `multi-part/form-data`.
-This produces the `resources/add` event for each file uploaded.
+This produces the `resources/add` event for each file uploaded. At least one file is required.
 
 ```bash
 $ curl -F 'files=@/path/to/file.pdf;filename=example.pdf;type=application/pdf' \
@@ -87,7 +87,7 @@ $ curl -X 'POST' \
        -H 'Accept: application/json' \
        --data '{"simulators":[{"method":"http/put","path":"/resource/:id","response":{"status":204}}]}' \
        http://localhost:3000/api/simulators/init
-``` 
+```
 
 ##### Request Spec
 
@@ -116,7 +116,6 @@ $ curl -X 'POST' \
 ##### Response Spec
 
 - `simulator`::[SimulatorDetails](#simulatordetails)
-
 
 #### `GET /api/simulators`
 
@@ -380,7 +379,7 @@ A type specification for all data accepted and returned by the API. A note for `
 
 ### URI
 
-The path of the simulator expressed in a String. Parameterized portions of the URI are prefixed with a colon `:`. 
+The path of the simulator expressed in a String. Parameterized portions of the URI are prefixed with a colon `:`.
 
 `/`, `/some/path`, `/some/path/with/:param`, and `/some/:param1/with/:param2`
 
@@ -554,7 +553,7 @@ An abstract representation of an HTTP simulator's update options. Can be one of
 [HTTPSimulatorChangePatch](#httpsimulatorchangepatch) or [HTTPSimulatorResetPatch](#httpsimulatorresetpatch). Any
 additional keys and values supplied when creating or updating a simulator will be stored with the simulator and returned
 as part of its config response.
- 
+
 ### HTTPSimulatorChangePatch
 
 - `action`::Enum{ `simulators/change` } - indicates a change request
@@ -566,8 +565,9 @@ simulator. Any keys not supplied will retain their current value
   "action": "simulators/change",
   "config": {
     "response": {
+      "status": 302,
       "headers": {
-        "x-new-header": "new-header-value"
+        "location": "http://www.example.com/"
       }
     }
   }
@@ -622,7 +622,7 @@ supplied, resets the simulator back to its initial state
   "action": "simulators/reset",
   "type": null
 }
-``` 
+```
 
 ### WSSimulatorPatch
 An abstract representation of a web socket simulator's update options. Can be one of
@@ -643,7 +643,7 @@ their current value
     "name": "A name for this simulator"
   }
 }
-``` 
+```
 
 ### WSSimulatorResetPatch
 
@@ -655,7 +655,7 @@ simulator back to its initial state and disconnects all active web socket connec
 {
   "action": "simulators/reset"
 }
-``` 
+```
 
 ### WSSimulatorDisconnectPatch
 
@@ -668,7 +668,7 @@ all active web sockets
   "action": "simulators.ws/disconnect",
   "socket-id": "86154ffd-d686-4262-80d0-9ee49ac282c2"
 }
-``` 
+```
 
 ### StoredRequest
 

@@ -2,8 +2,10 @@
   (:require
     [clojure.string :as string]
     [com.ben-allred.app-simulator.services.content :as content]
-    [com.ben-allred.app-simulator.utils.logging :as log])
+    [com.ben-allred.app-simulator.utils.logging :as log]
+    [com.ben-allred.app-simulator.utils.fns :as fns])
   (:import
+    (clojure.lang ExceptionInfo)
     (java.util Date)))
 
 (defn ^:private resource? [uri]
@@ -33,3 +35,12 @@
       :always (content/parse (get headers "content-type"))
       :always (handler)
       (api? request) (content/prepare #{"content-type"} (get headers "accept")))))
+
+(defn abortable [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch ExceptionInfo ex
+        (if-let [response (:response (.getData ex))]
+          response
+          (throw ex))))))

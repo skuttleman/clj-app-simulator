@@ -150,6 +150,11 @@
              (reducers/resources {:status :pending :data [::file-1 ::file-2]}
                                [:files.fetch-all/succeed {:resources [::file-3 ::file-4]}]))))
 
+    (testing "handles :files.replace/succeed"
+      (is (= {:status :available :data [{:id 111 :data ::data-111} {:id 222 :data ::data-new}]}
+             (reducers/resources {:data [{:id 111 :data ::data-111} {:id 222 :data ::data-222}]}
+                                 [:files.replace/succeeed {:resource {:id 222 :data ::data-new}}]))))
+
     (testing "returns unchanged state for any random action"
       (is (= {:status ::some-status :data ::same-state}
              (reducers/resources {:status ::some-status :data ::same-state} [:any-random-action ::ignored]))))))

@@ -6,12 +6,14 @@
     [com.ben-allred.app-simulator.api.services.simulators.routes :as routes.sim]
     [com.ben-allred.app-simulator.api.services.simulators.simulators :as sims]
     [com.ben-allred.app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.app-simulator.api.utils.specs :as specs]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [compojure.core :as c]
     [integration.utils.http :as test.http]
     [test.utils.spies :as spies])
   (:import
+    (clojure.lang ExceptionInfo)
     (java.io ByteArrayInputStream)))
 
 (defn ^:private find-by-method-and-path [routes method path]
@@ -128,110 +130,15 @@
             (is (spies/called-with? delete-spy ::identifier))
             (is (= result [:no-content]))))))))
 
-(deftest ^:unit patch-sim-test
-  (testing "(patch-sim)"
-    (let [[reset-spy reset-requests-spy reset-response-spy change-spy publish-spy] (repeatedly spies/create)
-          details-spy (spies/constantly ::details)]
-      (with-redefs [common/reset! (fn [& args]
-                                    (if (= 1 (count args))
-                                      (apply reset-spy args)
-                                      (apply change-spy args)))
-                    common/partially-reset! (fn [sim type]
-                                              (case type
-                                                :http/response (reset-response-spy sim)
-                                                :http/requests (reset-requests-spy sim)))
-                    common/details details-spy
-                    activity/publish publish-spy]
-        (let [handler (routes.sim/patch-sim ::env ::simulator)]
-          (testing "when resetting the simulator"
-            (spies/reset! reset-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/reset}})]
-              (testing "takes the requested action"
-                (is (spies/called-with? reset-spy ::simulator)))
-
-              (testing "gets the details"
-                (is (spies/called-with? details-spy ::simulator)))
-
-              (testing "publishes the event"
-                (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator ::details})))
-
-              (testing "responds with the details"
-                (is (= [:ok {:simulator ::details}] result)))))
-
-          (testing "when changing the simulator"
-            (spies/reset! change-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/change :config ::config}})]
-              (testing "takes the requested action"
-                (is (spies/called-with? change-spy ::simulator ::config)))
-
-              (testing "gets the details"
-                (is (spies/called-with? details-spy ::simulator)))
-
-              (testing "publishes the event"
-                (is (spies/called-with? publish-spy ::env :simulators/change {:simulator ::details})))
-
-              (testing "responds with the details"
-                (is (= [:ok {:simulator ::details}] result))))
-
-            (testing "and when the change fails"
-              (spies/reset! change-spy)
-              (spies/respond-with! change-spy (fn [_ _]
-                                                (throw (ex-info "An Exception" {:problems ::problems}))))
-              (let [result (handler {:body {:action :simulators/change :config ::config}})]
-                (testing "responds with error"
-                  (is (= [:bad-request ::problems] result))))))
-
-          (testing "when resetting the requests"
-            (spies/reset! reset-requests-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/reset :type :http/requests}})]
-              (testing "takes the requested action"
-                (is (spies/called-with? reset-requests-spy ::simulator)))
-
-              (testing "gets the details"
-                (is (spies/called-with? details-spy ::simulator)))
-
-              (testing "publishes the event"
-                (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator ::details})))
-
-              (testing "responds with the details"
-                (is (= [:ok {:simulator ::details}] result)))))
-
-          (testing "when resetting the response"
-            (spies/reset! reset-response-spy details-spy publish-spy)
-            (let [result (handler {:body {:action :simulators/reset :type :http/response}})]
-              (testing "takes the requested action"
-                (is (spies/called-with? reset-response-spy ::simulator)))
-
-              (testing "gets the details"
-                (is (spies/called-with? details-spy ::simulator)))
-
-              (testing "publishes the event"
-                (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator ::details})))
-
-              (testing "responds with the details"
-                (is (= [:ok {:simulator ::details}] result)))))
-
-          (testing "when an unknown action is patched"
-            (spies/reset! publish-spy)
-            (handler {:body {:action :unknown}})
-            (testing "does not publish an action"
-              (spies/never-called? publish-spy)))
-
-          (testing "when the action is a string"
-            (spies/reset! reset-spy publish-spy)
-            (handler {:body {:action "simulators/reset"}})
-            (testing "converts the keyword to a string"
-              (is (spies/called-with? reset-spy ::simulator))
-              (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator ::details})))))))))
-
-(deftest ^:unit patch-ws-test
-  (testing "(patch-ws)"
+(deftest ^:unit patch-test
+  (testing "(patch)"
     (let [reset-spy (spies/create)
           reset-messages-spy (spies/create)
           change-spy (spies/create)
           disconnect-spy (spies/create)
           details-spy (spies/constantly {::some ::details})
-          publish-spy (spies/create)]
+          publish-spy (spies/create)
+          conform-spy (spies/create (fn [_ body] body))]
       (with-redefs [common/reset! (fn [& args]
                                     (if (= 1 (count args))
                                       (apply reset-spy args)
@@ -239,11 +146,15 @@
                     common/partially-reset! reset-messages-spy
                     common/disconnect! disconnect-spy
                     common/details details-spy
-                    activity/publish publish-spy]
-        (let [handler (routes.sim/patch-ws ::env ::simulator)]
+                    activity/publish publish-spy
+                    specs/conform conform-spy]
+        (let [handler (routes.sim/patch ::env ::simulator :sim-type)]
           (testing "when resetting the simulator"
             (spies/reset! reset-spy details-spy publish-spy)
             (let [result (handler {:body {:action :simulators/reset}})]
+              (testing "conforms the body"
+                (is (spies/called-with? conform-spy :simulator.sim-type/patch {:action :simulators/reset})))
+
               (testing "takes the requested action"
                 (is (spies/called-with? reset-spy ::simulator)))
 
@@ -317,25 +228,14 @@
               (testing "responds with the details"
                 (is (= [:ok {:simulator {::some ::details}}] result)))))
 
-          (testing "when an unknown action is patched"
+          (testing "when the body does not conform to the spec"
             (spies/reset! publish-spy)
-            (handler {:body {:action :unknown}})
+            (spies/respond-with! conform-spy (constantly nil))
+            (testing "throws an exception"
+              (is (thrown? ExceptionInfo (handler {:body {:action :unknown}}))))
+
             (testing "does not publish an action"
-              (spies/never-called? publish-spy)))
-
-          (testing "when the action is a string"
-            (spies/reset! reset-spy publish-spy)
-            (handler {:body {:action "simulators/reset"}})
-            (testing "converts the action to a keyword"
-              (is (spies/called-with? reset-spy ::simulator))
-              (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator {::some ::details}}))))
-
-          (testing "when the socket-id is a string"
-            (spies/reset! disconnect-spy publish-spy)
-            (let [socket-id (uuids/random)]
-              (handler {:body {:action :simulators.ws/disconnect :socket-id (str socket-id)}})
-              (testing "converts the socket-id to a UUID"
-                (is (spies/called-with? disconnect-spy ::simulator socket-id))))))))))
+              (spies/never-called? publish-spy))))))))
 
 (deftest ^:unit send-ws-test
   (testing "(send-ws)"
@@ -394,16 +294,16 @@
                                          :id     "some-id"})
           get-sim-spy (spies/constantly ::get-sim)
           delete-sim-spy (spies/constantly ::delete-sim)
-          patch-sim-spy (spies/constantly ::patch-sim)
+          patch-spy (spies/constantly ::patch-sim)
           sim-route-spy (spies/constantly ::sim-route)]
       (with-redefs [common/details details-spy
                     routes.sim/get-sim get-sim-spy
                     routes.sim/delete-sim delete-sim-spy
-                    routes.sim/patch-sim patch-sim-spy
+                    routes.sim/patch patch-spy
                     routes.sim/http-sim-route sim-route-spy]
         (testing "contains a sim route"
           (spies/reset! details-spy sim-route-spy)
-          (is (-> (routes.sim/http-routes ::env ::simulator)
+          (is (-> (routes.sim/http-routes ::type ::env ::simulator)
                   (find-by-method-and-path :method "/simulators/some/path")
                   (= ::sim-route)))
           (is (spies/called-with? sim-route-spy ::env ::simulator)))
@@ -412,28 +312,28 @@
           (spies/respond-with! details-spy (constantly {:config {:method ::method :path "/"}
                                                         :id     "some-id"}))
           (testing "drops the trailing slash on the sim route"
-            (is (-> (routes.sim/http-routes ::env ::simulator)
+            (is (-> (routes.sim/http-routes ::type ::env ::simulator)
                     (find-by-method-and-path :method "/simulators")
                     (= ::sim-route)))))
 
         (testing "contains routes to get the simulator"
           (spies/reset! details-spy get-sim-spy)
-          (let [sims (routes.sim/http-routes ::env ::simulator)]
+          (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
             (is (spies/called-with? get-sim-spy ::simulator))
             (is (= ::get-sim
                    (find-by-method-and-path sims :get "/api/simulators/some-id")))))
 
         (testing "when building routes to delete the simulator"
           (spies/reset! details-spy delete-sim-spy)
-          (let [sims (routes.sim/http-routes ::env ::simulator)]
+          (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
             (testing "has the routes"
               (is (= ::delete-sim
                      (find-by-method-and-path sims :delete "/api/simulators/some-id"))))))
 
         (testing "contains routes to update the simulator"
-          (spies/reset! details-spy patch-sim-spy)
-          (let [sims (routes.sim/http-routes ::env ::simulator)]
-            (is (spies/called-with? patch-sim-spy ::env ::simulator))
+          (spies/reset! details-spy patch-spy)
+          (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
+            (is (spies/called-with? patch-spy ::env ::simulator ::type))
             (is (= ::patch-sim
                    (find-by-method-and-path sims :patch "/api/simulators/some-id")))))))))
 
@@ -445,7 +345,7 @@
           ws-sim-spy (spies/constantly ::connect)
           get-sim-spy (spies/constantly ::details)
           send-ws-spy (spies/constantly ::send)
-          patch-ws-spy (spies/constantly ::reset)
+          patch-spy (spies/constantly ::reset)
           disconnect-spy (spies/constantly ::disconnect)]
       (with-redefs [common/details details-spy
                     sims/remove! remove-spy
@@ -453,7 +353,7 @@
                     routes.sim/ws-sim-route ws-sim-spy
                     routes.sim/get-sim get-sim-spy
                     routes.sim/send-ws send-ws-spy
-                    routes.sim/patch-ws patch-ws-spy
+                    routes.sim/patch patch-spy
                     routes.sim/disconnect-ws disconnect-spy]
         (let [simulators (set (routes.sim/ws-routes ::env ::simulator))]
           (testing "gets the simulator's details"
@@ -478,7 +378,7 @@
             (is (spies/called-with? send-ws-spy ::simulator)))
 
           (testing "creates a handler to reset the simulator"
-            (is (spies/called-with? patch-ws-spy ::env ::simulator)))
+            (is (spies/called-with? patch-spy ::env ::simulator :ws)))
 
           (testing "creates a handler to disconnect sockets"
             (is (spies/called-with? disconnect-spy ::simulator)))
@@ -495,7 +395,7 @@
 
         (testing "when path is /"
           (spies/reset! details-spy remove-spy delete-sim-spy ws-sim-spy
-                        get-sim-spy send-ws-spy patch-ws-spy disconnect-spy)
+                        get-sim-spy send-ws-spy patch-spy disconnect-spy)
           (spies/respond-with! details-spy (constantly {:config {:path "/"} :id 123}))
           (let [simulators (set (routes.sim/ws-routes ::env ::simulator))]
             (testing "returns simulators with the correct paths"
@@ -514,10 +414,10 @@
           make-route-spy (spies/create (comp second vector))]
       (with-redefs [routes.sim/http-routes routes-spy
                     c/make-route make-route-spy]
-        (testing "make routes"
+        (testing "makes routes"
           (let [routes (routes.sim/http-sim->routes ::env ::simulator)]
             (is (= [::1 ::2] routes))
-            (is (spies/called-with? routes-spy ::env ::simulator))
+            (is (spies/called-with? routes-spy :http ::env ::simulator))
             (is (spies/called-with? make-route-spy ::route ::1))
             (is (spies/called-with? make-route-spy ::route ::2))))))))
 
@@ -543,6 +443,6 @@
         (testing "make routes"
           (let [routes (routes.sim/file-sim->routes ::env ::simulator)]
             (is (= [::1 ::2] routes))
-            (is (spies/called-with? routes-spy ::env ::simulator))
+            (is (spies/called-with? routes-spy :file ::env ::simulator))
             (is (spies/called-with? make-route-spy ::route ::1))
             (is (spies/called-with? make-route-spy ::route ::2))))))))

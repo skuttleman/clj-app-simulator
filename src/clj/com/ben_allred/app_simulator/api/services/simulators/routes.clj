@@ -3,12 +3,13 @@
     [com.ben-allred.app-simulator.api.services.activity :as activity]
     [com.ben-allred.app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.app-simulator.api.services.simulators.simulators :as sims]
+    [com.ben-allred.app-simulator.api.services.streams :as streams]
+    [com.ben-allred.app-simulator.api.utils.respond :as respond]
+    [com.ben-allred.app-simulator.api.utils.specs :as specs]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.strings :as strings]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
-    [compojure.core :as c])
-  (:import
-    (java.io InputStream)))
+    [compojure.core :as c]))
 
 (defn ^:private sim->routes [env f simulator]
   (->> (f env simulator)
@@ -22,7 +23,7 @@
 
 (defn http-sim-route [env simulator]
   (fn [request]
-    (let [response (->> (update request :body #(if (instance? InputStream %)
+    (let [response (->> (update request :body #(if (streams/input-stream? %)
                                                  (strings/trim-to-nil (slurp %))
                                                  %))
                         (common/receive! simulator))]
@@ -45,45 +46,29 @@
     (delete-sim! (common/identifier simulator))
     [:no-content]))
 
-(defn patch-sim [env simulator]
-  (fn [{{:keys [action config type]} :body}]
-    (try (let [action (keyword action)
-               type (keyword type)]
-           (case action
-             :simulators/change (common/reset! simulator config)
-             :simulators/reset (if type
-                                 (common/partially-reset! simulator type)
-                                 (common/reset! simulator))
-             nil)
-           (let [details (common/details simulator)]
-             (when (#{:simulators/reset :simulators/change} action)
-               (activity/publish env action {:simulator details}))
-             [:ok {:simulator details}]))
-         (catch Throwable ex
-           [:bad-request (:problems (ex-data ex))]))))
-
-(defn patch-ws [env simulator]
-  (fn [{{:keys [action socket-id config type]} :body}]
-    (let [action (keyword action)
-          type (keyword type)
-          socket-id (uuids/->uuid socket-id)]
-      (case action
-        :simulators/change (common/reset! simulator config)
-        :simulators/reset (if type
-                            (common/partially-reset! simulator type)
-                            (common/reset! simulator))
-        :simulators.ws/disconnect (if socket-id
-                                    (common/disconnect! simulator socket-id)
-                                    (common/disconnect! simulator))
-        nil)
-      (let [details (common/details simulator)]
-        (when (#{:simulators/reset :simulators/change :simulators.ws/disconnect} action)
-          (activity/publish env action (cond-> {:simulator details} socket-id (assoc :socket-id socket-id))))
-        [:ok {:simulator details}]))))
+(defn patch [env simulator type]
+  (fn [{body :body}]
+    (let [spec (keyword (format "simulator.%s/patch" (name type)))]
+      (if-let [{:keys [action socket-id config type]} (specs/conform spec body)]
+        (do
+          (case action
+            :simulators/change (common/reset! simulator config)
+            :simulators/reset (if type
+                                (common/partially-reset! simulator type)
+                                (common/reset! simulator))
+            :simulators.ws/disconnect (if socket-id
+                                        (common/disconnect! simulator socket-id)
+                                        (common/disconnect! simulator)))
+          (let [details {:simulator (common/details simulator)}]
+            (activity/publish env action (cond-> details
+                                           (and (= :simulators.ws/disconnect action) socket-id)
+                                           (assoc :socket-id socket-id)))
+            [:ok details]))
+        (respond/abort! :simulators.change/failed-spec)))))
 
 (defn send-ws [simulator]
   (fn [{:keys [params body]}]
-    (let [body (if (instance? InputStream body) (slurp body) (str body))
+    (let [body (if (streams/input-stream? body) (slurp body) (str body))
           socket-id (:socket-id params)]
       (if socket-id
         (common/send! simulator (uuids/->uuid socket-id) body)
@@ -95,12 +80,12 @@
     (common/disconnect! simulator)
     [:no-content]))
 
-(defn http-routes [env simulator]
+(defn http-routes [type env simulator]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)
         method-str (name method)
         get (get-sim simulator)
         delete (delete-sim env simulator (partial sims/remove! env))
-        patch (patch-sim env simulator)
+        patch (patch env simulator type)
         path (when (not= path "/") path)
         uri (str "/api/simulators/" id)]
     [[(keyword method-str) (str "/simulators" path) (http-sim-route env simulator)]
@@ -116,7 +101,7 @@
         socket-uri (str uri "/sockets/:socket-id")
         get (get-sim simulator)
         send (send-ws simulator)
-        patch (patch-ws env simulator)
+        patch (patch env simulator :ws)
         disconnect (disconnect-ws simulator)]
     [[:get sim-path (ws-sim-route simulator)]
      [:get uri get]
@@ -127,10 +112,10 @@
      [:patch uri patch]]))
 
 (defn http-sim->routes [env simulator]
-  (sim->routes env http-routes simulator))
+  (sim->routes env (partial http-routes :http) simulator))
 
 (defn ws-sim->routes [env simulator]
   (sim->routes env ws-routes simulator))
 
 (defn file-sim->routes [env simulator]
-  (sim->routes env http-routes simulator))
+  (sim->routes env (partial http-routes :file) simulator))

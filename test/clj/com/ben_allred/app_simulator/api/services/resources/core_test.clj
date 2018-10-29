@@ -4,112 +4,95 @@
     [com.ben-allred.app-simulator.api.services.activity :as activity]
     [com.ben-allred.app-simulator.api.services.resources.core :as resources]
     [com.ben-allred.app-simulator.api.services.streams :as streams]
+    [com.ben-allred.app-simulator.api.utils.specs :as specs]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [test.utils.spies :as spies])
   (:import
+    (clojure.lang ExceptionInfo)
     (java.util Date)))
 
 (deftest ^:unit upload!-test
   (testing "(upload!)"
-    (testing "when uploading new files"
-      (let [uploads (atom {::env {111 {:filename     ::filename-1
-                                       :file         ::file-1
-                                       :content-type ::content-type-1
-                                       :timestamp    123}}})
-            publish-spy (spies/create)
-            uuid-spy (spies/create)]
-        (with-redefs [resources/uploads uploads
-                      activity/publish publish-spy
-                      uuids/random uuid-spy
-                      streams/file? (constantly true)]
-          (spies/returning! uuid-spy 222 333)
-          (let [result (resources/upload! ::env [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
-                                                 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
-                [[_ event-1 data-1] [_ event-2 data-2]] (spies/calls publish-spy)
-                state (::env @uploads)]
+    (with-redefs [specs/valid? (constantly false)]
+      (testing "when uploading bad files"
+        (is (thrown? ExceptionInfo (resources/upload! ::env [::bad-file])))
+        (is (thrown? ExceptionInfo (resources/upload! ::env (uuids/random) [::bad-file])))))
 
-            (testing "publishes an event for file-2"
-              (is (= :resources/put event-1))
-              (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
-                     (dissoc (:resource data-1) :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-1 [:resource :timestamp]))))))
+    (with-redefs [specs/valid? (constantly true)]
+      (testing "when uploading new files"
+        (let [uploads (atom {::env {111 {:filename     ::filename-1
+                                         :file         ::file-1
+                                         :content-type ::content-type-1
+                                         :timestamp    123}}})
+              publish-spy (spies/create)
+              uuid-spy (spies/create)]
+          (with-redefs [resources/uploads uploads
+                        activity/publish publish-spy
+                        uuids/random uuid-spy
+                        streams/file? (constantly true)]
+            (spies/returning! uuid-spy 222 333)
+            (let [result (resources/upload! ::env [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
+                                                   {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
+                  [[_ event-1 data-1] [_ event-2 data-2]] (spies/calls publish-spy)
+                  state (::env @uploads)]
 
-            (testing "publishes an event for file-3"
-              (is (= :resources/put event-2))
-              (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
-                     (dissoc (:resource data-2) :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-2 [:resource :timestamp]))))))
+              (testing "publishes an event for file-2"
+                (is (= :resources/put event-1))
+                (is (= {:filename ::filename-2 :content-type ::content-type-2 :id 222}
+                       (dissoc (:resource data-1) :timestamp)))
+                (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-1 [:resource :timestamp]))))))
 
-            (testing "has file-1"
-              (is (= ::file-1 (get-in state [111 :file]))))
+              (testing "publishes an event for file-3"
+                (is (= :resources/put event-2))
+                (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 333}
+                       (dissoc (:resource data-2) :timestamp)))
+                (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data-2 [:resource :timestamp]))))))
 
-            (testing "has file-2"
-              (is (= ::file-2 (get-in state [222 :file]))))
+              (testing "has file-1"
+                (is (= ::file-1 (get-in state [111 :file]))))
 
-            (testing "has file-3"
-              (is (= ::file-3 (get-in state [333 :file]))))
+              (testing "has file-2"
+                (is (= ::file-2 (get-in state [222 :file]))))
 
-            (testing "returns added files"
-              (is (= (map #(dissoc % :timestamp) result)
-                     [{:filename ::filename-2 :content-type ::content-type-2 :id 222}
-                      {:filename ::filename-3 :content-type ::content-type-3 :id 333}])))))))
+              (testing "has file-3"
+                (is (= ::file-3 (get-in state [333 :file]))))
 
-    (testing "when uploading a replacement file"
-      (let [uploads (atom {::env {111 {:filename     ::filename-1
-                                       :file         ::file-1
-                                       :content-type ::content-type-1
-                                       :timestamp    123}}})
-            publish-spy (spies/create)
-            delete-spy (spies/create)]
-        (with-redefs [resources/uploads uploads
-                      activity/publish publish-spy
-                      uuids/->uuid identity
-                      streams/delete delete-spy
-                      streams/file? (constantly true)]
-          (let [result (resources/upload! ::env 111 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3})
-                [_ event data] (first (spies/calls publish-spy))
-                state (::env @uploads)]
+              (testing "returns added files"
+                (is (= (map #(dissoc % :timestamp) result)
+                       [{:filename ::filename-2 :content-type ::content-type-2 :id 222}
+                        {:filename ::filename-3 :content-type ::content-type-3 :id 333}])))))))
 
-            (testing "publishes an event for file-3"
-              (is (= :resources/put event))
-              (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 111}
-                     (dissoc (:resource data) :timestamp)))
-              (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data [:resource :timestamp]))))))
+      (testing "when uploading a replacement file"
+        (let [uploads (atom {::env {111 {:filename     ::filename-1
+                                         :file         ::file-1
+                                         :content-type ::content-type-1
+                                         :timestamp    123}}})
+              publish-spy (spies/create)
+              delete-spy (spies/create)]
+          (with-redefs [resources/uploads uploads
+                        activity/publish publish-spy
+                        uuids/->uuid identity
+                        streams/delete delete-spy
+                        streams/file? (constantly true)]
+            (let [result (resources/upload! ::env 111 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3})
+                  [_ event data] (first (spies/calls publish-spy))
+                  state (::env @uploads)]
 
-            (testing "has file-3"
-              (is (= ::file-3 (get-in state [111 :file]))))
+              (testing "publishes an event for file-3"
+                (is (= :resources/put event))
+                (is (= {:filename ::filename-3 :content-type ::content-type-3 :id 111}
+                       (dissoc (:resource data) :timestamp)))
+                (is (> 50 (- (.getTime (Date.)) (.getTime (get-in data [:resource :timestamp]))))))
 
-            (testing "deletes the existing file"
-              (is (spies/called-with? delete-spy ::file-1)))
+              (testing "has file-3"
+                (is (= ::file-3 (get-in state [111 :file]))))
 
-            (testing "returns added file"
-              (is (= (dissoc result :timestamp)
-                     {:filename ::filename-3 :content-type ::content-type-3 :id 111})))))))
+              (testing "deletes the existing file"
+                (is (spies/called-with? delete-spy ::file-1)))
 
-    (testing "when the upload is not a file"
-      (let [initial {111 {:filename     ::filename-1
-                          :file         ::file-1
-                          :content-type ::content-type-1
-                          :timestamp    123}}
-            uploads (atom {::env initial})
-            publish-spy (spies/create)
-            uuid-spy (spies/create)]
-        (with-redefs [resources/uploads uploads
-                      activity/publish publish-spy
-                      uuids/random uuid-spy
-                      streams/file? (constantly false)]
-          (spies/returning! uuid-spy 222 333)
-          (let [result (resources/upload! ::env [{:tempfile ::file-2 :filename ::filename-2 :content-type ::content-type-2}
-                                                 {:tempfile ::file-3 :filename ::filename-3 :content-type ::content-type-3}])
-                state (::env @uploads)]
-            (testing "publishes no events"
-              (is (spies/never-called? publish-spy)))
-
-            (testing "result is empty"
-              (is (empty? result)))
-
-            (testing "has unchanged state"
-              (is (= initial state)))))))))
+              (testing "returns added file"
+                (is (= (dissoc result :timestamp)
+                       {:filename ::filename-3 :content-type ::content-type-3 :id 111}))))))))))
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"
@@ -175,7 +158,6 @@
             (is (-> upload-data
                     (get-in [::env 222])
                     (dissoc :file)
-                    (assoc :id 222)
                     (= (:resource data))))))
 
         (testing "when deleting a resource that does not exist"
@@ -200,16 +182,13 @@
                                      :timestamp    456}}})]
       (with-redefs [resources/uploads uploads]
         (testing "returns a list of files"
-          (is (= [{:id           222
-                   :filename     ::file-1
+          (is (= [{:filename     ::file-1
                    :content-type ::content-type
                    :timestamp    123}
-                  {:id           333
-                   :filename     ::file-2
+                  {:filename     ::file-2
                    :content-type ::content-type
                    :timestamp    456}
-                  {:id           111
-                   :filename     ::file-3
+                  {:filename     ::file-3
                    :content-type ::content-type
                    :timestamp    789}]
                  (resources/list-files ::env))))))))

@@ -1,5 +1,6 @@
 .modal {
     transition: top 0.333s linear;
+    z-index: 200;
 
     &.mounted {
         top: -150vh;
