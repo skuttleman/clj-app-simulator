@@ -2,6 +2,8 @@
 
 A programmable API simulator for use in manual/automated integration and acceptance testing.
 
+[![Clojars Project](https://img.shields.io/clojars/v/com.ben-allred/app-simulator.svg)](https://clojars.org/com.ben-allred/app-simulator)
+
 ## API
 
 With the exception of the [Resource API](#resource-api), all endpoints support `application/json`, `application/edn`,
