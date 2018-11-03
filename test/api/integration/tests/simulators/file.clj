@@ -216,8 +216,8 @@
                                 (let [{:keys [event]} (chans/<⏰!! chan)]
                                   (is (= :simulators/receive (keyword event)))))
 
-                              (testing "returns :not-found"
-                                (is (= status :not-found))))))))))))))
+                              (testing "returns not-found"
+                                (is (= status :http.status/not-found))))))))))))))
 
         (test.ws/close! ws)
         (async/close! chan)))))

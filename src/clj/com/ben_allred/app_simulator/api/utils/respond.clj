@@ -5,32 +5,32 @@
 (defn ^:private type->response [type data]
   (case type
     :resources/empty
-    [:bad-request
+    [:http.status/bad-request
      {:message (format "Must supply a file for the form param `%s`"
                        (:param data))}]
 
     :resources/failed-spec
-    [:bad-request
+    [:http.status/bad-request
      {:message (format "Bad value submitted for the form param `%s`"
                        (:param data))}]
 
     :simulators.init/failed-spec
-    [:bad-request
+    [:http.status/bad-request
      {:message "One or more invalid simulator specifications"}]
 
     :simulators.add/failed-spec
-    [:bad-request
+    [:http.status/bad-request
      {:message "Invalid simulator specification"}]
 
     :simulators.change/failed-spec
-    [:bad-request
+    [:http.status/bad-request
      {:message "Invalid simulator change specification"}]
 
     :simulators.add/duplicate-sim
-    [:bad-request
+    [:http.status/bad-request
      {:message "A simulator already exists for this path and method"}]
 
-    [:internal-server-error]))
+    [:http.status/internal-server-error]))
 
 (defn with [[status body headers]]
   (cond-> {:status 200}

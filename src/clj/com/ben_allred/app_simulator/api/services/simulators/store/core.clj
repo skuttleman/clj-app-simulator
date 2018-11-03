@@ -18,7 +18,7 @@
                 "Content-Length" (:size resource)
                 "Content-Disposition" (format "inline; filename=\"%s\"" (:filename resource)))
         (assoc :body (streams/open-input-stream (:file resource))))
-    [:not-found]))
+    [:http.status/not-found]))
 
 (defn http-store []
   (collaj/create-store reducers/http))

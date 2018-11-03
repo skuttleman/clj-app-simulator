@@ -103,7 +103,7 @@
               result (handler ::request)]
           (testing "responds with the simulator's details"
             (is (spies/called-with? details-spy ::simulator))
-            (is (= [:ok {:simulator ::details}] result))))))))
+            (is (= [:http.status/ok {:simulator ::details}] result))))))))
 
 (deftest ^:unit delete-sim-test
   (testing "(delete-sim)"
@@ -128,7 +128,7 @@
 
             (is (spies/called-with? identifier-spy ::simulator))
             (is (spies/called-with? delete-spy ::identifier))
-            (is (= result [:no-content]))))))))
+            (is (= result [:http.status/no-content]))))))))
 
 (deftest ^:unit patch-test
   (testing "(patch)"
@@ -165,7 +165,7 @@
                 (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator {::some ::details}})))
 
               (testing "responds with the details"
-                (is (= [:ok {:simulator {::some ::details}}] result)))))
+                (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
 
           (testing "when changing the simulator"
             (spies/reset! change-spy details-spy publish-spy)
@@ -180,7 +180,7 @@
                 (is (spies/called-with? publish-spy ::env :simulators/change {:simulator {::some ::details}})))
 
               (testing "responds with the details"
-                (is (= [:ok {:simulator {::some ::details}}] result)))))
+                (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
 
           (testing "when resetting the messages"
             (spies/reset! reset-messages-spy details-spy publish-spy)
@@ -195,7 +195,7 @@
                 (is (spies/called-with? publish-spy ::env :simulators/reset {:simulator {::some ::details}})))
 
               (testing "responds with the details"
-                (is (= [:ok {:simulator {::some ::details}}] result)))))
+                (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
 
           (testing "when disconnecting all sockets"
             (spies/reset! disconnect-spy details-spy publish-spy)
@@ -210,7 +210,7 @@
                 (is (spies/called-with? publish-spy ::env :simulators.ws/disconnect {:simulator {::some ::details}})))
 
               (testing "responds with the details"
-                (is (= [:ok {:simulator {::some ::details}}] result)))))
+                (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
 
           (testing "when disconnecting one socket"
             (spies/reset! disconnect-spy details-spy publish-spy)
@@ -226,7 +226,7 @@
                 (is (spies/called-with? publish-spy ::env :simulators.ws/disconnect {:simulator {::some ::details} :socket-id socket-id})))
 
               (testing "responds with the details"
-                (is (= [:ok {:simulator {::some ::details}}] result)))))
+                (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
 
           (testing "when the body does not conform to the spec"
             (spies/reset! publish-spy)

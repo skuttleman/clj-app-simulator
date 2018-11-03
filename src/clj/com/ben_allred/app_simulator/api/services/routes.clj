@@ -23,35 +23,35 @@
            (colls/force-sequential)
            (resources/upload! (env/env*))
            (assoc {} :resources)
-           (conj [:created])))
+           (conj [:http.status/created])))
     (PUT "/:resource-id" request
       (let [{:keys [resource-id file]} (:params request)]
         (->> file
              (resources/upload! (env/env*) resource-id)
              (assoc {} :resource)
-             (conj [:ok]))))
+             (conj [:http.status/ok]))))
     (GET "/" []
-      [:ok {:resources (resources/list-files (env/env*))}])
+      [:http.status/ok {:resources (resources/list-files (env/env*))}])
     (DELETE "/" []
       (resources/clear! (env/env*))
-      [:no-content])
+      [:http.status/no-content])
     (DELETE "/:resource-id" [resource-id]
       (resources/remove! (env/env*) resource-id)
-      [:no-content])))
+      [:http.status/no-content])))
 
 (defroutes ^:private sims
   (context "/" []
     (simulators/routes (env/env*))
     (context "/simulators" []
-      (ANY "/" [] [:not-found {:message "simulator not found"}])
-      (ANY "/*" [] [:not-found {:message "simulator not found"}]))
-    (ANY "/api/*" [] [:not-found])))
+      (ANY "/" [] [:http.status/not-found {:message "simulator not found"}])
+      (ANY "/*" [] [:http.status/not-found {:message "simulator not found"}]))
+    (ANY "/api/*" [] [:http.status/not-found])))
 
 (defroutes ^:private web
   (context "/" []
     (route/resources "/")
-    (GET "/health" [] [:ok {:a :ok}])
-    (GET "/*" req [:ok
+    (GET "/health" [] [:http.status/ok {:a :ok}])
+    (GET "/*" req [:http.status/ok
                    (-> req
                        (select-keys #{:uri :query-string})
                        (html/render (env/env*)))
@@ -65,4 +65,4 @@
   (context "/" []
     sims
     web
-    (ANY "/*" [] [:not-found])))
+    (ANY "/*" [] [:http.status/not-found])))

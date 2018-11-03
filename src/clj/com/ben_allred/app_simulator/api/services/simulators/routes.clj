@@ -36,7 +36,7 @@
 
 (defn get-sim [simulator]
   (fn [_]
-    [:ok {:simulator (common/details simulator)}]))
+    [:http.status/ok {:simulator (common/details simulator)}]))
 
 (defn delete-sim [env simulator delete-sim!]
   (fn [_]
@@ -44,7 +44,7 @@
                       :simulators/delete
                       {:simulator (common/details simulator)})
     (delete-sim! (common/identifier simulator))
-    [:no-content]))
+    [:http.status/no-content]))
 
 (defn patch [env simulator type]
   (fn [{body :body}]
@@ -63,7 +63,7 @@
             (activity/publish env action (cond-> details
                                            (and (= :simulators.ws/disconnect action) socket-id)
                                            (assoc :socket-id socket-id)))
-            [:ok details]))
+            [:http.status/ok details]))
         (respond/abort! :simulators.change/failed-spec)))))
 
 (defn send-ws [simulator]
@@ -73,12 +73,12 @@
       (if socket-id
         (common/send! simulator (uuids/->uuid socket-id) body)
         (common/send! simulator body))
-      [:no-content])))
+      [:http.status/no-content])))
 
 (defn disconnect-ws [simulator]
   (fn [_]
     (common/disconnect! simulator)
-    [:no-content]))
+    [:http.status/no-content]))
 
 (defn http-routes [type env simulator]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)

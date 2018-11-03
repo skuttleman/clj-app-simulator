@@ -15,7 +15,7 @@
   ([] (simulator {:method   :http/get
                   :path     "/some/path"
                   :delay    123
-                  :response (respond/with [:ok "[\"some\",\"body\"]" {:header ["some" "header"]}])}))
+                  :response (respond/with [:http.status/ok "[\"some\",\"body\"]" {:header ["some" "header"]}])}))
   ([config]
    (let [dispatch (spies/create)
          get-state (spies/constantly ::state)

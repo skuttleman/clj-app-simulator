@@ -42,14 +42,14 @@
 (defn details [env]
   (->> (simulator-configs env common/details)
        (assoc {} :simulators)
-       (conj [:ok])))
+       (conj [:http.status/ok])))
 
 (defn add [env config]
   (when-not (valid? config)
     (respond/abort! :simulators.add/failed-spec))
   (let [simulator (common/details (make-simulator! env config))]
     (activity/publish env :simulators/add {:simulator simulator})
-    [:created {:simulator simulator}]))
+    [:http.status/created {:simulator simulator}]))
 
 (defn set! [env configs]
   (when (seq (remove valid? configs))
@@ -59,13 +59,13 @@
                   (map (comp common/details (partial make-simulator! env)))
                   (assoc {} :simulators))]
     (activity/publish env :simulators/init sims)
-    [:created sims]))
+    [:http.status/created sims]))
 
 (defn reset-all! [env]
   (let [sims (simulator-configs env)]
     (dorun (map common/reset! sims))
     (activity/publish env :simulators/reset-all {:simulators (map common/details sims)}))
-  [:no-content])
+  [:http.status/no-content])
 
 (defn routes [env]
   (->> (simulator-configs env common/routes)

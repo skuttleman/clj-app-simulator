@@ -192,7 +192,7 @@
                                             content-type
                                             {:headers {:x-custom-request-header "some header"}})]
                 (testing "responds as configured"
-                  (is (= :accepted (get response 2)))
+                  (is (= :http.status/accepted (get response 2)))
                   (is (= {:some "json"} (second response)))
                   (is (= "application/json" (get-in response [3 :headers :content-type])))
                   (is (= "some value" (get-in response [3 :headers :x-custom-header])))))

@@ -19,7 +19,7 @@
                             :headers {:content-type "application/edn"}
                             :body    "{:some (:edn)}"}
                   result (async/<! (http/request* (async/go response)))]
-              (is (= [:success {:some [:edn]} :ok response]
+              (is (= [:success {:some [:edn]} :http.status/ok response]
                      result))))
 
           (testing "and when the request fails"
@@ -27,7 +27,7 @@
                             :headers {:content-type "application/edn"}
                             :body    "{:errors #{:error-1 :error-2}}"}
                   result (async/<! (http/request* (async/go (ex-info "" response))))]
-              (is (= [:error {:errors #{:error-1 :error-2}} :internal-server-error response]
+              (is (= [:error {:errors #{:error-1 :error-2}} :http.status/internal-server-error response]
                      result))))
           (done))))))
 
