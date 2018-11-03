@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.fields
   (:require
-    #?(:cljs [com.ben-allred.app-simulator.ui.utils.dom :as dom])
+    #?@(:cljs [[com.ben-allred.app-simulator.ui.utils.dom :as dom]
+               [reagent.core :as r]])
     [com.ben-allred.app-simulator.utils.fns :as fns]
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
@@ -37,49 +38,80 @@
                     error])])])]
           body)))
 
-(defn select [{:keys [disabled on-change value class-name to-view to-model] :as attrs} options]
-  (let [to-view (or to-view identity)
-        to-model (or to-model identity)
-        available? (set (map first options))]
-    [form-field
-     attrs
-     [:select.select
-      {:class-name class-name
-       :value      (if (available? value)
-                     (to-view value)
-                     empty-value)
-       :disabled   #?(:clj true :cljs disabled)
-       #?@(:cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
-      (for [[option label attrs] (cond->> options
-                                   (not (available? value)) (cons [empty-value "Choose…" {:disabled true}]))
-            :let [option (to-view option)]]
-        [:option
-         (assoc attrs :value option :key (str option))
-         label])]]))
+(defn with-auto-focus [component]
+  #?(:clj  (fn [attrs & args]
+             (into [component (dissoc attrs :auto-focus?)] args))
+     :cljs (fn [{:keys [auto-focus?]} & _]
+             (let [node-atom (atom nil)
+                   ref (fn [node] (some->> node (reset! node-atom)))]
+               (r/create-class
+                 {:component-did-mount
+                  (fn [_this]
+                    (when-let [node @node-atom]
+                      (when (and node auto-focus?)
+                        (dom/focus node))))
+                  :reagent-render
+                  (fn [attrs & args]
+                    (into [component (cond-> (dissoc attrs :auto-focus?)
+                                       auto-focus? (assoc :ref ref))]
+                          args))})))))
 
-(defn textarea [{:keys [disabled on-change value class-name to-view to-model] :as attrs}]
-  (let [to-view (or to-view identity)
-        to-model (or to-model identity)]
-    [form-field
-     attrs
-     [:textarea.textarea
-      {:value      (to-view value)
-       :class-name class-name
-       :disabled #?(:clj true :cljs disabled)
-       #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}
-      #?(:clj (to-view value))]]))
+(defn ^:testable -select []
+  (with-auto-focus
+    (fn [{:keys [disabled on-change value to-view to-model] :as attrs} options]
+      (let [to-view (or to-view identity)
+            to-model (or to-model identity)
+            available? (set (map first options))]
+        [form-field
+         attrs
+         [:select.select
+          (-> {:value    (if (available? value)
+                           (to-view value)
+                           empty-value)
+               :disabled #?(:clj true :cljs disabled)
+               #?@(:cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
+              (merge (select-keys attrs #{:class-name :ref})))
+          (for [[option label attrs] (cond->> options
+                                       (not (available? value)) (cons [empty-value "Choose…" {:disabled true}]))
+                :let [option (to-view option)]]
+            [:option
+             (assoc attrs :value option :key (str option))
+             label])]]))))
 
-(defn input [{:keys [disabled on-change value class-name type to-view to-model] :as attrs}]
-  (let [to-view (or to-view identity)
-        to-model (or to-model identity)]
-    [form-field
-     attrs
-     [:input.input
-      {:value      (to-view value)
-       :class-name class-name
-       :type       (or type :text)
-       :disabled #?(:clj true :cljs disabled)
-       #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}]]))
+(def select (-select))
+
+(defn ^:testable -textarea []
+  (with-auto-focus
+    (fn [{:keys [disabled on-change value to-view to-model] :as attrs}]
+      (let [to-view (or to-view identity)
+            to-model (or to-model identity)]
+        [form-field
+         attrs
+         [:textarea.textarea
+          (-> {:value      (to-view value)
+               :disabled   #?(:clj true :cljs disabled)
+               #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}
+              (merge (select-keys attrs #{:class-name :ref})))
+          #?(:clj (to-view value))]]))))
+
+(def textarea (-textarea))
+
+(defn ^:testable -input []
+  (with-auto-focus
+    (fn [{:keys [disabled on-change value class-name type to-view to-model] :as attrs}]
+      (let [to-view (or to-view identity)
+            to-model (or to-model identity)]
+        [form-field
+         attrs
+         [:input.input
+          (-> {:value      (to-view value)
+               :class-name class-name
+               :type       (or type :text)
+               :disabled   #?(:clj true :cljs disabled)
+               #?@(:cljs [:on-change (comp on-change to-model dom/target-value)])}
+              (merge (select-keys attrs #{:class-name :ref})))]]))))
+
+(def input (-input))
 
 (defn header [{:keys [disabled value on-change to-view to-model] :as attrs}]
   (let [to-view (or to-view identity)
@@ -89,11 +121,11 @@
      (update attrs :errors flatten)
      [:div.header-field
       [:input.input.header-key
-       {:value k
+       {:value    k
         :disabled #?(:clj true :cljs disabled)
         #?@(:cljs [:on-change #(on-change (to-model [(dom/target-value %) v]))])}]
       [:input.input.header-value
-       {:value v
+       {:value    v
         :disabled #?(:clj true :cljs disabled)
         #?@(:cljs [:on-change #(on-change (to-model [k (dom/target-value %)]))])}]]]))
 

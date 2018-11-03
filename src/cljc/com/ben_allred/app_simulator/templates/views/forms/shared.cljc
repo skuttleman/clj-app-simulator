@@ -16,11 +16,6 @@
                       :errors (get-in (forms/display-errors form) path))
                (update :disabled fns/or (forms/syncing? form)))))
 
-(defn name-field [form model->view view->model]
-  [fields/input
-   (-> {:label "Name"}
-       (with-attrs form [:name] model->view view->model))])
-
 (defn group-field [form model->view view->model]
   [fields/input
    (-> {:label "Group"}
@@ -30,11 +25,6 @@
   [fields/textarea
    (-> {:label "Description"}
        (with-attrs form [:description] model->view view->model))])
-
-(defn path-field [form model->view view->model]
-  [fields/input
-   (-> {:label "Path"}
-       (with-attrs form [:path] model->view view->model))])
 
 (defn sim-request [sim {:keys [timestamp] :as request}]
   [:li.request.info

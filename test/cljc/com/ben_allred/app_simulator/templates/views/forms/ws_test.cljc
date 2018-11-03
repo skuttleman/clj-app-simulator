@@ -5,6 +5,7 @@
                [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]])
     [clojure.test :as t :refer [deftest is testing]]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
+    [com.ben-allred.app-simulator.templates.fields :as fields]
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
@@ -16,9 +17,32 @@
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"
-    (testing "wraps the shared view"
-      (is (= [shared.views/name-field ::form tr/model->view tr/view->model]
-             (ws.views/name-field ::form))))))
+    (with-redefs [shared.views/with-attrs (spies/create (fn [attrs & _] attrs))]
+      (testing "when a value is supplied for auto-focus?"
+        (testing "renders the field with auto-focus"
+          (let [[component attrs] (ws.views/name-field ::form ::auto-focus)]
+            (is (spies/called-with? shared.views/with-attrs
+                                    (spies/matcher map?)
+                                    ::form
+                                    [:name]
+                                    tr/model->view
+                                    tr/view->model))
+            (is (= fields/input component))
+            (is (= "Name" (:label attrs)))
+            (is (= ::auto-focus (:auto-focus? attrs))))))
+
+      (testing "when no value is supplied for auto-focus?"
+        (testing "defaults auto-focus to false"
+          (let [[component attrs] (ws.views/name-field ::form)]
+            (is (spies/called-with? shared.views/with-attrs
+                                    (spies/matcher map?)
+                                    ::form
+                                    [:name]
+                                    tr/model->view
+                                    tr/view->model))
+            (is (= fields/input component))
+            (is (= "Name" (:label attrs)))
+            (is (false? (:auto-focus? attrs)))))))))
 
 (deftest ^:unit group-field-test
   (testing "(group-field)"
@@ -133,7 +157,7 @@
         (let [root (ws.views/sim-edit-form* ::id ::form)
               form (test.dom/query-one root :.simulator-edit)]
           (testing "has a name field"
-            (is (test.dom/contains? form [ws.views/name-field ::form])))
+            (is (test.dom/contains? form [ws.views/name-field ::form true])))
 
           #?(:cljs
              (testing "when there are no errors and the form has changes"

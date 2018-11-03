@@ -5,7 +5,8 @@
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.strings :as strings]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
-    [com.ben-allred.app-simulator.templates.fields :as fields]))
+    [com.ben-allred.app-simulator.templates.fields :as fields]
+    [reagent.core :as r]))
 
 (defn sim-iterate
   ([label m class]
@@ -53,5 +54,6 @@
 (defn message-editor [form model->view view->model]
   [:div.send-ws-message
    [fields/textarea
-    (-> {:label "Message"}
+    (-> {:label "Message"
+         :auto-focus? true}
         (shared.views/with-attrs form [:message] model->view view->model))]])

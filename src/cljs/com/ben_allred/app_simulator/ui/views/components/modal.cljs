@@ -3,10 +3,10 @@
     [com.ben-allred.app-simulator.templates.core :as templates]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
+    [com.ben-allred.app-simulator.ui.simulators.shared.modals :as modals]
     [com.ben-allred.app-simulator.ui.utils.dom :as dom]
     [com.ben-allred.app-simulator.utils.colls :as colls]
-    [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.ui.simulators.shared.modals :as modals]))
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (def ^:private id->component
   {:modals/confirm-delete modals/confirm-delete

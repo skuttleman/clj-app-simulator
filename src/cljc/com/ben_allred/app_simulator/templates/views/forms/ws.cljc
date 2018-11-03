@@ -11,13 +11,23 @@
     [com.ben-allred.app-simulator.templates.views.simulators :as views.sim]
     [com.ben-allred.app-simulator.utils.dates :as dates]
     [com.ben-allred.app-simulator.templates.core :as templates]
-    [com.ben-allred.app-simulator.utils.logging :as log]))
+    [com.ben-allred.app-simulator.utils.logging :as log]
+    [com.ben-allred.app-simulator.templates.fields :as fields]))
 
 (defn path-field [form]
-  [shared.views/path-field form tr/model->view tr/view->model])
+  [fields/input
+   (-> {:label       "Path"
+        :auto-focus? true}
+       (shared.views/with-attrs form [:path] tr/model->view tr/view->model))])
 
-(defn name-field [form]
-  [shared.views/name-field form tr/model->view tr/view->model])
+(defn name-field
+  ([form]
+   (name-field form false))
+  ([form auto-focus?]
+   [fields/input
+    (-> {:label       "Name"
+         :auto-focus? auto-focus?}
+        (shared.views/with-attrs form [:name] tr/model->view tr/view->model))]))
 
 (defn group-field [form]
   [shared.views/group-field form tr/model->view tr/view->model])
@@ -54,7 +64,7 @@
 (defn sim-edit-form* [id form]
   [:form.simulator-edit
    #?(:cljs {:on-submit (interactions/update-simulator form id)})
-   [name-field form]
+   [name-field form true]
    [group-field form]
    [description-field form]
    [:div.button-row

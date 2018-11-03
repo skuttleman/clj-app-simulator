@@ -42,21 +42,6 @@
                (is (= ::errors errors))
                (is (= ::syncing disabled)))))))))
 
-(deftest ^:unit name-field-test
-  (testing "(name-field)"
-    (let [attrs-spy (spies/create (comp first list))]
-      (with-redefs [shared.views/with-attrs attrs-spy]
-        (let [root (shared.views/name-field ::form ::model->view ::view->model)
-              input (test.dom/query-one root fields/input)]
-          (testing "has an input with attrs"
-            (is (spies/called-with? attrs-spy
-                                    (spies/matcher map?)
-                                    ::form
-                                    [:name]
-                                    ::model->view
-                                    ::view->model))
-            (is (= "Name" (:label (test.dom/attrs input))))))))))
-
 (deftest ^:unit group-field-test
   (testing "(group-field)"
     (let [attrs-spy (spies/create (comp first list))]
@@ -86,21 +71,6 @@
                                     ::model->view
                                     ::view->model))
             (is (= "Description" (:label (test.dom/attrs input))))))))))
-
-(deftest ^:unit path-field-test
-  (testing "(path-field)"
-    (let [attrs-spy (spies/create (comp first list))]
-      (with-redefs [shared.views/with-attrs attrs-spy]
-        (let [root (shared.views/path-field ::form ::model->view ::view->model)
-              input (test.dom/query-one root fields/input)]
-          (testing "has an input with attrs"
-            (is (spies/called-with? attrs-spy
-                                    (spies/matcher map?)
-                                    ::form
-                                    [:path]
-                                    ::model->view
-                                    ::view->model))
-            (is (= "Path" (:label (test.dom/attrs input))))))))))
 
 (deftest ^:unit sim-request-test
   (testing "(sim-request)"

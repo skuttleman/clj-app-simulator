@@ -15,10 +15,18 @@
   (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
 
 (defn path-field [form]
-  [shared.views/path-field form tr/model->view tr/view->model])
+  [fields/input
+   (-> {:label "Path"}
+       (with-attrs form [:path]))])
 
-(defn name-field [form]
-  [shared.views/name-field form tr/model->view tr/view->model])
+(defn name-field
+  ([form]
+   (name-field form false))
+  ([form auto-focus?]
+   [fields/input
+    (-> {:label       "Name"
+         :auto-focus? auto-focus?}
+        (with-attrs form [:name]))]))
 
 (defn group-field [form]
   [shared.views/group-field form tr/model->view tr/view->model])
@@ -57,14 +65,15 @@
 
 (defn method-field [form]
   [fields/select
-   (-> {:label "HTTP Method"}
+   (-> {:label       "HTTP Method"
+        :auto-focus? true}
        (with-attrs form [:method]))
    resources/file-methods])
 
 (defn sim-edit-form* [id form resources]
   [:form.simulator-edit
    #?(:cljs {:on-submit (interactions/update-simulator form id)})
-   [name-field form]
+   [name-field form true]
    [group-field form]
    [description-field form]
    [status-field form]

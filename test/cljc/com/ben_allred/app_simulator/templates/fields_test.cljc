@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.fields-test
   (:require
-    #?(:cljs [com.ben-allred.app-simulator.ui.utils.dom :as dom])
+    #?@(:cljs [[com.ben-allred.app-simulator.ui.utils.dom :as dom]
+               [reagent.core :as r]])
     [clojure.test :as t :refer [deftest is testing]]
     [com.ben-allred.app-simulator.templates.fields :as fields]
     [test.utils.dom :as test.dom]
@@ -10,13 +11,58 @@
   (let [[ff & more] (apply component args)]
     (apply ff more)))
 
+(deftest ^:unit with-auto-focus-test
+  (testing "(with-auto-focus)"
+    #?(:clj
+       (testing "renders without auto-focus? flag"
+         (let [component (fields/with-auto-focus ::component)]
+           (is (= (component {:some :stuff :auto-focus? ::auto-focus})
+                  [::component {:some :stuff}]))))
+       :cljs
+       (with-redefs [r/create-class (spies/create :reagent-render)
+                     dom/focus (spies/create)]
+         (spies/reset! r/create-class dom/focus)
+         (let [component ((fields/with-auto-focus ::component) {:auto-focus? true})
+               {:keys [component-did-mount]} (ffirst (spies/calls r/create-class))]
+           (testing "creates a component"
+             (is (spies/called-with? r/create-class (spies/matcher map?))))
+
+           (testing "renders the component with attrs"
+             (is (= [::component {:some ::attrs} ::child-1 ::child-2]
+                    (-> {:some ::attrs :auto-focus? ::auto-focus}
+                        (component ::child-1 ::child-2)
+                        (update 1 dissoc :ref)))))
+
+           (testing "focuses on mount"
+             (let [ref (-> {}
+                           (component)
+                           (test.dom/attrs)
+                           (:ref))]
+               (ref ::node)
+               (component-did-mount ::this)
+               (is (spies/called-with? dom/focus ::node)))))
+
+         (testing "when auto-focus? is false"
+           (spies/reset! r/create-class dom/focus)
+           (let [component ((fields/with-auto-focus ::component) {:auto-focus? false})
+                 {:keys [component-did-mount]} (ffirst (spies/calls r/create-class))]
+             (testing "does not focus on mount"
+               (is (-> {}
+                       (component)
+                       (test.dom/attrs)
+                       (:ref)
+                       (nil?)))
+               (component-did-mount ::this)
+               (is (spies/never-called? dom/focus)))))))))
+
 (deftest ^:unit select-test
   (testing "(select)"
     (let [to-view (spies/create #(assoc % :to-view true))
           to-model (spies/create #(assoc % :to-model true))
           on-change (spies/create)
           target-value (spies/create first)]
-      (with-redefs [#?@(:cljs [dom/target-value target-value])]
+      (with-redefs [#?@(:cljs [dom/target-value target-value])
+                    fields/with-auto-focus identity]
         (testing "when rendering a select component"
           (let [options [[{:a 1} "A"]
                          [{:b 2} "B"]
@@ -26,9 +72,10 @@
                        :on-change  on-change
                        :value      {:a 1}
                        :class-name ::class-name
+                       :ref        ::ref
                        :label      ::label
                        :errors     {:has :errors}}
-                root (render fields/select attrs options)
+                root (render (fields/-select) attrs options)
                 form-field (test.dom/query-one root :.form-field)]
             (testing "renders a form-field"
               (is (-> form-field
@@ -46,7 +93,8 @@
               (testing "renders a :select element"
                 (is (spies/called-with? to-view {:a 1}))
                 (is (= {:a 1 :to-view true} (:value attrs)))
-                (is (= ::class-name (:class-name attrs))))
+                (is (= ::class-name (:class-name attrs)))
+                (is (= ::ref (:ref attrs))))
 
               #?(:clj
                  (testing "is disabled"
@@ -71,19 +119,19 @@
                   (is (test.dom/contains? elem label)))))
 
             (testing "and when rendering without a label"
-              (let [root (render fields/select (dissoc attrs :label) options)
+              (let [root (render (fields/-select) (dissoc attrs :label) options)
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not render a :label element"
                   (is (not (test.dom/query-one form-field :label))))))
 
             (testing "and when rendering without errors"
-              (let [root (render fields/select (dissoc attrs :errors) options)
+              (let [root (render (fields/-select) (dissoc attrs :errors) options)
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not have an :errors class"
                   (is (not (:class-name (test.dom/attrs form-field)))))))
 
             (testing "and when :to-view is nil"
-              (let [root (render fields/select (dissoc attrs :to-view) options)
+              (let [root (render (fields/-select) (dissoc attrs :to-view) options)
                     form-field (test.dom/query-one root :.form-field)
                     select (test.dom/query-one form-field :select)]
                 (testing "has the unchanged :value"
@@ -91,7 +139,7 @@
 
             #?(:cljs
                (testing "and when :to-model is nil"
-                 (let [root (render fields/select (dissoc attrs :to-model) options)
+                 (let [root (render (fields/-select) (dissoc attrs :to-model) options)
                        form-field (test.dom/query-one root :.form-field)
                        select (test.dom/query-one form-field :select)]
                    (testing "passes the target value to :on-change"
@@ -105,16 +153,18 @@
           to-model (spies/create #(assoc % :to-model true))
           on-change (spies/create)
           target-value (spies/create first)]
-      (with-redefs [#?@(:cljs [dom/target-value target-value])]
+      (with-redefs [#?@(:cljs [dom/target-value target-value])
+                    fields/with-auto-focus identity]
         (testing "when rendering a textarea component"
           (let [attrs {:to-view    to-view
                        :to-model   to-model
                        :on-change  on-change
                        :value      {:some ::value}
                        :class-name ::class-name
+                       :ref        ::ref
                        :label      ::label
                        :errors     {:has :errors}}
-                root (render fields/textarea attrs)
+                root (render (fields/-textarea) attrs)
                 form-field (test.dom/query-one root :.form-field)]
             (testing "renders a form-field"
               (is (-> form-field
@@ -132,7 +182,8 @@
               (testing "renders a :textarea element"
                 (is (spies/called-with? to-view {:some ::value}))
                 (is (= {:some ::value :to-view true} (:value attrs)))
-                (is (= ::class-name (:class-name attrs))))
+                (is (= ::class-name (:class-name attrs)))
+                (is (= ::ref (:ref attrs))))
 
               #?(:clj
                  (testing "is disabled"
@@ -146,19 +197,19 @@
                    (is (spies/called-with? on-change {:new :value :to-model true})))))
 
             (testing "and when rendering without a label"
-              (let [root (render fields/textarea (dissoc attrs :label))
+              (let [root (render (fields/-textarea) (dissoc attrs :label))
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not render a :label element"
                   (is (not (test.dom/query-one form-field :label))))))
 
             (testing "and when rendering without errors"
-              (let [root (render fields/textarea (dissoc attrs :errors))
+              (let [root (render (fields/-textarea) (dissoc attrs :errors))
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not have an :errors class"
                   (is (not (:class-name (test.dom/attrs form-field)))))))
 
             (testing "and when :to-view is nil"
-              (let [root (render fields/textarea (dissoc attrs :to-view))
+              (let [root (render (fields/-textarea) (dissoc attrs :to-view))
                     form-field (test.dom/query-one root :.form-field)
                     textarea (test.dom/query-one form-field :textarea)]
                 (testing "has the unchanged :value"
@@ -166,7 +217,7 @@
 
             #?(:cljs
                (testing "and when :to-model is nil"
-                 (let [root (render fields/textarea (dissoc attrs :to-model))
+                 (let [root (render (fields/-textarea) (dissoc attrs :to-model))
                        form-field (test.dom/query-one root :.form-field)
                        textarea (test.dom/query-one form-field :textarea)]
                    (testing "passes the target value to :on-change"
@@ -180,17 +231,19 @@
           to-model (spies/create #(assoc % :to-model true))
           on-change (spies/create)
           target-value (spies/create first)]
-      (with-redefs [#?@(:cljs [dom/target-value target-value])]
+      (with-redefs [#?@(:cljs [dom/target-value target-value])
+                    fields/with-auto-focus identity]
         (testing "when rendering a input component"
           (let [attrs {:to-view    to-view
                        :to-model   to-model
                        :on-change  on-change
                        :value      {:some ::value}
                        :class-name ::class-name
+                       :ref        ::ref
                        :label      ::label
                        :errors     {:has :errors}
                        :type       ::type}
-                root (render fields/input attrs)
+                root (render (fields/-input) attrs)
                 form-field (test.dom/query-one root :.form-field)]
             (testing "renders a form-field"
               (is (-> form-field
@@ -209,6 +262,7 @@
                 (is (spies/called-with? to-view {:some ::value}))
                 (is (= {:some ::value :to-view true} (:value attrs)))
                 (is (= ::class-name (:class-name attrs)))
+                (is (= ::ref (:ref attrs)))
                 (is (= ::type (:type attrs))))
 
               #?(:clj
@@ -223,26 +277,26 @@
                    (is (spies/called-with? on-change {:new :value :to-model true})))))
 
             (testing "and when rendering without a label"
-              (let [root (render fields/input (dissoc attrs :label))
+              (let [root (render (fields/-input) (dissoc attrs :label))
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not render a :label element"
                   (is (not (test.dom/query-one form-field :label))))))
 
             (testing "and when rendering without errors"
-              (let [root (render fields/input (dissoc attrs :errors))
+              (let [root (render (fields/-input) (dissoc attrs :errors))
                     form-field (test.dom/query-one root :.form-field)]
                 (testing "does not have an :errors class"
                   (is (not (:class-name (test.dom/attrs form-field)))))))
 
             (testing "and when :type is nil"
-              (let [root (render fields/input (dissoc attrs :type))
+              (let [root (render (fields/-input) (dissoc attrs :type))
                     form-field (test.dom/query-one root :.form-field)
                     input (test.dom/query-one form-field :input)]
                 (testing "has a :type of :text"
                   (is (= :text (:type (test.dom/attrs input)))))))
 
             (testing "and when :to-view is nil"
-              (let [root (render fields/input (dissoc attrs :to-view))
+              (let [root (render (fields/-input) (dissoc attrs :to-view))
                     form-field (test.dom/query-one root :.form-field)
                     input (test.dom/query-one form-field :input)]
                 (testing "has the unchanged :value"
@@ -250,7 +304,7 @@
 
             #?(:cljs
                (testing "and when :to-model is nil"
-                 (let [root (render fields/input (dissoc attrs :to-model))
+                 (let [root (render (fields/-input) (dissoc attrs :to-model))
                        form-field (test.dom/query-one root :.form-field)
                        input (test.dom/query-one form-field :input)]
                    (testing "passes the target value to :on-change"

@@ -17,13 +17,45 @@
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"
-    (is (= [shared.views/path-field ::form tr/model->view tr/view->model]
-           (http.views/path-field ::form)))))
+    (with-redefs [shared.views/with-attrs (spies/create (fn [attrs & _] attrs))]
+      (let [[component attrs] (http.views/path-field ::form)]
+        (is (spies/called-with? shared.views/with-attrs
+                                (spies/matcher map?)
+                                ::form
+                                [:path]
+                                tr/model->view
+                                tr/view->model))
+        (is (= fields/input component))
+        (is (= "Path" (:label attrs)))))))
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"
-    (is (= [shared.views/name-field ::form tr/model->view tr/view->model]
-           (http.views/name-field ::form)))))
+    (with-redefs [shared.views/with-attrs (spies/create (fn [attrs & _] attrs))]
+      (testing "when a value is supplied for auto-focus?"
+        (testing "renders the field with auto-focus"
+          (let [[component attrs] (http.views/name-field ::form ::auto-focus)]
+            (is (spies/called-with? shared.views/with-attrs
+                                    (spies/matcher map?)
+                                    ::form
+                                    [:name]
+                                    tr/model->view
+                                    tr/view->model))
+            (is (= fields/input component))
+            (is (= "Name" (:label attrs)))
+            (is (= ::auto-focus (:auto-focus? attrs))))))
+
+      (testing "when no value is supplied for auto-focus?"
+        (testing "defaults auto-focus to false"
+          (let [[component attrs] (http.views/name-field ::form)]
+            (is (spies/called-with? shared.views/with-attrs
+                                    (spies/matcher map?)
+                                    ::form
+                                    [:name]
+                                    tr/model->view
+                                    tr/view->model))
+            (is (= fields/input component))
+            (is (= "Name" (:label attrs)))
+            (is (false? (:auto-focus? attrs)))))))))
 
 (deftest ^:unit group-field-test
   (testing "(group-field)"
@@ -149,6 +181,7 @@
                                     tr/view->model))
             (is (= fields/select node))
             (is (= "HTTP Method" (:label attrs)))
+            (is (true? (:auto-focus? attrs)))
             (is (= ::attrs (:more attrs)))
             (is (= resources/http-methods resource))))))))
 
@@ -167,7 +200,7 @@
                 edit-form (test.dom/query-one root :.simulator-edit)]
             (testing "renders a name field"
               (let [node (test.dom/query-one edit-form http.views/name-field)]
-                (is (= [http.views/name-field ::form] node))))
+                (is (= [http.views/name-field ::form true] node))))
 
             (testing "renders a group field"
               (let [node (test.dom/query-one edit-form http.views/group-field)]
