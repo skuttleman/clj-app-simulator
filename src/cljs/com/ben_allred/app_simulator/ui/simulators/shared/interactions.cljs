@@ -39,8 +39,8 @@
     (let [current-model (forms/current-model form)]
       (dom/prevent-default e)
       (forms/verify! form)
-      (if (and (not (forms/errors form))
-               (forms/changed? form))
+      (when (and (not (forms/errors form))
+                 (forms/changed? form))
         (do-request (->> current-model
                          (model->source)
                          (actions/update-simulator id)
@@ -48,8 +48,7 @@
                     (comp (resetter forms/reset! form current-model)
                           (toaster :success "The simulator has been updated"))
                     (comp (resetter forms/ready! form)
-                          (toaster :error "The simulator could not be updated")))
-        (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
+                          (toaster :error "The simulator could not be updated")))))))
 
 (defn clear-requests [type id]
   (fn [_]
@@ -84,7 +83,7 @@
     (let [current-model (forms/current-model form)]
       (dom/prevent-default e)
       (forms/verify! form)
-      (if (not (forms/errors form))
+      (when-not (forms/errors form)
         (do-request (-> current-model
                         (model->source)
                         (actions/create-simulator)
@@ -96,8 +95,7 @@
                           (resetter forms/reset! form current-model)
                           (toaster :success "The simulator has been created"))
                     (comp (resetter forms/ready! form)
-                          (toaster :error "The simulator could not be created")))
-        (store/dispatch (actions/show-toast :error "You must fix errors before proceeding"))))))
+                          (toaster :error "The simulator could not be created")))))))
 
 (defn show-delete-modal [id]
   (fn [_]

@@ -36,7 +36,7 @@
     (fn [_]
       (let [current-model (forms/current-model form)]
         (forms/verify! form)
-        (if (not (forms/errors form))
+        (when-not (forms/errors form)
           (-> simulator-id
               (actions/send-message socket-id (:message current-model))
               (store/dispatch)
@@ -44,8 +44,7 @@
                                                     (shared.interactions/resetter forms/reset! form current-model)
                                                     (shared.interactions/toaster :success "The message has been sent"))
                                               (comp (shared.interactions/resetter forms/ready! form)
-                                                    (shared.interactions/toaster :error "The message could not be sent"))))
-          (store/dispatch (actions/show-toast :error "You must fix errors before proceeding")))))))
+                                                    (shared.interactions/toaster :error "The message could not be sent")))))))))
 
 (defn show-send-modal [simulator-id socket-id]
   (fn [_]

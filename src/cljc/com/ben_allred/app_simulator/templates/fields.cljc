@@ -61,21 +61,24 @@
     (fn [{:keys [disabled on-change value to-view to-model] :as attrs} options]
       (let [to-view (or to-view identity)
             to-model (or to-model identity)
-            available? (set (map first options))]
+            available? (set (map first options))
+            value' (if (available? value)
+                     (to-view value)
+                     empty-value)]
         [form-field
          attrs
          [:select.select
-          (-> {:value    (if (available? value)
-                           (to-view value)
-                           empty-value)
+          (-> {:value    value'
                :disabled #?(:clj true :cljs disabled)
                #?@(:cljs [:on-change (comp on-change (sans-empty to-model) dom/target-value)])}
               (merge (select-keys attrs #{:class-name :ref})))
           (for [[option label attrs] (cond->> options
-                                       (not (available? value)) (cons [empty-value "Choose…" {:disabled true}]))
-                :let [option (to-view option)]]
+                                       (not (available? value)) (cons [empty-value
+                                                                       (str "Choose" #?(:clj "..." :cljs "…"))
+                                                                       {:disabled true}]))
+                :let [option' (to-view option)]]
             [:option
-             (assoc attrs :value option :key (str option))
+             (assoc attrs :value option' :key (str option') #?@(:clj [:selected (= option' value')]))
              label])]]))))
 
 (def select (-select))
