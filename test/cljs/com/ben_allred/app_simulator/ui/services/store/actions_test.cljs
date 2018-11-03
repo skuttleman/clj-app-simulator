@@ -338,6 +338,7 @@
         (actions/hide-modal [dispatch])
         (is (spies/called-with? dispatch [:modal/hide]))
         (is (spies/called-times? dispatch 1)))
+
       (testing "unmounts modal"
         (spies/reset! dispatch)
         (spies/reset! timeout-spy)
@@ -347,6 +348,26 @@
             (f)
             (is (spies/called-with? dispatch [:modal/unmount]))
             (is (= 600 ms))))))))
+
+(deftest ^:unit remove-toast-test
+  (testing "(remove-toast)"
+    (let [dispatch (spies/create)
+          timeout-spy (spies/create)]
+      (testing "marks toast as removing"
+        (spies/reset! dispatch)
+        ((actions/remove-toast ::key) [dispatch])
+        (is (spies/called-with? dispatch [:toast/removing ::key]))
+        (is (spies/called-times? dispatch 1)))
+
+      (testing "removes toast"
+        (spies/reset! dispatch)
+        (spies/reset! timeout-spy)
+        (with-redefs [macros/set-timeout timeout-spy]
+          ((actions/remove-toast ::key) [dispatch])
+          (let [[f ms] (first (spies/calls timeout-spy))]
+            (f)
+            (is (spies/called-with? dispatch [:toast/remove ::key]))
+            (is (= 201 ms))))))))
 
 (deftest ^:unit show-toast-test
   (testing "(show-toast)"

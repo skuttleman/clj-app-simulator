@@ -11,32 +11,37 @@
   (testing "(toast)"
     (let [toast (toast/toast {:key-3 {:ref   (atom "Toast 3")
                                       :level :success}
+                              :key-5 {:ref (atom "Toast 5")
+                                      :level :error}
                               :key-1 {:ref   (atom "Toast 1")
                                       :level :success}
                               :key-2 {:ref   (atom "Toast 2")
-                                      :level :error}})]
-      (let [[toast-1 toast-2 toast-3 :as toast-messages] (test.dom/query-all toast :.toast-message)]
+                                      :level :error}
+                              :key-4 {:ref (atom "Toast 4")
+                                      :level :success}})]
+      (let [[toast-1 toast-2 toast-3 toast-4 :as toast-messages] (test.dom/query-all toast :.toast-message)]
         (testing "limits display of toasts"
-          (is (= 2 (count toast-messages)))
-          (is (not (test.dom/contains? toast-3 "Toast 3"))))
+          (is (= 4 (count toast-messages)))
+          (is (not (test.dom/contains? toast-messages "Toast 5"))))
 
         (testing "has sorted toast messages"
           (is (test.dom/contains? toast-1 "Toast 1"))
-          (is (test.dom/contains? toast-2 "Toast 2"))))
+          (is (test.dom/contains? toast-2 "Toast 2"))
+          (is (test.dom/contains? toast-3 "Toast 3"))
+          (is (test.dom/contains? toast-4 "Toast 4"))))
 
       (testing "adds class for message level"
         (is (= 1 (count (test.dom/query-all toast :.toast-message.is-danger))))
-        (is (= 1 (count (test.dom/query-all toast :.toast-message.is-success)))))
+        (is (= 3 (count (test.dom/query-all toast :.toast-message.is-success)))))
 
       (doseq [[idx key] [[0 :key-1] [1 :key-2]]]
         (testing (str "has remove button for toast " key)
           (let [toast-message (nth (test.dom/query-all toast :.toast-message) idx)
-                button (test.dom/query-one toast-message :.delete)
                 dispatch-spy (spies/create)
                 action-spy (spies/constantly ::action)]
             (with-redefs [store/dispatch dispatch-spy
                           actions/remove-toast action-spy]
-              (test.dom/simulate-event button :click)
+              (test.dom/simulate-event toast-message :click)
               (is (spies/called-with? action-spy key))
               (is (spies/called-with? dispatch-spy ::action)))))))))
 

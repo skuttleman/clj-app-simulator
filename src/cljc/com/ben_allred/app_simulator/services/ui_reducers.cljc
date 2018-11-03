@@ -40,6 +40,7 @@
    (case type
      :toast/adding (assoc state key {:level level :ref ref :adding? true})
      :toast/display (update state key dissoc :adding?)
+     :toast/removing (maps/update-maybe state key assoc :removing? true)
      :toast/remove (dissoc state key)
      state)))
 

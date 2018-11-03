@@ -127,7 +127,9 @@
     (macros/after 600 (dispatch [:modal/unmount]))))
 
 (defn remove-toast [key]
-  [:toast/remove key])
+  (fn [[dispatch]]
+    (dispatch [:toast/removing key])
+    (macros/after 201 (dispatch [:toast/remove key]))))
 
 (defn show-toast [level text]
   (fn [[dispatch]]

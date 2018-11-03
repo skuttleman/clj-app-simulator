@@ -1,8 +1,5 @@
 .toast-container {
-    display: flex;
     position: fixed;
-    justify-content: center;
-    align-items: flex-end;
     width: 100vw;
     height: 100vh;
     top: 0;
@@ -10,21 +7,36 @@
     pointer-events: none;
     z-index: 100;
 
-    .toast-message {
-        pointer-events: auto;
-        width: 400px;
-        box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, .2);
-        margin: 1px;
-        transform: scaleY(1);
-        transition: transform 0.1s linear;
-        background-color: $white;
+    .toast-messages {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        height: 100%;
+        width: 100%;
 
-        &:last-child {
-            margin-bottom: 0;
-        }
+        .toast-message {
+            pointer-events: auto;
+            width: 400px;
+            box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, .2);
+            margin: 1px;
+            transition: margin-right 0.2s linear;
+            background-color: $white;
 
-        &.adding {
-            transform: scaleY(0);
+            .message {
+                cursor: pointer;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+
+            &.adding {
+                margin-right: -401px;
+            }
+
+            &.removing {
+                margin-right: -401px;
+            }
         }
     }
 }
