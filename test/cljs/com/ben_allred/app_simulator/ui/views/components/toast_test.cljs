@@ -37,14 +37,12 @@
       (doseq [[idx key] (map-indexed vector [:key-1 :key-2 :key-3 :key-4])]
         (testing (str "has remove button for toast " key)
           (let [toast-message (nth (test.dom/query-all toast :.toast-message) idx)
-                button (test.dom/query-one toast-message :.delete)
-                dispatch-spy (spies/create)
-                action-spy (spies/constantly ::action)]
-            (with-redefs [store/dispatch dispatch-spy
-                          actions/remove-toast action-spy]
+                button (test.dom/query-one toast-message :.delete)]
+            (with-redefs [store/dispatch (spies/create)
+                          actions/remove-toast (spies/constantly ::action)]
               (test.dom/simulate-event button :click)
-              (is (spies/called-with? action-spy key))
-              (is (spies/called-with? dispatch-spy ::action)))))))))
+              (is (spies/called-with? actions/remove-toast key))
+              (is (spies/called-with? store/dispatch ::action)))))))))
 
 (defn run-tests []
   (t/run-tests))

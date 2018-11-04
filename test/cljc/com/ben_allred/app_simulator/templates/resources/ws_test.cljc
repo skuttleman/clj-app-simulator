@@ -7,49 +7,44 @@
 
 (deftest ^:unit validate-new*-test
   (testing "(validate-new*)"
-    (let [make-spy (spies/constantly ::validator)
-          required-spy (spies/constantly ::required)
-          pred-spy (spies/constantly ::pred)]
-      (with-redefs [f/make-validator make-spy
-                    f/required required-spy
-                    f/pred pred-spy]
-        (let [validator (resources/validate-new*)]
-          (testing "constructs a validator"
-            (is (spies/called-times? required-spy 2))
-            (is (spies/called? pred-spy))
-            (is (-> make-spy
-                    (spies/calls)
-                    (ffirst)
-                    (update :path set)
-                    (= {:path #{::required ::pred} :method ::required})))
-            (is (= ::validator validator)))
+    (with-redefs [f/make-validator (spies/constantly ::validator)
+                  f/required (spies/constantly ::required)
+                  f/pred (spies/constantly ::pred)]
+      (let [validator (resources/validate-new*)]
+        (testing "constructs a validator"
+          (is (spies/called-times? f/required 2))
+          (is (spies/called? f/pred))
+          (is (-> f/make-validator
+                  (spies/calls)
+                  (ffirst)
+                  (update :path set)
+                  (= {:path #{::required ::pred} :method ::required})))
+          (is (= ::validator validator)))
 
-          (testing "when validating the path"
-            (let [path-pred (ffirst (spies/calls pred-spy))]
-              (testing "recognizes valid paths"
-                (are [path] (path-pred path)
-                  "/"
-                  "/some"
-                  "/:some/path"
-                  "/this/:is/_also/valid-123"))
+        (testing "when validating the path"
+          (let [path-pred (ffirst (spies/calls f/pred))]
+            (testing "recognizes valid paths"
+              (are [path] (path-pred path)
+                "/"
+                "/some"
+                "/:some/path"
+                "/this/:is/_also/valid-123"))
 
-              (testing "recognizes invalid paths"
-                (are [path] (not (path-pred path))
-                  ""
-                  "\\"
-                  ":something"
-                  "/$$$")))))))))
+            (testing "recognizes invalid paths"
+              (are [path] (not (path-pred path))
+                ""
+                "\\"
+                ":something"
+                "/$$$"))))))))
 
 (deftest ^:unit socket-message*-test
   (testing "(socket-message*)"
-    (let [validator-spy (spies/constantly ::validator)
-          required-spy (spies/constantly ::required)]
-      (with-redefs [f/make-validator validator-spy
-                    f/required required-spy]
-        (let [socket-message (resources/socket-message*)]
-          (is (spies/called-with? required-spy (spies/matcher string?)))
-          (is (spies/called-with? validator-spy {:message ::required}))
-          (is (= ::validator socket-message)))))))
+    (with-redefs [f/make-validator (spies/constantly ::validator)
+                  f/required (spies/constantly ::required)]
+      (let [socket-message (resources/socket-message*)]
+        (is (spies/called-with? f/required (spies/matcher string?)))
+        (is (spies/called-with? f/make-validator {:message ::required}))
+        (is (= ::validator socket-message))))))
 
 (defn run-tests []
   (t/run-tests))

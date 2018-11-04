@@ -33,71 +33,63 @@
 
 (deftest ^:unit go-test
   (testing "(go)"
-    (let [content-spy (spies/constantly {:headers {:content-type "content-type" :accept "accept"}})
-          kvlt-spy (spies/constantly ::kvlt)
-          request-spy (spies/constantly ::request)]
-      (with-redefs [content/prepare content-spy
-                    kvlt/request! kvlt-spy
-                    http/request* request-spy]
-        (testing "makes the request"
-          (let [result (http/go ::method ::url {::some ::request :headers {:accept ::accept}})]
-            (is (spies/called-with? content-spy
-                                    {::some   ::request
-                                     :headers {:accept ::accept}
-                                     :method  ::method
-                                     :url     ::url}
-                                    #{:content-type :accept}
-                                    "application/transit"))
-            (is (spies/called-with? kvlt-spy
-                                    {:headers {:content-type "application/transit"
-                                               :accept       ::accept}}))
-            (is (spies/called-with? request-spy ::kvlt))
-            (is (= ::request result))))))))
+    (with-redefs [content/prepare (spies/constantly {:headers {:content-type "content-type" :accept "accept"}})
+                  kvlt/request! (spies/constantly ::kvlt)
+                  http/request* (spies/constantly ::request)]
+      (testing "makes the request"
+        (let [result (http/go ::method ::url {::some ::request :headers {:accept ::accept}})]
+          (is (spies/called-with? content/prepare
+                                  {::some   ::request
+                                   :headers {:accept ::accept}
+                                   :method  ::method
+                                   :url     ::url}
+                                  #{:content-type :accept}
+                                  "application/transit"))
+          (is (spies/called-with? kvlt/request!
+                                  {:headers {:content-type "application/transit"
+                                             :accept       ::accept}}))
+          (is (spies/called-with? http/request* ::kvlt))
+          (is (= ::request result)))))))
 
 (deftest ^:unit get-test
   (testing "(get)"
-    (let [spy (spies/constantly ::response-channel)]
-      (with-redefs [http/go spy]
-        (testing "sends a :get request"
-          (spies/reset! spy)
-          (is (= ::response-channel (http/get ::some-url)))
-          (is (spies/called-with? spy :get ::some-url nil))
-          (testing "with an optional request value"
-            (spies/reset! spy)
-            (http/get ::some-url ::some-request)
-            (is (spies/called-with? spy :get ::some-url ::some-request))))))))
+    (with-redefs [http/go (spies/constantly ::response-channel)]
+      (testing "sends a :get request"
+        (spies/reset! http/go)
+        (is (= ::response-channel (http/get ::some-url)))
+        (is (spies/called-with? http/go :get ::some-url nil))
+        (testing "with an optional request value"
+          (spies/reset! http/go)
+          (http/get ::some-url ::some-request)
+          (is (spies/called-with? http/go :get ::some-url ::some-request)))))))
 
 (deftest ^:unit post-test
   (testing "(post)"
-    (let [spy (spies/constantly ::response-channel)]
-      (with-redefs [http/go spy]
-        (testing "sends a :post request"
-          (http/post ::some-url ::some-request)
-          (is (spies/called-with? spy :post ::some-url ::some-request)))))))
+    (with-redefs [http/go (spies/constantly ::response-channel)]
+      (testing "sends a :post request"
+        (http/post ::some-url ::some-request)
+        (is (spies/called-with? http/go :post ::some-url ::some-request))))))
 
 (deftest ^:unit patch-test
   (testing "(patch)"
-    (let [spy (spies/constantly ::response-channel)]
-      (with-redefs [http/go spy]
-        (testing "sends a :patch request"
-          (http/patch ::some-url ::some-request)
-          (is (spies/called-with? spy :patch ::some-url ::some-request)))))))
+    (with-redefs [http/go (spies/constantly ::response-channel)]
+      (testing "sends a :patch request"
+        (http/patch ::some-url ::some-request)
+        (is (spies/called-with? http/go :patch ::some-url ::some-request))))))
 
 (deftest ^:unit put-test
   (testing "(put)"
-    (let [spy (spies/constantly ::response-channel)]
-      (with-redefs [http/go spy]
-        (testing "sends a :put request"
-          (http/put ::some-url ::some-request)
-          (is (spies/called-with? spy :put ::some-url ::some-request)))))))
+    (with-redefs [http/go (spies/constantly ::response-channel)]
+      (testing "sends a :put request"
+        (http/put ::some-url ::some-request)
+        (is (spies/called-with? http/go :put ::some-url ::some-request))))))
 
 (deftest ^:unit delete-test
   (testing "(delete)"
-    (let [spy (spies/constantly ::response-channel)]
-      (with-redefs [http/go spy]
-        (testing "sends a :delete request"
-          (http/delete ::some-url ::some-request)
-          (is (spies/called-with? spy :delete ::some-url ::some-request)))))))
+    (with-redefs [http/go (spies/constantly ::response-channel)]
+      (testing "sends a :delete request"
+        (http/delete ::some-url ::some-request)
+        (is (spies/called-with? http/go :delete ::some-url ::some-request))))))
 
 (defn run-tests []
   (t/run-tests))

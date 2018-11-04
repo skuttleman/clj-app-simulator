@@ -21,91 +21,90 @@
 
 (deftest ^:unit sim-card-test
   (testing "(sim-card)"
-    (let [nav-spy (spies/constantly ::href)]
-      (with-redefs [nav*/path-for nav-spy]
-        (let [request-count (inc (rand-int 100))
-              socket-count (inc (rand-int 25))
-              id (rand-int 100000)
-              sim {:config   {:path        "/some/path"
-                              :method      :some/method
-                              :name        "A Name"
-                              :description "describing the things."}
-                   :requests (take request-count (range))
-                   :sockets  (take socket-count (range))
-                   :id       id}
-              sim-card (views.sim/sim-card sim)]
-          (testing "has a nav link to the details page"
-            (is (spies/called-with? nav-spy :details {:id id}))
-            (is (-> sim-card
-                    (test.dom/query-one :.details-link)
-                    (test.dom/attrs)
-                    (:href)
-                    (= ::href))))
+    (with-redefs [nav*/path-for (spies/constantly ::href)]
+      (let [request-count (inc (rand-int 100))
+            socket-count (inc (rand-int 25))
+            id (rand-int 100000)
+            sim {:config   {:path        "/some/path"
+                            :method      :some/method
+                            :name        "A Name"
+                            :description "describing the things."}
+                 :requests (take request-count (range))
+                 :sockets  (take socket-count (range))
+                 :id       id}
+            sim-card (views.sim/sim-card sim)]
+        (testing "has a nav link to the details page"
+          (is (spies/called-with? nav*/path-for :details {:id id}))
+          (is (-> sim-card
+                  (test.dom/query-one :.details-link)
+                  (test.dom/attrs)
+                  (:href)
+                  (= ::href))))
 
-          (testing "shows the details"
+        (testing "shows the details"
+          (-> sim-card
+              (test.dom/query-one views.sim/sim-details)
+              (= [views.sim/sim-details sim])
+              (is)))
+
+        (testing "when name is not nil"
+          (testing "shows the name"
             (-> sim-card
-                (test.dom/query-one views.sim/sim-details)
-                (= [views.sim/sim-details sim])
-                (is)))
+                (test.dom/query-one :div.sim-card-name)
+                (test.dom/contains? "A Name")
+                (is))))
 
-          (testing "when name is not nil"
-            (testing "shows the name"
-              (-> sim-card
-                  (test.dom/query-one :div.sim-card-name)
-                  (test.dom/contains? "A Name")
-                  (is))))
+        (testing "when description is not nil"
+          (testing "shows the description"
+            (-> sim-card
+                (test.dom/query-one :div.sim-card-description)
+                (test.dom/contains? "describing the things.")
+                (is))))
 
-          (testing "when description is not nil"
-            (testing "shows the description"
-              (-> sim-card
-                  (test.dom/query-one :div.sim-card-description)
-                  (test.dom/contains? "describing the things.")
-                  (is))))
+        (testing "when there are one or more requests"
+          (testing "shows the request count"
+            (-> sim-card
+                (test.dom/query-one :.sim-card-request-count)
+                (test.dom/contains? request-count)
+                (is))))
 
-          (testing "when there are one or more requests"
-            (testing "shows the request count"
-              (-> sim-card
-                  (test.dom/query-one :.sim-card-request-count)
-                  (test.dom/contains? request-count)
-                  (is))))
+        (testing "when there are one or more sockets"
+          (testing "shows the socket count"
+            (-> sim-card
+                (test.dom/query-one :.sim-card-socket-count)
+                (test.dom/contains? socket-count)
+                (is)))))
 
-          (testing "when there are one or more sockets"
-            (testing "shows the socket count"
-              (-> sim-card
-                  (test.dom/query-one :.sim-card-socket-count)
-                  (test.dom/contains? socket-count)
-                  (is)))))
+      (let [sim-card (views.sim/sim-card {:method   :some/method
+                                          :path     "/some/path"
+                                          :requests []})]
+        (testing "when name is nil"
+          (testing "does not show the name"
+            (-> sim-card
+                (test.dom/contains? :.sim-card-name)
+                (not)
+                (is))))
 
-        (let [sim-card (views.sim/sim-card {:method   :some/method
-                                            :path     "/some/path"
-                                            :requests []})]
-          (testing "when name is nil"
-            (testing "does not show the name"
-              (-> sim-card
-                  (test.dom/contains? :.sim-card-name)
-                  (not)
-                  (is))))
+        (testing "when description is nil"
+          (testing "does not show the description"
+            (-> sim-card
+                (test.dom/contains? :.sim-card-description)
+                (not)
+                (is))))
 
-          (testing "when description is nil"
-            (testing "does not show the description"
-              (-> sim-card
-                  (test.dom/contains? :.sim-card-description)
-                  (not)
-                  (is))))
+        (testing "when there are no requests"
+          (testing "does not show the request count"
+            (-> sim-card
+                (test.dom/contains? :.sim-card-request-count)
+                (not)
+                (is))))
 
-          (testing "when there are no requests"
-            (testing "does not show the request count"
-              (-> sim-card
-                  (test.dom/contains? :.sim-card-request-count)
-                  (not)
-                  (is))))
-
-          (testing "when there are no sockets"
-            (testing "does not show the socket count"
-              (-> sim-card
-                  (test.dom/contains? :.sim-card-socket-count)
-                  (not)
-                  (is)))))))))
+        (testing "when there are no sockets"
+          (testing "does not show the socket count"
+            (-> sim-card
+                (test.dom/contains? :.sim-card-socket-count)
+                (not)
+                (is))))))))
 
 (deftest ^:unit sim-group-test
   (testing "(sim-group)"

@@ -7,57 +7,49 @@
 
 (deftest ^:unit navigate*-test
   (testing "(navigate*)"
-    (let [pushy-spy (spies/create)
-          path-for-spy (spies/constantly ::path)]
-      (testing "sets history token"
-        (with-redefs [pushy/set-token! pushy-spy
-                      nav/path-for path-for-spy]
-          (nav/navigate* ::history ::page ::params)
-          (is (spies/called-with? path-for-spy ::page ::params))
-          (is (spies/called-with? pushy-spy ::history ::path)))))))
+    (testing "sets history token"
+      (with-redefs [pushy/set-token! (spies/create)
+                    nav/path-for (spies/constantly ::path)]
+        (nav/navigate* ::history ::page ::params)
+        (is (spies/called-with? nav/path-for ::page ::params))
+        (is (spies/called-with? pushy/set-token! ::history ::path))))))
 
 (deftest ^:unit nav-and-replace*-test
   (testing "(nav-and-replace*)"
-    (let [pushy-spy (spies/create)
-          path-for-spy (spies/constantly ::path)]
-      (testing "sets history token"
-        (with-redefs [pushy/replace-token! pushy-spy
-                      nav/path-for path-for-spy]
-          (nav/nav-and-replace* ::history ::page ::params)
-          (is (spies/called-with? path-for-spy ::page ::params))
-          (is (spies/called-with? pushy-spy ::history ::path)))))))
+    (testing "sets history token"
+      (with-redefs [pushy/replace-token! (spies/create)
+                    nav/path-for (spies/constantly ::path)]
+        (nav/nav-and-replace* ::history ::page ::params)
+        (is (spies/called-with? nav/path-for ::page ::params))
+        (is (spies/called-with? pushy/replace-token! ::history ::path))))))
 
 (deftest ^:unit navigate!-test
   (testing "(navigate!)"
-    (let [navigate-spy (spies/create)]
+    (with-redefs [nav/history ::history
+                  nav/navigate* (spies/create)]
       (testing "calls navigate* with routes"
-        (with-redefs [nav/history ::history
-                      nav/navigate* navigate-spy]
-          (spies/reset! navigate-spy)
-          (nav/navigate! ::page ::params)
-          (is (spies/called-with? navigate-spy ::history ::page ::params))))
+        (spies/reset! nav/navigate*)
+        (nav/navigate! ::page ::params)
+        (is (spies/called-with? nav/navigate* ::history ::page ::params)))
+
       (testing "defaults params to nil"
-        (with-redefs [nav/history ::history
-                      nav/navigate* navigate-spy]
-          (spies/reset! navigate-spy)
-          (nav/navigate! ::page)
-          (is (spies/called-with? navigate-spy ::history ::page nil)))))))
+        (spies/reset! nav/navigate*)
+        (nav/navigate! ::page)
+        (is (spies/called-with? nav/navigate* ::history ::page nil))))))
 
 (deftest ^:unit nav-and-replace!-test
   (testing "(nav-and-replace!)"
-    (let [navigate-spy (spies/create)]
+    (with-redefs [nav/history ::history
+                  nav/nav-and-replace* (spies/create)]
       (testing "calls navigate* with routes"
-        (with-redefs [nav/history ::history
-                      nav/nav-and-replace* navigate-spy]
-          (spies/reset! navigate-spy)
-          (nav/nav-and-replace! ::page ::params)
-          (is (spies/called-with? navigate-spy ::history ::page ::params))))
+        (spies/reset! nav/nav-and-replace*)
+        (nav/nav-and-replace! ::page ::params)
+        (is (spies/called-with? nav/nav-and-replace* ::history ::page ::params)))
+
       (testing "defaults params to nil"
-        (with-redefs [nav/history ::history
-                      nav/nav-and-replace* navigate-spy]
-          (spies/reset! navigate-spy)
-          (nav/nav-and-replace! ::page)
-          (is (spies/called-with? navigate-spy ::history ::page nil)))))))
+        (spies/reset! nav/nav-and-replace*)
+        (nav/nav-and-replace! ::page)
+        (is (spies/called-with? nav/nav-and-replace* ::history ::page nil))))))
 
 (defn run-tests []
   (t/run-tests))

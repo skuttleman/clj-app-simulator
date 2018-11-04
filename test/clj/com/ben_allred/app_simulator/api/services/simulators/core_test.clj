@@ -19,251 +19,225 @@
 
 (deftest ^:unit valid?-test
   (testing "(valid?)"
-    (let [http-spy (spies/create)
-          ws-spy (spies/create)
-          file-spy (spies/create)]
-      (with-redefs [http.sim/valid? http-spy
-                    ws.sim/valid? ws-spy
-                    file.sim/valid? file-spy]
-        (testing "when the http validator is successful"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! http-spy (constantly true))
+    (with-redefs [http.sim/valid? (spies/create)
+                  ws.sim/valid? (spies/create)
+                  file.sim/valid? (spies/create)]
+      (testing "when the http validator is successful"
+        (spies/reset! http.sim/valid? ws.sim/valid? file.sim/valid?)
+        (spies/respond-with! http.sim/valid? (constantly true))
 
-          (testing "succeeds"
-            (is (simulators/valid? ::config))))
+        (testing "succeeds"
+          (is (simulators/valid? ::config))))
 
-        (testing "when the ws validator is successful"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! ws-spy (constantly true))
+      (testing "when the ws validator is successful"
+        (spies/reset! http.sim/valid? ws.sim/valid? file.sim/valid?)
+        (spies/respond-with! ws.sim/valid? (constantly true))
 
-          (testing "succeeds"
-            (is (simulators/valid? ::config))))
+        (testing "succeeds"
+          (is (simulators/valid? ::config))))
 
-        (testing "when the file validator is successful"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! file-spy (constantly true))
+      (testing "when the file validator is successful"
+        (spies/reset! http.sim/valid? ws.sim/valid? file.sim/valid?)
+        (spies/respond-with! file.sim/valid? (constantly true))
 
-          (testing "succeeds"
-            (is (simulators/valid? ::config))))
+        (testing "succeeds"
+          (is (simulators/valid? ::config))))
 
-        (testing "when no validators are successful"
-          (spies/reset! http-spy ws-spy file-spy)
+      (testing "when no validators are successful"
+        (spies/reset! http.sim/valid? ws.sim/valid? file.sim/valid?)
 
-          (testing "fails"
-            (is (not (simulators/valid? ::config)))))))))
+        (testing "fails"
+          (is (not (simulators/valid? ::config))))))))
 
 (deftest ^:unit config->?simulator-test
   (testing "(config->?simulator)"
-    (let [http-spy (spies/create)
-          ws-spy (spies/create)
-          file-spy (spies/create)]
-      (with-redefs [http.sim/->HttpSimulator http-spy
-                    ws.sim/->WsSimulator ws-spy
-                    file.sim/->FileSimulator file-spy]
-        (testing "when the config can be used to build an http simulator"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! http-spy (constantly ::simulator))
+    (with-redefs [http.sim/->HttpSimulator (spies/create)
+                  ws.sim/->WsSimulator (spies/create)
+                  file.sim/->FileSimulator (spies/create)]
+      (testing "when the config can be used to build an http simulator"
+        (spies/reset! http.sim/->HttpSimulator ws.sim/->WsSimulator file.sim/->FileSimulator)
+        (spies/respond-with! http.sim/->HttpSimulator (constantly ::simulator))
 
-          (testing "returns the simulator"
-            (let [result (simulators/config->?simulator ::env ::config)]
-              (is (spies/called-with? http-spy ::env (spies/matcher uuid?) ::config))
-              (is (= result ::simulator)))))
+        (testing "returns the simulator"
+          (let [result (simulators/config->?simulator ::env ::config)]
+            (is (spies/called-with? http.sim/->HttpSimulator ::env (spies/matcher uuid?) ::config))
+            (is (= result ::simulator)))))
 
-        (testing "when the config can be used to build a ws simulator"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! ws-spy (constantly ::simulator))
+      (testing "when the config can be used to build a ws simulator"
+        (spies/reset! http.sim/->HttpSimulator ws.sim/->WsSimulator file.sim/->FileSimulator)
+        (spies/respond-with! ws.sim/->WsSimulator (constantly ::simulator))
 
-          (testing "returns the simulator"
-            (let [result (simulators/config->?simulator ::env ::config)]
-              (is (spies/called-with? ws-spy ::env (spies/matcher uuid?) ::config))
-              (is (= result ::simulator)))))
+        (testing "returns the simulator"
+          (let [result (simulators/config->?simulator ::env ::config)]
+            (is (spies/called-with? ws.sim/->WsSimulator ::env (spies/matcher uuid?) ::config))
+            (is (= result ::simulator)))))
 
-        (testing "when the config can be used to build a file simulator"
-          (spies/reset! http-spy ws-spy file-spy)
-          (spies/respond-with! file-spy (constantly ::simulator))
+      (testing "when the config can be used to build a file simulator"
+        (spies/reset! http.sim/->HttpSimulator ws.sim/->WsSimulator file.sim/->FileSimulator)
+        (spies/respond-with! file.sim/->FileSimulator (constantly ::simulator))
 
-          (testing "returns the simulator"
-            (let [result (simulators/config->?simulator ::env ::config)]
-              (is (spies/called-with? file-spy ::env (spies/matcher uuid?) ::config))
-              (is (= result ::simulator)))))
+        (testing "returns the simulator"
+          (let [result (simulators/config->?simulator ::env ::config)]
+            (is (spies/called-with? file.sim/->FileSimulator ::env (spies/matcher uuid?) ::config))
+            (is (= result ::simulator)))))
 
-        (testing "when the config cannot be used to build any simulator"
-          (spies/reset! http-spy ws-spy file-spy)
+      (testing "when the config cannot be used to build any simulator"
+        (spies/reset! http.sim/->HttpSimulator ws.sim/->WsSimulator file.sim/->FileSimulator)
 
-          (testing "returns nil"
-            (is (nil? (simulators/config->?simulator ::env ::config)))))))))
+        (testing "returns nil"
+          (is (nil? (simulators/config->?simulator ::env ::config))))))))
 
 (deftest ^:unit make-simulator!-test
   (testing "(make-simulator!)"
-    (let [config-spy (spies/constantly ::simulator)
-          add-spy (spies/constantly ::added)]
-      (with-redefs [simulators/config->?simulator config-spy
-                    sims/add! add-spy]
-        (testing "when a simulator is created"
-          (spies/reset! config-spy add-spy)
-          (let [result (simulators/make-simulator! ::env ::config)]
-            (testing "adds the simulator"
-              (is (spies/called-with? config-spy ::env ::config))
-              (is (spies/called-with? add-spy ::env ::simulator)))
+    (with-redefs [simulators/config->?simulator (spies/constantly ::simulator)
+                  sims/add! (spies/constantly ::added)]
+      (testing "when a simulator is created"
+        (spies/reset! simulators/config->?simulator sims/add!)
+        (let [result (simulators/make-simulator! ::env ::config)]
+          (testing "adds the simulator"
+            (is (spies/called-with? simulators/config->?simulator ::env ::config))
+            (is (spies/called-with? sims/add! ::env ::simulator)))
 
-            (testing "returns the simulator"
-              (is (= ::added result)))))
+          (testing "returns the simulator"
+            (is (= ::added result)))))
 
-        (testing "when a simulator is not created"
-          (spies/reset! config-spy add-spy)
-          (spies/respond-with! config-spy (constantly nil))
-          (testing "throws an exception"
-            (is (thrown? ExceptionInfo (simulators/make-simulator! ::env ::config)))))))))
+      (testing "when a simulator is not created"
+        (spies/reset! simulators/config->?simulator sims/add!)
+        (spies/respond-with! simulators/config->?simulator (constantly nil))
+        (testing "throws an exception"
+          (is (thrown? ExceptionInfo (simulators/make-simulator! ::env ::config))))))))
 
 (deftest ^:unit details-test
   (testing "(details)"
-    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
-          details-spy (spies/create (colls/onto [::details]))]
-      (with-redefs [sims/simulators simulators-spy
-                    common/details details-spy]
-        (let [result (simulators/details ::env)]
-          (testing "returns the simulators' details"
-            (is (test.http/success? (respond/with result)))
-            (is (= {:simulators [[::details ::sim-1]
-                                 [::details ::sim-2]]}
-                   (second result)))
-            (is (spies/called-with? simulators-spy ::env))
-            (is (spies/called-with? details-spy ::sim-1))
-            (is (spies/called-with? details-spy ::sim-2))))))))
+    (with-redefs [sims/simulators (spies/constantly [::sim-1 ::sim-2])
+                  common/details (spies/create (colls/onto [::details]))]
+      (let [result (simulators/details ::env)]
+        (testing "returns the simulators' details"
+          (is (test.http/success? (respond/with result)))
+          (is (= {:simulators [[::details ::sim-1]
+                               [::details ::sim-2]]}
+                 (second result)))
+          (is (spies/called-with? sims/simulators ::env))
+          (is (spies/called-with? common/details ::sim-1))
+          (is (spies/called-with? common/details ::sim-2)))))))
 
 (deftest ^:unit add-test
   (testing "(add)"
-    (let [make-spy (spies/constantly ::simulator)
-          details-spy (spies/constantly ::details)
-          publish-spy (spies/create)
-          valid-spy (spies/constantly true)]
-      (with-redefs [simulators/make-simulator! make-spy
-                    common/details details-spy
-                    activity/publish publish-spy
-                    simulators/valid? valid-spy]
-        (testing "makes a simulator"
-          (spies/reset! make-spy details-spy publish-spy)
-          (simulators/add ::env ::config)
-          (is (spies/called-with? make-spy ::env ::config)))
+    (with-redefs [simulators/make-simulator! (spies/constantly ::simulator)
+                  common/details (constantly ::details)
+                  activity/publish (spies/create)
+                  simulators/valid? (spies/constantly true)]
+      (testing "makes a simulator"
+        (spies/reset! simulators/make-simulator! activity/publish)
+        (simulators/add ::env ::config)
+        (is (spies/called-with? simulators/make-simulator! ::env ::config)))
 
-        (testing "when a simulator is made"
-          (spies/reset! make-spy details-spy publish-spy)
-          (let [result (simulators/add ::env ::config)]
-            (testing "publishes an event"
-              (is (spies/called-with? publish-spy ::env :simulators/add {:simulator ::details})))
+      (testing "when a simulator is made"
+        (spies/reset! simulators/make-simulator! activity/publish)
+        (let [result (simulators/add ::env ::config)]
+          (testing "publishes an event"
+            (is (spies/called-with? activity/publish ::env :simulators/add {:simulator ::details})))
 
-            (testing "returns a the simulator's details"
-              (is (test.http/success? (respond/with result)))
-              (is (= {:simulator ::details}
-                     (second result))))))
+          (testing "returns a the simulator's details"
+            (is (test.http/success? (respond/with result)))
+            (is (= {:simulator ::details}
+                   (second result))))))
 
-        (testing "when the simulator is not valid"
-          (spies/reset! publish-spy)
-          (spies/respond-with! valid-spy (constantly false))
-          (testing "throws an exception"
-            (is (thrown? ExceptionInfo (simulators/add ::env ::config))))
+      (testing "when the simulator is not valid"
+        (spies/reset! activity/publish)
+        (spies/respond-with! simulators/valid? (constantly false))
+        (testing "throws an exception"
+          (is (thrown? ExceptionInfo (simulators/add ::env ::config))))
 
-          (testing "does not publish an event"
-            (is (spies/never-called? publish-spy))))))))
+        (testing "does not publish an event"
+          (is (spies/never-called? activity/publish)))))))
 
 (deftest ^:unit set!-test
   (testing "(set!)"
-    (let [valid-spy (spies/constantly true)
-          clear-spy (spies/create)
-          make-spy (spies/create (colls/onto [::simulator]))
-          details-spy (spies/create (maps/onto :details))
-          publish-spy (spies/create)]
-      (with-redefs [simulators/valid? valid-spy
-                    sims/clear! clear-spy
-                    simulators/make-simulator! make-spy
-                    common/details details-spy
-                    activity/publish publish-spy]
-        (testing "when all configs are valid"
-          (spies/reset! valid-spy clear-spy make-spy details-spy publish-spy)
-          (let [result (simulators/set! ::env [::cfg-1 ::cfg-2 ::cfg-3])]
-            (is (spies/called-with? valid-spy ::cfg-1))
-            (is (spies/called-with? valid-spy ::cfg-2))
-            (is (spies/called-with? valid-spy ::cfg-3))
+    (with-redefs [simulators/valid? (spies/constantly true)
+                  sims/clear! (spies/create)
+                  simulators/make-simulator! (spies/create (colls/onto [::simulator]))
+                  common/details (spies/create (maps/onto :details))
+                  activity/publish (spies/create)]
+      (testing "when all configs are valid"
+        (spies/reset! simulators/valid? sims/clear! simulators/make-simulator! common/details activity/publish)
+        (let [result (simulators/set! ::env [::cfg-1 ::cfg-2 ::cfg-3])]
+          (is (spies/called-with? simulators/valid? ::cfg-1))
+          (is (spies/called-with? simulators/valid? ::cfg-2))
+          (is (spies/called-with? simulators/valid? ::cfg-3))
 
-            (testing "clears the simulators"
-              (is (spies/called-with? clear-spy ::env)))
+          (testing "clears the simulators"
+            (is (spies/called-with? sims/clear! ::env)))
 
-            (testing "publishes an event"
-              (is (spies/called-with? publish-spy
-                                      ::env
-                                      :simulators/init
-                                      {:simulators [{:details [::simulator ::env ::cfg-1]}
-                                                    {:details [::simulator ::env ::cfg-2]}
-                                                    {:details [::simulator ::env ::cfg-3]}]})))
+          (testing "publishes an event"
+            (is (spies/called-with? activity/publish
+                                    ::env
+                                    :simulators/init
+                                    {:simulators [{:details [::simulator ::env ::cfg-1]}
+                                                  {:details [::simulator ::env ::cfg-2]}
+                                                  {:details [::simulator ::env ::cfg-3]}]})))
 
-            (testing "returns the simulators' details"
-              (is (test.http/success? (respond/with result)))
-              (is (= {:simulators [{:details [::simulator ::env ::cfg-1]}
-                                   {:details [::simulator ::env ::cfg-2]}
-                                   {:details [::simulator ::env ::cfg-3]}]}
-                     (second result))))
+          (testing "returns the simulators' details"
+            (is (test.http/success? (respond/with result)))
+            (is (= {:simulators [{:details [::simulator ::env ::cfg-1]}
+                                 {:details [::simulator ::env ::cfg-2]}
+                                 {:details [::simulator ::env ::cfg-3]}]}
+                   (second result))))
 
-            (testing "makes the simulators"
-              (is (spies/called-with? make-spy ::env ::cfg-1))
-              (is (spies/called-with? make-spy ::env ::cfg-2))
-              (is (spies/called-with? make-spy ::env ::cfg-3))
-              (is (spies/called-with? details-spy [::simulator ::env ::cfg-1]))
-              (is (spies/called-with? details-spy [::simulator ::env ::cfg-2]))
-              (is (spies/called-with? details-spy [::simulator ::env ::cfg-3])))))
+          (testing "makes the simulators"
+            (is (spies/called-with? simulators/make-simulator! ::env ::cfg-1))
+            (is (spies/called-with? simulators/make-simulator! ::env ::cfg-2))
+            (is (spies/called-with? simulators/make-simulator! ::env ::cfg-3))
+            (is (spies/called-with? common/details [::simulator ::env ::cfg-1]))
+            (is (spies/called-with? common/details [::simulator ::env ::cfg-2]))
+            (is (spies/called-with? common/details [::simulator ::env ::cfg-3])))))
 
-        (testing "when not all configs are valid"
-          (spies/reset! valid-spy clear-spy make-spy details-spy publish-spy)
-          (spies/respond-with! valid-spy (constantly false))
-          (testing "throws an exception"
-            (is (thrown? ExceptionInfo (simulators/set! ::env [::config-1 ::config-2]))))
+      (testing "when not all configs are valid"
+        (spies/reset! simulators/valid? sims/clear! simulators/make-simulator! common/details activity/publish)
+        (spies/respond-with! simulators/valid? (constantly false))
+        (testing "throws an exception"
+          (is (thrown? ExceptionInfo (simulators/set! ::env [::config-1 ::config-2]))))
 
-          (testing "does not publish an event"
-            (is (spies/never-called? publish-spy))))))))
+        (testing "does not publish an event"
+          (is (spies/never-called? activity/publish)))))))
 
 (deftest ^:unit reset-all!-test
   (testing "(reset-all!)"
-    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
-          reset-spy (spies/create)
-          publish-spy (spies/create)
-          details-spy (spies/create (colls/onto [::details]))]
-      (with-redefs [sims/simulators simulators-spy
-                    common/reset! reset-spy
-                    activity/publish publish-spy
-                    common/details details-spy]
-        (let [result (simulators/reset-all! ::env)]
-          (testing "resets every sim"
-            (is (spies/called-with? simulators-spy ::env))
-            (is (spies/called-with? reset-spy ::sim-1))
-            (is (spies/called-with? reset-spy ::sim-2)))
+    (with-redefs [sims/simulators (spies/constantly [::sim-1 ::sim-2])
+                  common/reset! (spies/create)
+                  activity/publish (spies/create)
+                  common/details (spies/create (colls/onto [::details]))]
+      (let [result (simulators/reset-all! ::env)]
+        (testing "resets every sim"
+          (is (spies/called-with? sims/simulators ::env))
+          (is (spies/called-with? common/reset! ::sim-1))
+          (is (spies/called-with? common/reset! ::sim-2)))
 
-          (testing "publishes an event with details"
-            (is (spies/called-with? publish-spy
-                                    ::env
-                                    :simulators/reset-all
-                                    {:simulators [[::details ::sim-1]
-                                                  [::details ::sim-2]]}))
-            (is (spies/called-with? details-spy ::sim-1))
-            (is (spies/called-with? details-spy ::sim-2)))
+        (testing "publishes an event with details"
+          (is (spies/called-with? activity/publish
+                                  ::env
+                                  :simulators/reset-all
+                                  {:simulators [[::details ::sim-1]
+                                                [::details ::sim-2]]}))
+          (is (spies/called-with? common/details ::sim-1))
+          (is (spies/called-with? common/details ::sim-2)))
 
-          (testing "returns a success response"
-            (is (test.http/success? (respond/with result)))))))))
+        (testing "returns a success response"
+          (is (test.http/success? (respond/with result))))))))
 
 (deftest ^:unit routes-test
   (testing "(routes)"
-    (let [simulators-spy (spies/constantly [::sim-1 ::sim-2])
-          routes-spy (spies/constantly [::route-1 ::route-2])
-          make-routes-spy (spies/constantly ::route)]
-      (with-redefs [sims/simulators simulators-spy
-                    common/routes routes-spy
-                    c/routes make-routes-spy]
-        (let [result (simulators/routes ::env)]
-          (testing "gets route data for each simulator"
-            (is (spies/called-with? simulators-spy ::env))
-            (is (spies/called-with? routes-spy ::sim-1))
-            (is (spies/called-with? routes-spy ::sim-2)))
+    (with-redefs [sims/simulators (spies/constantly [::sim-1 ::sim-2])
+                  common/routes (spies/constantly [::route-1 ::route-2])
+                  c/routes (spies/constantly ::route)]
+      (let [result (simulators/routes ::env)]
+        (testing "gets route data for each simulator"
+          (is (spies/called-with? sims/simulators ::env))
+          (is (spies/called-with? common/routes ::sim-1))
+          (is (spies/called-with? common/routes ::sim-2)))
 
-          (testing "makes routes"
-            (is (spies/called-with? make-routes-spy ::route-1 ::route-2 ::route-1 ::route-2)))
+        (testing "makes routes"
+          (is (spies/called-with? c/routes ::route-1 ::route-2 ::route-1 ::route-2)))
 
-          (testing "returns composed route"
-            (is (= ::route result))))))))
+        (testing "returns composed route"
+          (is (= ::route result)))))))

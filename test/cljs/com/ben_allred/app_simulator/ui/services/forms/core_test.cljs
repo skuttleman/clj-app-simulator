@@ -73,50 +73,47 @@
 
 (deftest ^:unit sync-button-test
   (testing "(sync-button)"
-    (let [syncing-spy (spies/create)
-          errors-spy (spies/create)
-          sync-spy (spies/create)
-          on-click (spies/create)]
-      (with-redefs [gensym (constantly ::id)
-                    forms/syncing? syncing-spy
-                    forms/errors errors-spy
-                    forms/sync! sync-spy]
-        (let [sync-button (forms/sync-button nil)]
-          (testing "when the form is syncing"
-            (spies/respond-with! syncing-spy (constantly ::syncing))
-            (let [[_ attrs content :as button] (-> (sync-button {:form      ::form
-                                                                 :text      ::text
-                                                                 :sync-text ::sync-text
-                                                                 ::other    ::attrs
-                                                                 :on-click  on-click})
-                                                   (test.dom/query-one :.button.sync-button))]
-              (testing "is disabled"
-                (is (:disabled attrs)))
+    (with-redefs [gensym (constantly ::id)
+                  forms/syncing? (spies/create)
+                  forms/errors (spies/create)
+                  forms/sync! (spies/create)]
+      (let [on-click (spies/create)
+            sync-button (forms/sync-button nil)]
+        (testing "when the form is syncing"
+          (spies/respond-with! forms/syncing? (constantly ::syncing))
+          (let [[_ attrs content :as button] (-> (sync-button {:form      ::form
+                                                               :text      ::text
+                                                               :sync-text ::sync-text
+                                                               ::other    ::attrs
+                                                               :on-click  on-click})
+                                                 (test.dom/query-one :.button.sync-button))]
+            (testing "is disabled"
+              (is (:disabled attrs)))
 
-              (testing "displays the sync-text"
-                (let [content (test.dom/query-one content :.syncing)]
-                  (is (test.dom/contains? content ::sync-text))
-                  (is (test.dom/contains? content [views/spinner]))))
+            (testing "displays the sync-text"
+              (let [content (test.dom/query-one content :.syncing)]
+                (is (test.dom/contains? content ::sync-text))
+                (is (test.dom/contains? content [views/spinner]))))
 
-              (testing "and when the button is clicked"
-                (test.dom/simulate-event button :click)
-                (testing "syncs the form"
-                  (is (spies/called-with? errors-spy ::form))
-                  (is (spies/called-with? sync-spy ::form ::id))))))
+            (testing "and when the button is clicked"
+              (test.dom/simulate-event button :click)
+              (testing "syncs the form"
+                (is (spies/called-with? forms/errors ::form))
+                (is (spies/called-with? forms/sync! ::form ::id))))))
 
-          (testing "when the form is not syncing"
-            (spies/respond-with! syncing-spy (constantly nil))
-            (let [[_ attrs content] (-> (sync-button {:form      ::form
-                                                      :text      ::text
-                                                      :sync-text ::sync-text
-                                                      ::other    ::attrs
-                                                      :on-click  on-click})
-                                        (test.dom/query-one :.button.sync-button))]
-              (testing "is not disabled"
-                (is (not (:disabled attrs))))
+        (testing "when the form is not syncing"
+          (spies/respond-with! forms/syncing? (constantly nil))
+          (let [[_ attrs content] (-> (sync-button {:form      ::form
+                                                    :text      ::text
+                                                    :sync-text ::sync-text
+                                                    ::other    ::attrs
+                                                    :on-click  on-click})
+                                      (test.dom/query-one :.button.sync-button))]
+            (testing "is not disabled"
+              (is (not (:disabled attrs))))
 
-              (testing "displays the text"
-                (is (= content ::text))))))))))
+            (testing "displays the text"
+              (is (= content ::text)))))))))
 
 (defn run-tests []
   (t/run-tests))

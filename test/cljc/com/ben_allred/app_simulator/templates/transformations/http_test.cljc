@@ -74,22 +74,21 @@
 (deftest ^:unit sim->model-test
   (testing "(sim->model)"
     (testing "transforms values"
-      (let [spy (spies/constantly ::model)]
-        (with-redefs [tr/source->model spy]
-          (let [config {:things      ::things
-                        :stuff       ::stuff
-                        :group       ::group
-                        :response    ::response
-                        :delay       ::delay
-                        :name        ::name
-                        :description ::description}
-                result (tr/sim->model {:config config})]
-            (is (spies/called-with? spy {:group       ::group
-                                         :response    ::response
-                                         :delay       ::delay
-                                         :name        ::name
-                                         :description ::description}))
-            (is (= ::model result))))))))
+      (with-redefs [tr/source->model (spies/constantly ::model)]
+        (let [config {:things      ::things
+                      :stuff       ::stuff
+                      :group       ::group
+                      :response    ::response
+                      :delay       ::delay
+                      :name        ::name
+                      :description ::description}
+              result (tr/sim->model {:config config})]
+          (is (spies/called-with? tr/source->model {:group       ::group
+                                                    :response    ::response
+                                                    :delay       ::delay
+                                                    :name        ::name
+                                                    :description ::description}))
+          (is (= ::model result)))))))
 
 (defn run-tests []
   (t/run-tests))

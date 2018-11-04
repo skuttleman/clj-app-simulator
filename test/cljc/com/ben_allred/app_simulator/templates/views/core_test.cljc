@@ -9,69 +9,67 @@
 
 (deftest ^:unit not-found-test
   (testing "(not-found)"
-    (let [nav-spy (spies/constantly :HOME)]
-      (with-redefs [nav*/path-for nav-spy]
-        (let [root (views/not-found ::state)]
-          (testing "renders a header"
-            (is (test.dom/contains? root [:h1.title.is-2 "Page not found"])))
+    (with-redefs [nav*/path-for (constantly :HOME)]
+      (let [root (views/not-found ::state)]
+        (testing "renders a header"
+          (is (test.dom/contains? root [:h1.title.is-2 "Page not found"])))
 
-          (testing "renders a home link"
-            (let [link (test.dom/query-one root :.home)]
-              (is (-> link
-                      (test.dom/attrs)
-                      (:href)
-                      (= :HOME))))))))))
+        (testing "renders a home link"
+          (let [link (test.dom/query-one root :.home)]
+            (is (-> link
+                    (test.dom/attrs)
+                    (:href)
+                    (= :HOME)))))))))
 
 (deftest ^:unit header-test
   (testing "(header)"
-    (let [path-for-spy (spies/constantly "HREF")]
-      (with-redefs [nav*/path-for path-for-spy]
-        (let [header (views/header {:handler ::handler})]
-          (testing "has a home link"
-            (is (-> header
-                    (test.dom/query-one :.home-link)
-                    (test.dom/attrs)
-                    (:href)
-                    (= "HREF")))
-            (is (spies/called-with? path-for-spy :home))))
+    (with-redefs [nav*/path-for (spies/constantly "HREF")]
+      (let [header (views/header {:handler ::handler})]
+        (testing "has a home link"
+          (is (-> header
+                  (test.dom/query-one :.home-link)
+                  (test.dom/attrs)
+                  (:href)
+                  (= "HREF")))
+          (is (spies/called-with? nav*/path-for :home))))
 
-        (testing "when on the home page"
-          (let [header (views/header {:handler :home})]
-            (spies/reset! path-for-spy)
-            (let [rendered (templates/render header)]
-              (testing "has a tab for simulators"
-                (is (-> rendered
-                        (test.dom/query-one :span.tab)
-                        (test.dom/contains? "simulators"))))
+      (testing "when on the home page"
+        (let [header (views/header {:handler :home})]
+          (spies/reset! nav*/path-for)
+          (let [rendered (templates/render header)]
+            (testing "has a tab for simulators"
+              (is (-> rendered
+                      (test.dom/query-one :span.tab)
+                      (test.dom/contains? "simulators"))))
 
-              (testing "has a link for resources"
-                (let [link (-> rendered
-                               (test.dom/query-one :a.tab))]
-                  (is (test.dom/contains? rendered "resources"))
-                  (is (-> link
-                          (test.dom/attrs)
-                          (:href)
-                          (= "HREF")))
-                  (is (spies/called-with? path-for-spy :resources)))))))
+            (testing "has a link for resources"
+              (let [link (-> rendered
+                             (test.dom/query-one :a.tab))]
+                (is (test.dom/contains? rendered "resources"))
+                (is (-> link
+                        (test.dom/attrs)
+                        (:href)
+                        (= "HREF")))
+                (is (spies/called-with? nav*/path-for :resources)))))))
 
-        (testing "when on the resources page"
-          (let [header (views/header {:handler :resources})]
-            (spies/reset! path-for-spy)
-            (let [rendered (templates/render header)]
-              (testing "has a link for simulators"
-                (let [link (-> rendered
-                               (test.dom/query-one :a.tab))]
-                  (is (test.dom/contains? rendered "simulators"))
-                  (is (-> link
-                          (test.dom/attrs)
-                          (:href)
-                          (= "HREF")))
-                  (is (spies/called-with? path-for-spy :home))))
+      (testing "when on the resources page"
+        (let [header (views/header {:handler :resources})]
+          (spies/reset! nav*/path-for)
+          (let [rendered (templates/render header)]
+            (testing "has a link for simulators"
+              (let [link (-> rendered
+                             (test.dom/query-one :a.tab))]
+                (is (test.dom/contains? rendered "simulators"))
+                (is (-> link
+                        (test.dom/attrs)
+                        (:href)
+                        (= "HREF")))
+                (is (spies/called-with? nav*/path-for :home))))
 
-              (testing "has a tab for resources"
-                (is (-> rendered
-                        (test.dom/query-one :span.tab)
-                        (test.dom/contains? "resources")))))))))))
+            (testing "has a tab for resources"
+              (is (-> rendered
+                      (test.dom/query-one :span.tab)
+                      (test.dom/contains? "resources"))))))))))
 
 (deftest ^:unit root-test
   (testing "(root)"

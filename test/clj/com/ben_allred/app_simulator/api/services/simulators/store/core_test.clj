@@ -12,29 +12,26 @@
 (deftest ^:unit http-store-test
   (testing "(http-store)"
     (testing "creates a collaj store with http reducer"
-      (let [spy (spies/constantly ::store)]
-        (with-redefs [collaj/create-store spy]
-          (let [store (store/http-store)]
-            (is (spies/called-with? spy reducers/http))
-            (is (= store ::store))))))))
+      (with-redefs [collaj/create-store (spies/constantly ::store)]
+        (let [store (store/http-store)]
+          (is (spies/called-with? collaj/create-store reducers/http))
+          (is (= store ::store)))))))
 
 (deftest ^:unit ws-store-test
   (testing "(ws-store)"
     (testing "creates a collaj store with http reducer"
-      (let [spy (spies/constantly ::store)]
-        (with-redefs [collaj/create-store spy]
-          (let [store (store/ws-store)]
-            (is (spies/called-with? spy reducers/ws collaj.enhancers/with-fn-dispatch))
-            (is (= store ::store))))))))
+      (with-redefs [collaj/create-store (spies/constantly ::store)]
+        (let [store (store/ws-store)]
+          (is (spies/called-with? collaj/create-store reducers/ws collaj.enhancers/with-fn-dispatch))
+          (is (= store ::store)))))))
 
 (deftest ^:unit file-store-test
   (testing "(file-store)"
     (testing "creates a collaj store with http reducer"
-      (let [spy (spies/constantly ::store)]
-        (with-redefs [collaj/create-store spy]
-          (let [store (store/file-store)]
-            (is (spies/called-with? spy reducers/http))
-            (is (= store ::store))))))))
+      (with-redefs [collaj/create-store (spies/constantly ::store)]
+        (let [store (store/file-store)]
+          (is (spies/called-with? collaj/create-store reducers/http))
+          (is (= store ::store)))))))
 
 (deftest ^:unit delay-test
   (testing "(delay)"
@@ -48,26 +45,24 @@
 
 (deftest ^:unit file-response-test
   (testing "(file-response)"
-    (let [resources-spy (spies/constantly {:content-type ::content-type
-                                           :size 12345
-                                           :filename "filename.ext"
-                                           :file ::file})
-          stream-spy (spies/constantly ::file-stream)]
-      (with-redefs [resources/get resources-spy
-                    streams/open-input-stream stream-spy]
-        (testing "retrieves response from store as file"
-          (is (= {:status ::status
-                  :body ::file-stream
-                  :headers {"a-header" "value"
-                            "Content-Type" ::content-type
-                            "Content-Length" 12345
-                            "Content-Disposition" "inline; filename=\"filename.ext\""}}
-                 (store/file-response ::env
-                                      {:config {:current {:response {:headers {:a-header "value"}
-                                                                     :file    ::123
-                                                                     :status  ::status}}}})))
-          (is (spies/called-with? resources-spy ::env ::123))
-          (is (spies/called-with? stream-spy ::file)))))))
+    (with-redefs [resources/get (spies/constantly {:content-type ::content-type
+                                                   :size         12345
+                                                   :filename     "filename.ext"
+                                                   :file         ::file})
+                  streams/open-input-stream (spies/constantly ::file-stream)]
+      (testing "retrieves response from store as file"
+        (is (= {:status  ::status
+                :body    ::file-stream
+                :headers {"a-header"            "value"
+                          "Content-Type"        ::content-type
+                          "Content-Length"      12345
+                          "Content-Disposition" "inline; filename=\"filename.ext\""}}
+               (store/file-response ::env
+                                    {:config {:current {:response {:headers {:a-header "value"}
+                                                                   :file    ::123
+                                                                   :status  ::status}}}})))
+        (is (spies/called-with? resources/get ::env ::123))
+        (is (spies/called-with? streams/open-input-stream ::file))))))
 
 (deftest ^:unit requests-test
   (testing "(requests)"

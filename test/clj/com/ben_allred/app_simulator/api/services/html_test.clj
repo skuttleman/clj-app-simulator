@@ -75,61 +75,59 @@
                          [state [http.views/sim-create-form] [views/spinner]]))))))
 
           (testing "when rendering a details component"
-            (let [config-spy (spies/create)
-                  uuid-spy (spies/constantly ::uuid)]
-              (with-redefs [utils.sims/config->section config-spy
-                            uuids/->uuid uuid-spy]
-                (let [simulator {:config ::config :data ::data}
-                      state {:page       {:route-params {:id ::id}}
-                             :simulators {:data {::uuid simulator}}
-                             :resources    {:data ::resources}}]
-                  (testing "and when the simulator is type :http"
-                    (spies/respond-with! config-spy (constantly "http"))
-                    (testing "renders the view"
-                      (let [args (-> state
-                                     (details)
-                                     (test.dom/query-one views/details)
-                                     (rest))]
-                        (is (spies/called-with? uuid-spy ::id))
-                        (is (spies/called-with? config-spy ::config))
-                        (is (= args
-                               [[http.views/sim simulator] [views/spinner]])))))
+            (with-redefs [utils.sims/config->section (spies/create)
+                          uuids/->uuid (spies/constantly ::uuid)]
+              (let [simulator {:config ::config :data ::data}
+                    state {:page       {:route-params {:id ::id}}
+                           :simulators {:data {::uuid simulator}}
+                           :resources  {:data ::resources}}]
+                (testing "and when the simulator is type :http"
+                  (spies/respond-with! utils.sims/config->section (constantly "http"))
+                  (testing "renders the view"
+                    (let [args (-> state
+                                   (details)
+                                   (test.dom/query-one views/details)
+                                   (rest))]
+                      (is (spies/called-with? uuids/->uuid ::id))
+                      (is (spies/called-with? utils.sims/config->section ::config))
+                      (is (= args
+                             [[http.views/sim simulator] [views/spinner]])))))
 
-                  (testing "and when the simulator is type :ws"
-                    (spies/respond-with! config-spy (constantly "ws"))
-                    (testing "renders the view"
-                      (let [args (-> state
-                                     (details)
-                                     (test.dom/query-one views/details)
-                                     (rest))]
-                        (is (spies/called-with? uuid-spy ::id))
-                        (is (spies/called-with? config-spy ::config))
-                        (is (= args
-                               [[ws.views/sim simulator] [views/spinner]])))))
+                (testing "and when the simulator is type :ws"
+                  (spies/respond-with! utils.sims/config->section (constantly "ws"))
+                  (testing "renders the view"
+                    (let [args (-> state
+                                   (details)
+                                   (test.dom/query-one views/details)
+                                   (rest))]
+                      (is (spies/called-with? uuids/->uuid ::id))
+                      (is (spies/called-with? utils.sims/config->section ::config))
+                      (is (= args
+                             [[ws.views/sim simulator] [views/spinner]])))))
 
-                  (testing "and when the simulator is type :file"
-                    (spies/respond-with! config-spy (constantly "file"))
-                    (testing "renders the view"
-                      (let [args (-> state
-                                     (details)
-                                     (test.dom/query-one views/details)
-                                     (rest))]
-                        (is (spies/called-with? uuid-spy ::id))
-                        (is (spies/called-with? config-spy ::config))
-                        (is (= args
-                               [[file.views/sim simulator ::resources] [views/spinner]]))))))
+                (testing "and when the simulator is type :file"
+                  (spies/respond-with! utils.sims/config->section (constantly "file"))
+                  (testing "renders the view"
+                    (let [args (-> state
+                                   (details)
+                                   (test.dom/query-one views/details)
+                                   (rest))]
+                      (is (spies/called-with? uuids/->uuid ::id))
+                      (is (spies/called-with? utils.sims/config->section ::config))
+                      (is (= args
+                             [[file.views/sim simulator ::resources] [views/spinner]]))))))
 
-                (testing "and when the simulator is not found"
-                  (spies/respond-with! uuid-spy ::missing-uuid)
-                  (let [[msg spinner] (-> state
-                                          (details)
-                                          (test.dom/query-one views/details)
-                                          (rest))]
-                    (testing "renders a message"
-                      (is (test.dom/re-contains? msg #"simulator"))
-                      (is (test.dom/re-contains? msg #"not"))
-                      (is (test.dom/re-contains? msg #"found"))
-                      (is (= spinner [views/spinner]))))))))
+              (testing "and when the simulator is not found"
+                (spies/respond-with! uuids/->uuid ::missing-uuid)
+                (let [[msg spinner] (-> state
+                                        (details)
+                                        (test.dom/query-one views/details)
+                                        (rest))]
+                  (testing "renders a message"
+                    (is (test.dom/re-contains? msg #"simulator"))
+                    (is (test.dom/re-contains? msg #"not"))
+                    (is (test.dom/re-contains? msg #"found"))
+                    (is (= spinner [views/spinner])))))))
 
           (testing "when rendering a resources component"
             (let [state {:resources {:data ::data}}
@@ -207,44 +205,37 @@
                    (first))))))
 
     (testing "when including content"
-      (let [render-spy (spies/constantly ::rendered)]
-        (with-redefs [templates/render render-spy]
-          (let [tree (html/build-tree ::content)]
-            (testing "renders content"
-              (is (spies/called-with? render-spy ::content)))
+      (with-redefs [templates/render (spies/constantly ::rendered)]
+        (let [tree (html/build-tree ::content)]
+          (testing "renders content"
+            (is (spies/called-with? templates/render ::content)))
 
-            (testing "embeds content in #app"
-              (is (-> tree
-                      (test.dom/query-one :#app)
-                      (test.dom/contains? ::rendered))))))))))
+          (testing "embeds content in #app"
+            (is (-> tree
+                    (test.dom/query-one :#app)
+                    (test.dom/contains? ::rendered)))))))))
 
 (deftest ^:unit hydrate-test
   (testing "(hydrate)"
-    (let [build-spy (spies/constantly ::tree)
-          html-spy (spies/constantly ::html)
-          app-spy (spies/constantly ::app)
-          dispatch-spy (spies/create)
-          get-state-spy (spies/constantly {:some :state})
-          create-store-spy (spies/constantly {:dispatch dispatch-spy :get-state get-state-spy})
-          list-files-spy (spies/constantly ::resources)
-          details-spy (spies/constantly [nil {:simulators [::sim-1 ::sim-2 ::sim-3]}])]
-      (with-redefs [html/build-tree build-spy
-                    html/tree->html html-spy
-                    html/app app-spy
-                    collaj/create-store create-store-spy
-                    resources/list-files list-files-spy
-                    simulators/details details-spy]
+    (let [dispatch-spy (spies/create)
+          get-state-spy (spies/constantly {:some :state})]
+      (with-redefs [html/build-tree (spies/constantly ::tree)
+                    html/tree->html (spies/constantly ::html)
+                    html/app (spies/constantly ::app)
+                    collaj/create-store (spies/constantly {:dispatch dispatch-spy :get-state get-state-spy})
+                    resources/list-files (spies/constantly ::resources)
+                    simulators/details (spies/constantly [nil {:simulators [::sim-1 ::sim-2 ::sim-3]}])]
         (let [html (html/hydrate ::page ::env)
-              state (ffirst (spies/calls app-spy))]
+              state (ffirst (spies/calls html/app))]
           (testing "gets the default state"
-            (is (spies/called-with? create-store-spy ui-reducers/root))
+            (is (spies/called-with? collaj/create-store ui-reducers/root))
             (is (spies/called-with? get-state-spy)))
 
           (testing "gets current resources"
-            (is (spies/called-with? list-files-spy ::env)))
+            (is (spies/called-with? resources/list-files ::env)))
 
           (testing "gets current simulators"
-            (is (spies/called-with? details-spy ::env)))
+            (is (spies/called-with? simulators/details ::env)))
 
           (testing "calls dispatch to setup state"
             (is (spies/called-with? dispatch-spy [:files.fetch-all/succeed {:resources ::resources}]))
@@ -267,26 +258,24 @@
             (is (= :state (:some state))))
 
           (testing "builds the dom tree"
-            (is (spies/called-with? build-spy ::app)))
+            (is (spies/called-with? html/build-tree ::app)))
 
           (testing "converts the tree to html"
-            (is (spies/called-with? html-spy ::tree))
+            (is (spies/called-with? html/tree->html ::tree))
             (is (= ::html html))))))))
 
 (deftest ^:unit render-test
   (testing "(render)"
-    (let [match-spy (spies/constantly ::page)
-          hydrate-spy (spies/constantly ::html)]
-      (with-redefs [nav*/match-route match-spy
-                    html/hydrate hydrate-spy]
-        (testing "returns html"
-          (let [result (html/render {:uri "/any/ole/route"} ::env)]
-            (is (spies/called-with? match-spy "/any/ole/route"))
-            (is (spies/called-with? hydrate-spy ::page ::env))
-            (is (= ::html result))))
+    (with-redefs [nav*/match-route (spies/constantly ::page)
+                  html/hydrate (spies/constantly ::html)]
+      (testing "returns html"
+        (let [result (html/render {:uri "/any/ole/route"} ::env)]
+          (is (spies/called-with? nav*/match-route "/any/ole/route"))
+          (is (spies/called-with? html/hydrate ::page ::env))
+          (is (= ::html result))))
 
-        (testing "when the request has a query-string"
-          (spies/reset! match-spy)
-          (html/render {:uri "/any/ole/route" :query-string "a=b"} ::env)
+      (testing "when the request has a query-string"
+        (spies/reset! nav*/match-route)
+        (html/render {:uri "/any/ole/route" :query-string "a=b"} ::env)
 
-          (is (spies/called-with? match-spy "/any/ole/route?a=b")))))))
+        (is (spies/called-with? nav*/match-route "/any/ole/route?a=b"))))))

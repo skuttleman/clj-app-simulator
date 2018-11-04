@@ -16,34 +16,33 @@
 
 (deftest ^:unit receive-test
   (testing "(receive)"
-    (let [prepare-spy (spies/create (comp first vector))]
-      (with-redefs [content/prepare prepare-spy]
-        (let [actual (actions/receive {:extra        ::extra
-                                       :stuff        ::stuff
-                                       :socket-id    ::socket-id
-                                       :headers      {"some" ::headers "accept" ::accept}
-                                       :timestamp    ::timestamp
-                                       :body         ::body
-                                       :query-params {"some" ::query-params}
-                                       :route-params ::route-params})
-              expected {:headers      {:some ::headers :accept ::accept}
-                        :body         ::body
-                        :query-params {:some ::query-params}
-                        :route-params ::route-params
-                        :socket-id    ::socket-id}]
-          (testing "cleans request"
-            (is (spies/called-with? prepare-spy (spies/matcher #(= (dissoc % :id) expected)) #{:content-type :accept} ::accept))
-            (is (= expected (dissoc (second actual) :timestamp :id))))
+    (with-redefs [content/prepare (spies/create (comp first vector))]
+      (let [actual (actions/receive {:extra        ::extra
+                                     :stuff        ::stuff
+                                     :socket-id    ::socket-id
+                                     :headers      {"some" ::headers "accept" ::accept}
+                                     :timestamp    ::timestamp
+                                     :body         ::body
+                                     :query-params {"some" ::query-params}
+                                     :route-params ::route-params})
+            expected {:headers      {:some ::headers :accept ::accept}
+                      :body         ::body
+                      :query-params {:some ::query-params}
+                      :route-params ::route-params
+                      :socket-id    ::socket-id}]
+        (testing "cleans request"
+          (is (spies/called-with? content/prepare (spies/matcher #(= (dissoc % :id) expected)) #{:content-type :accept} ::accept))
+          (is (= expected (dissoc (second actual) :timestamp :id))))
 
-          (testing "adds an id"
-            (is (uuid? (:id (second actual)))))
+        (testing "adds an id"
+          (is (uuid? (:id (second actual)))))
 
-          (testing "wraps cleaned request in a tuple"
-            (is (= :simulators/receive (first actual))))
+        (testing "wraps cleaned request in a tuple"
+          (is (= :simulators/receive (first actual))))
 
-          (testing "adds timestamp"
-            (let [timestamp (:timestamp (second (actions/receive {})))]
-              (is (test.dt/date-within timestamp (Date.) 10)))))))))
+        (testing "adds timestamp"
+          (let [timestamp (:timestamp (second (actions/receive {})))]
+            (is (test.dt/date-within timestamp (Date.) 10))))))))
 
 (deftest ^:unit change-test
   (testing "(change)"
@@ -64,65 +63,60 @@
 
 (deftest ^:unit send-one-test
   (testing "(send-one)"
-    (let [send-spy (spies/create)
-          state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})]
-      (with-redefs [web.async/send! send-spy]
-        (let [f (actions/send-one ::id-2 ::message)]
-          (testing "sends the message to the socket"
-            (spies/reset! send-spy state-spy)
-            (f [nil state-spy])
-            (is (spies/called-with? state-spy))
-            (is (spies/called-with? send-spy ::ws-2 ::message))
-            (is (spies/called-times? send-spy 1)))
+    (with-redefs [web.async/send! (spies/create)]
+      (let [state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})
+            f (actions/send-one ::id-2 ::message)]
+        (testing "sends the message to the socket"
+          (spies/reset! web.async/send! state-spy)
+          (f [nil state-spy])
+          (is (spies/called-with? state-spy))
+          (is (spies/called-with? web.async/send! ::ws-2 ::message))
+          (is (spies/called-times? web.async/send! 1)))
 
-          (testing "when no socket is found"
-            (spies/reset! send-spy state-spy)
-            (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
+        (testing "when no socket is found"
+          (spies/reset! web.async/send! state-spy)
+          (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
 
-            (testing "does not send the message"
-              (is (spies/never-called? send-spy)))))))))
+          (testing "does not send the message"
+            (is (spies/never-called? web.async/send!))))))))
 
 (deftest ^:unit send-all-test
   (testing "(send-all)"
-    (let [send-spy (spies/create)
-          state-spy (spies/constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})]
-      (with-redefs [web.async/send! send-spy]
-        (let [f (actions/send-all ::message)]
-          (testing "sends the message to every socket"
-            (f [nil state-spy])
+    (with-redefs [web.async/send! (spies/create)]
+      (let [state-spy (spies/constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})
+            f (actions/send-all ::message)]
+        (testing "sends the message to every socket"
+          (f [nil state-spy])
 
-            (is (spies/called-with? send-spy ::ws-1 ::message))
-            (is (spies/called-with? send-spy ::ws-2 ::message))
-            (is (spies/called-with? send-spy ::ws-3 ::message))))))))
+          (is (spies/called-with? web.async/send! ::ws-1 ::message))
+          (is (spies/called-with? web.async/send! ::ws-2 ::message))
+          (is (spies/called-with? web.async/send! ::ws-3 ::message)))))))
 
 (deftest ^:unit disconnect-test
   (testing "(disconnect)"
-    (let [disconnect-spy (spies/create)
-          state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})]
-      (with-redefs [web.async/close disconnect-spy]
-        (let [f (actions/disconnect ::id-2)]
-          (testing "disconnects the socket"
-            (spies/reset! disconnect-spy state-spy)
-            (f [nil state-spy])
-            (is (spies/called-with? state-spy))
-            (is (spies/called-with? disconnect-spy ::ws-2))
-            (is (spies/called-times? disconnect-spy 1)))
+    (with-redefs [web.async/close (spies/create)]
+      (let [state-spy (spies/constantly {:sockets {::id-1 ::ws-1 ::id-2 ::ws-2}})
+            f (actions/disconnect ::id-2)]
+        (testing "disconnects the socket"
+          (spies/reset! web.async/close state-spy)
+          (f [nil state-spy])
+          (is (spies/called-with? state-spy))
+          (is (spies/called-with? web.async/close ::ws-2))
+          (is (spies/called-times? web.async/close 1)))
 
-          (testing "when no socket is found"
-            (spies/reset! disconnect-spy state-spy)
-            (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
+        (testing "when no socket is found"
+          (spies/reset! web.async/close state-spy)
+          (spies/respond-with! state-spy (constantly {:sockets {::id-1 ::ws}}))
 
-            (testing "does not disconnect"
-              (is (spies/never-called? disconnect-spy)))))))))
+          (testing "does not disconnect"
+            (is (spies/never-called? web.async/close))))))))
 
 (deftest ^:unit disconnect-all-test
   (testing "(disconnect-all)"
-    (let [disconnect-spy (spies/create)
-          state-spy (spies/constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})]
-      (with-redefs [web.async/close disconnect-spy]
-        (testing "sends the message to every socket"
-          (actions/disconnect-all [nil state-spy])
+    (with-redefs [web.async/close (spies/create)]
+      (testing "sends the message to every socket"
+        (actions/disconnect-all [nil (constantly {:sockets {1 ::ws-1 2 ::ws-2 3 ::ws-3}})])
 
-          (is (spies/called-with? disconnect-spy ::ws-1))
-          (is (spies/called-with? disconnect-spy ::ws-2))
-          (is (spies/called-with? disconnect-spy ::ws-3)))))))
+        (is (spies/called-with? web.async/close ::ws-1))
+        (is (spies/called-with? web.async/close ::ws-2))
+        (is (spies/called-with? web.async/close ::ws-3))))))
