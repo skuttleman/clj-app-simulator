@@ -125,7 +125,7 @@
                     (test.dom/attrs)
                     (:disabled)
                     (not)))
-            (is (spies/called-with? send-spy ::form ::simulator-id ::socket-id))
+            (is (spies/called-with? interactions/send-message ::form ::simulator-id ::socket-id))
             (is (-> send-button
                     (test.dom/attrs)
                     (:on-click)

@@ -1,5 +1,5 @@
 (ns com.ben-allred.app-simulator.api.services.simulators.common
-  (:refer-clojure :exclude [reset!]))
+  (:refer-clojure :exclude [reset! type]))
 
 (defprotocol IRun
   (start! [this])
@@ -7,7 +7,8 @@
 
 (defprotocol IIdentify
   (details [this])
-  (identifier [this]))
+  (identifier [this])
+  (type [this]))
 
 (defprotocol IReceive
   (receive! [this request])
@@ -38,6 +39,8 @@
   (details [this]
     nil)
   (identifier [this]
+    nil)
+  (type [this]
     nil)
 
   IReceive

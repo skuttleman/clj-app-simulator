@@ -12,15 +12,21 @@
                              to-string str
                              to-clj    identity}}]
   (let [uri (cond-> url
-              (seq query-params) (str "?" (qp/stringify query-params)))]
+              (seq query-params) (str "?" (qp/stringify query-params)))
+        closed-atom (atom true)]
     (with-meta
       [(ws*/connect uri
-                    :on-connect on-open
+                    :on-connect (fn [event]
+                                  (reset! closed-atom false)
+                                  (on-open event))
                     :on-receive (comp on-msg to-clj)
                     :on-error on-err
-                    :on-close (comp on-close #?(:clj  vector
-                                                :cljs (juxt #(.-code %) #(.-reason %)))))]
-      {::to-string to-string})))
+                    :on-close (fn [event & more]
+                                (reset! closed-atom true)
+                                (on-close #?(:clj  (into [event] more)
+                                             :cljs [(.-code event) (.-reason event)]))))]
+      {::to-string to-string
+       ::closed?   closed-atom})))
 
 (defn send! [[ws :as socket] msg]
   (let [to-string (::to-string (meta socket))]
@@ -28,3 +34,9 @@
 
 (defn close! [[ws]]
   (ws*/close ws))
+
+(defn closed? [socket]
+  (some-> socket
+          (meta)
+          (::closed?)
+          (deref)))

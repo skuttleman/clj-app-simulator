@@ -20,7 +20,7 @@
 (defn ^:private api->file [id-fn]
   (fn [file]
     (-> file
-        (set/rename-keys {:tempfile :file})
+        (update :file fns/or (:tempfile file))
         (assoc :timestamp (Date.) :id (id-fn)))))
 
 (defn ^:private validate! [param files]
@@ -36,7 +36,7 @@
 (defn ^:private upload* [env id-fn files]
   (->> files
        (map (api->file id-fn))
-       (fns/each! #(swap! uploads update-in [env (:id %)] (comp (constantly %) streams/delete :file)))
+       (fns/each! #(swap! uploads update-in [env (:id %)] (comp (constantly %) streams/delete :tempfile)))
        (map file->data)
        (fns/each! #(activity/publish env :resources/put {:resource %}))
        (doall)))
@@ -55,7 +55,7 @@
 (defn clear! [env]
   (->> (clojure.core/get @uploads env)
        (vals)
-       (map (comp streams/delete :file))
+       (map (comp streams/delete :tempfile))
        (dorun))
   (swap! uploads dissoc env)
   (activity/publish env :resources/clear nil))
@@ -63,7 +63,7 @@
 (defn remove! [env id]
   (let [id (uuids/->uuid id)]
     (when-let [resource (get-in @uploads [env id])]
-      (streams/delete (:file resource))
+      (streams/delete (:tempfile resource))
       (swap! uploads update env dissoc id)
       (activity/publish env :resources/remove {:resource (file->data resource)}))))
 

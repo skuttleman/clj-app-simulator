@@ -9,3 +9,5 @@
 (def send! ws/send!)
 
 (def close! ws/close!)
+
+(def closed? ws/closed?)

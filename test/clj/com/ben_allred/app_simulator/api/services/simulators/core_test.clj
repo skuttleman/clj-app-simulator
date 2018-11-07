@@ -8,11 +8,9 @@
     [com.ben-allred.app-simulator.api.services.simulators.http :as http.sim]
     [com.ben-allred.app-simulator.api.services.simulators.simulators :as sims]
     [com.ben-allred.app-simulator.api.services.simulators.ws :as ws.sim]
-    [com.ben-allred.app-simulator.api.utils.respond :as respond]
     [com.ben-allred.app-simulator.utils.colls :as colls]
     [com.ben-allred.app-simulator.utils.maps :as maps]
     [compojure.core :as c]
-    [integration.utils.http :as test.http]
     [test.utils.spies :as spies])
   (:import
     (clojure.lang ExceptionInfo)))
@@ -113,10 +111,9 @@
                   common/details (spies/create (colls/onto [::details]))]
       (let [result (simulators/details ::env)]
         (testing "returns the simulators' details"
-          (is (test.http/success? (respond/with result)))
-          (is (= {:simulators [[::details ::sim-1]
-                               [::details ::sim-2]]}
-                 (second result)))
+          (is (= [[::details ::sim-1]
+                  [::details ::sim-2]]
+                 result))
           (is (spies/called-with? sims/simulators ::env))
           (is (spies/called-with? common/details ::sim-1))
           (is (spies/called-with? common/details ::sim-2)))))))
@@ -139,9 +136,8 @@
             (is (spies/called-with? activity/publish ::env :simulators/add {:simulator ::details})))
 
           (testing "returns a the simulator's details"
-            (is (test.http/success? (respond/with result)))
-            (is (= {:simulator ::details}
-                   (second result))))))
+            (is (= ::details
+                   result)))))
 
       (testing "when the simulator is not valid"
         (spies/reset! activity/publish)
@@ -178,11 +174,10 @@
                                                   {:details [::simulator ::env ::cfg-3]}]})))
 
           (testing "returns the simulators' details"
-            (is (test.http/success? (respond/with result)))
-            (is (= {:simulators [{:details [::simulator ::env ::cfg-1]}
-                                 {:details [::simulator ::env ::cfg-2]}
-                                 {:details [::simulator ::env ::cfg-3]}]}
-                   (second result))))
+            (is (= [{:details [::simulator ::env ::cfg-1]}
+                    {:details [::simulator ::env ::cfg-2]}
+                    {:details [::simulator ::env ::cfg-3]}]
+                   result)))
 
           (testing "makes the simulators"
             (is (spies/called-with? simulators/make-simulator! ::env ::cfg-1))
@@ -220,10 +215,7 @@
                                   {:simulators [[::details ::sim-1]
                                                 [::details ::sim-2]]}))
           (is (spies/called-with? common/details ::sim-1))
-          (is (spies/called-with? common/details ::sim-2)))
-
-        (testing "returns a success response"
-          (is (test.http/success? (respond/with result))))))))
+          (is (spies/called-with? common/details ::sim-2)))))))
 
 (deftest ^:unit routes-test
   (testing "(routes)"

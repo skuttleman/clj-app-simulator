@@ -147,8 +147,12 @@
 (s/def :resource/filename :type/string)
 (s/def :resource/resource (s/keys :req-un [:entity/id :resource/filename :entity/timestamp :resource/content-type]))
 (s/def :resource.upload/tempfile :type/file)
-(s/def :resource/upload (s/keys :req-un [:resource.upload/tempfile]
-                                :opt-un [:resource/filename :resource/content-type]))
+(s/def :resource.upload/file :type/file)
+(s/def :resource.web/upload (s/keys :req-un [:resource.upload/tempfile]
+                                    :opt-un [:resource/filename :resource/content-type]))
+(s/def :resource.api/upload (s/keys :req-un [:resource.upload/file]
+                                    :opt-un [:resource/filename :resource/content-type]))
+(s/def :resource/upload (sor :resource.web/upload :resource.api/upload))
 (s/def :simulator.change/config (sor :simulator.http.change/config
                                      :simulator.file.change/config
                                      :simulator.ws.change/config))

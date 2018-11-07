@@ -130,9 +130,10 @@
                     common/partially-reset! (spies/create)
                     common/disconnect! (spies/create)
                     common/details (spies/constantly {::some ::details})
+                    common/type (constantly :sim-type)
                     activity/publish (spies/create)
                     specs/conform (spies/create (fn [_ body] body))]
-        (let [handler (routes.sim/patch ::env ::simulator :sim-type)]
+        (let [handler (routes.sim/patch ::env ::simulator)]
           (testing "when resetting the simulator"
             (spies/reset! reset-spy common/details activity/publish)
             (let [result (handler {:body {:action :simulators/reset}})]
@@ -280,7 +281,7 @@
                   routes.sim/http-sim-route (spies/constantly ::sim-route)]
       (testing "contains a sim route"
         (spies/reset! common/details routes.sim/http-sim-route)
-        (is (-> (routes.sim/http-routes ::type ::env ::simulator)
+        (is (-> (routes.sim/http-routes ::env ::simulator)
                 (find-by-method-and-path :method "/simulators/some/path")
                 (= ::sim-route)))
         (is (spies/called-with? routes.sim/http-sim-route ::env ::simulator)))
@@ -289,28 +290,28 @@
         (spies/respond-with! common/details (constantly {:config {:method ::method :path "/"}
                                                          :id     "some-id"}))
         (testing "drops the trailing slash on the sim route"
-          (is (-> (routes.sim/http-routes ::type ::env ::simulator)
+          (is (-> (routes.sim/http-routes ::env ::simulator)
                   (find-by-method-and-path :method "/simulators")
                   (= ::sim-route)))))
 
       (testing "contains routes to get the simulator"
         (spies/reset! common/details routes.sim/get-sim)
-        (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
+        (let [sims (routes.sim/http-routes ::env ::simulator)]
           (is (spies/called-with? routes.sim/get-sim ::simulator))
           (is (= ::get-sim
                  (find-by-method-and-path sims :get "/api/simulators/some-id")))))
 
       (testing "when building routes to delete the simulator"
         (spies/reset! common/details routes.sim/delete-sim)
-        (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
+        (let [sims (routes.sim/http-routes ::env ::simulator)]
           (testing "has the routes"
             (is (= ::delete-sim
                    (find-by-method-and-path sims :delete "/api/simulators/some-id"))))))
 
       (testing "contains routes to update the simulator"
         (spies/reset! common/details routes.sim/patch)
-        (let [sims (routes.sim/http-routes ::type ::env ::simulator)]
-          (is (spies/called-with? routes.sim/patch ::env ::simulator ::type))
+        (let [sims (routes.sim/http-routes ::env ::simulator)]
+          (is (spies/called-with? routes.sim/patch ::env ::simulator))
           (is (= ::patch-sim
                  (find-by-method-and-path sims :patch "/api/simulators/some-id"))))))))
 
@@ -347,7 +348,7 @@
           (is (spies/called-with? routes.sim/send-ws ::simulator)))
 
         (testing "creates a handler to reset the simulator"
-          (is (spies/called-with? routes.sim/patch ::env ::simulator :ws)))
+          (is (spies/called-with? routes.sim/patch ::env ::simulator)))
 
         (testing "creates a handler to disconnect sockets"
           (is (spies/called-with? routes.sim/disconnect-ws ::simulator)))
@@ -384,7 +385,7 @@
       (testing "makes routes"
         (let [routes (routes.sim/http-sim->routes ::env ::simulator)]
           (is (= [::1 ::2] routes))
-          (is (spies/called-with? routes.sim/http-routes :http ::env ::simulator))
+          (is (spies/called-with? routes.sim/http-routes ::env ::simulator))
           (is (spies/called-with? c/make-route ::route ::1))
           (is (spies/called-with? c/make-route ::route ::2)))))))
 
@@ -406,6 +407,6 @@
       (testing "make routes"
         (let [routes (routes.sim/file-sim->routes ::env ::simulator)]
           (is (= [::1 ::2] routes))
-          (is (spies/called-with? routes.sim/http-routes :file ::env ::simulator))
+          (is (spies/called-with? routes.sim/http-routes ::env ::simulator))
           (is (spies/called-with? c/make-route ::route ::1))
           (is (spies/called-with? c/make-route ::route ::2)))))))

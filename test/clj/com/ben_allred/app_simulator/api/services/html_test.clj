@@ -224,7 +224,7 @@
                     html/app (spies/constantly ::app)
                     collaj/create-store (spies/constantly {:dispatch dispatch-spy :get-state get-state-spy})
                     resources/list-files (spies/constantly ::resources)
-                    simulators/details (spies/constantly [nil {:simulators [::sim-1 ::sim-2 ::sim-3]}])]
+                    simulators/details (spies/constantly [::sim-1 ::sim-2 ::sim-3])]
         (let [html (html/hydrate ::page ::env)
               state (ffirst (spies/calls html/app))]
           (testing "gets the default state"

@@ -64,6 +64,8 @@
               (assoc :id id)))
         (identifier [_]
           [method id-path])
+        (type [_]
+          :ws)
 
         common/IReset
         (reset! [_]

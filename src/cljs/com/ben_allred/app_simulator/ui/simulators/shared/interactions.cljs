@@ -90,7 +90,7 @@
                         (store/dispatch))
                     (comp (fns/=>> (:simulator)
                                    (:id)
-                                   (assoc {} :id)
+                                   (hash-map :id)
                                    (nav/nav-and-replace! :details))
                           (resetter forms/reset! form current-model)
                           (toaster :success "The simulator has been created"))

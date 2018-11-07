@@ -11,10 +11,24 @@
 
 (defroutes ^:private sim-api
   (context "/simulators" []
-    (GET "/" [] (simulators/details (env/env*)))
-    (POST "/" request (simulators/add (env/env*) (get-in request [:body :simulator])))
-    (POST "/init" request (simulators/set! (env/env*) (get-in request [:body :simulators])))
-    (DELETE "/reset" [] (simulators/reset-all! (env/env*)))))
+    (GET "/" []
+      (->> (env/env*)
+           (simulators/details)
+           (hash-map :simulators)
+           (conj [:http.status/ok])))
+    (POST "/" request
+      (->> (get-in request [:body :simulator])
+           (simulators/add (env/env*))
+           (hash-map :simulator)
+           (conj [:http.status/created])))
+    (POST "/init" request
+      (->> (get-in request [:body :simulators])
+           (simulators/set! (env/env*))
+           (hash-map :simulators)
+           (conj [:http.status/created])))
+    (DELETE "/reset" []
+      (simulators/reset-all! (env/env*))
+      [:http.status/no-content])))
 
 (def ^:private res-api
   (context "/resources" []
@@ -22,16 +36,18 @@
       (->> (get-in request [:params :files])
            (colls/force-sequential)
            (resources/upload! (env/env*))
-           (assoc {} :resources)
+           (hash-map :resources)
            (conj [:http.status/created])))
     (PUT "/:resource-id" request
       (let [{:keys [resource-id file]} (:params request)]
         (->> file
              (resources/upload! (env/env*) resource-id)
-             (assoc {} :resource)
+             (hash-map :resource)
              (conj [:http.status/ok]))))
     (GET "/" []
-      [:http.status/ok {:resources (resources/list-files (env/env*))}])
+      (->> (resources/list-files (env/env*))
+           (hash-map :resources)
+           (conj [:http.status/ok])))
     (DELETE "/" []
       (resources/clear! (env/env*))
       [:http.status/no-content])
@@ -43,9 +59,9 @@
   (context "/" []
     (simulators/routes (env/env*))
     (context "/simulators" []
-      (ANY "/" [] [:http.status/not-found {:message "simulator not found"}])
       (ANY "/*" [] [:http.status/not-found {:message "simulator not found"}]))
-    (ANY "/api/*" [] [:http.status/not-found])))
+    (context "/api" []
+      (ANY "/*" [] [:http.status/not-found]))))
 
 (defroutes ^:private web
   (context "/" []

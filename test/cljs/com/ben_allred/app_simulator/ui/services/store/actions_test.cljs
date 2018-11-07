@@ -192,8 +192,8 @@
         (let [dispatch-spy (spies/create)
               result ((actions/send-message 123 nil ::some-message) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.send-message/request]))
-          (is (spies/called-with? http-spy "/api/simulators/123" {:body ::some-message :headers {:content-type "text/plain"}}))
-          (is (spies/called-with? request-spy
+          (is (spies/called-with? http/post "/api/simulators/123" {:body ::some-message :headers {:content-type "text/plain"}}))
+          (is (spies/called-with? actions/request*
                                   ::request
                                   dispatch-spy
                                   :simulators.send-message/succeed

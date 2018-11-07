@@ -38,6 +38,8 @@
               (assoc :id id)))
         (identifier [_]
           [(keyword (name method)) id-path])
+        (type [_]
+          :http)
 
         common/IReset
         (reset! [_]

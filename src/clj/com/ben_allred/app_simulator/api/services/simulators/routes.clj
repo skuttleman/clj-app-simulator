@@ -46,9 +46,10 @@
     (delete-sim! (common/identifier simulator))
     [:http.status/no-content]))
 
-(defn patch [env simulator type]
+(defn patch [env simulator]
   (fn [{body :body}]
-    (let [spec (keyword (format "simulator.%s/patch" (name type)))]
+    (let [sim-type (common/type simulator)
+          spec (keyword (format "simulator.%s/patch" (name sim-type)))]
       (if-let [{:keys [action socket-id config type]} (specs/conform spec body)]
         (do
           (case action
@@ -80,12 +81,12 @@
     (common/disconnect! simulator)
     [:http.status/no-content]))
 
-(defn http-routes [type env simulator]
+(defn http-routes [env simulator]
   (let [{{:keys [method path]} :config id :id} (common/details simulator)
         method-str (name method)
         get (get-sim simulator)
         delete (delete-sim env simulator (partial sims/remove! env))
-        patch (patch env simulator type)
+        patch (patch env simulator)
         path (when (not= path "/") path)
         uri (str "/api/simulators/" id)]
     [[(keyword method-str) (str "/simulators" path) (http-sim-route env simulator)]
@@ -101,7 +102,7 @@
         socket-uri (str uri "/sockets/:socket-id")
         get (get-sim simulator)
         send (send-ws simulator)
-        patch (patch env simulator :ws)
+        patch (patch env simulator)
         disconnect (disconnect-ws simulator)]
     [[:get sim-path (ws-sim-route simulator)]
      [:get uri get]
@@ -112,10 +113,10 @@
      [:patch uri patch]]))
 
 (defn http-sim->routes [env simulator]
-  (sim->routes env (partial http-routes :http) simulator))
+  (sim->routes env http-routes simulator))
 
 (defn ws-sim->routes [env simulator]
   (sim->routes env ws-routes simulator))
 
 (defn file-sim->routes [env simulator]
-  (sim->routes env (partial http-routes :file) simulator))
+  (sim->routes env http-routes simulator))

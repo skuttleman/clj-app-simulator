@@ -3,7 +3,9 @@
     [clojure.test :refer [deftest is testing]]
     [com.ben-allred.app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.app-simulator.api.services.simulators.simulators :as sims]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies])
+  (:import
+    (clojure.lang MapEntry)))
 
 (deftest ^:unit clear!-test
   (testing "(clear!)"
@@ -86,3 +88,19 @@
         (testing "returns the simulators"
           (is (= #{::sim-1 ::sim-2}
                  (set (sims/simulators ::env)))))))))
+
+(deftest ^:unit get-test
+  (testing "(get)"
+    (with-redefs [sims/sims (atom {::env (->> [[:a ::sim-1]
+                                               [:b ::sim-2]
+                                               [:c ::sim-3]
+                                               [:d ::sim-4]]
+                                              (map (fn [[k v]] (MapEntry/create k v))))})
+                  common/details (spies/create)]
+      (testing "finds a simulator by its id"
+      (spies/returning! common/details {:id 123} {:id 456} {:id 789} {:id 000})
+        (is (= ::sim-3 (sims/get ::env 789))))
+
+      (testing "returns nil if no simulator is found"
+        (spies/reset! common/details)
+        (is (nil? (sims/get ::env 999)))))))

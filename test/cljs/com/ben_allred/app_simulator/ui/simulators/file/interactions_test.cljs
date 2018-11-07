@@ -42,7 +42,7 @@
                   actions/show-modal (spies/constantly ::action)]
       ((interactions/show-delete-modal ::title ::msg ::on-click) ::ignored)
       (let [hide-spy (spies/create)
-            [modal title delete-btn cancel-btn] (first (spies/calls actions/show-modalspy))]
+            [modal title delete-btn cancel-btn] (first (spies/calls actions/show-modal))]
         (testing "dispatches the action"
           (is (spies/called-with? store/dispatch ::action)))
 

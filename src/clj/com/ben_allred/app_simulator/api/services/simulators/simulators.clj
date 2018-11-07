@@ -1,4 +1,5 @@
 (ns com.ben-allred.app-simulator.api.services.simulators.simulators
+  (:refer-clojure :exclude [get])
   (:require
     [com.ben-allred.app-simulator.api.services.simulators.common :as common]
     [com.ben-allred.app-simulator.utils.fns :as fns]
@@ -32,3 +33,12 @@
        (sort-by (fns/=>> (first) (mapv name) (apply str)))
        (reverse)
        (map second)))
+
+(defn get [env simulator-id]
+  (->> @sims
+       (env)
+       (vals)
+       (sequence (comp (map (juxt identity common/details))
+                       (filter (comp #{simulator-id} :id second))
+                       (map first)))
+       (first)))

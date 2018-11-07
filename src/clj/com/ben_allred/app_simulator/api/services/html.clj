@@ -143,7 +143,7 @@
 (defn hydrate [page env]
   (let [{:keys [dispatch get-state]} (collaj/create-store ui-reducers/root)
         resources (resources/list-files env)
-        [_ {:keys [simulators]}] (simulators/details env)]
+        simulators (simulators/details env)]
     (dispatch [:files.fetch-all/succeed {:resources resources}])
     (dispatch [:simulators/clear])
     (doseq [simulator simulators]

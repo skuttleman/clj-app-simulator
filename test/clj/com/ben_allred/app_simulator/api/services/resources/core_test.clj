@@ -63,6 +63,7 @@
     (testing "when uploading a replacement file"
       (let [uploads (atom {::env {111 {:filename     ::filename-1
                                        :file         ::file-1
+                                       :tempfile     ::temp-1
                                        :content-type ::content-type-1
                                        :timestamp    123}}})]
         (with-redefs [specs/valid? (constantly true)
@@ -85,7 +86,7 @@
               (is (= ::file-3 (get-in state [111 :file]))))
 
             (testing "deletes the existing file"
-              (is (spies/called-with? streams/delete ::file-1)))
+              (is (spies/called-with? streams/delete ::temp-1)))
 
             (testing "returns added file"
               (is (= (dissoc result :timestamp)
@@ -96,6 +97,7 @@
     (let [uploads (atom {::env       {111 {:filename     ::file-3
                                            :content-type ::content-type
                                            :timestamp    789
+                                           :tempfile     ::temp-111
                                            :file         ::file-111}
                                       222 {:filename     ::file-1
                                            :content-type ::content-type
@@ -103,6 +105,7 @@
                                            :file         ::file-222}
                                       333 {:filename     ::file-2
                                            :content-type ::content-type
+                                           :tempfile     ::temp-333
                                            :timestamp    456
                                            :file         ::file-333}}
                          ::other-env {444 {}}})]
@@ -114,9 +117,8 @@
           (is (empty? (::env @uploads)))
           (is (seq (::other-env @uploads)))
           (is (spies/called-times? streams/delete 3))
-          (is (spies/called-with? streams/delete ::file-111))
-          (is (spies/called-with? streams/delete ::file-222))
-          (is (spies/called-with? streams/delete ::file-333)))
+          (is (spies/called-with? streams/delete ::temp-111))
+          (is (spies/called-with? streams/delete ::temp-333)))
 
         (testing "publishes an event"
           (is (spies/called-with? activity/publish ::env :resources/clear nil)))))))
@@ -130,6 +132,7 @@
                               222 {:filename     ::file-1
                                    :content-type ::content-type
                                    :file         ::file-222
+                                   :tempfile     ::file-222
                                    :timestamp    123}
                               333 {:filename     ::file-2
                                    :content-type ::content-type
@@ -142,7 +145,7 @@
                     streams/delete (spies/create)]
         (resources/remove! ::env 222)
         (testing "clears uploads"
-          (is (= (update upload-data ::env dissoc 222) @uploads))
+          (is (= (dissoc (::env upload-data) 222) (::env @uploads)))
           (is (spies/called-with? streams/delete ::file-222)))
 
         (testing "publishes an event"
@@ -150,7 +153,7 @@
             (is (= :resources/remove event))
             (is (-> upload-data
                     (get-in [::env 222])
-                    (dissoc :file)
+                    (dissoc :file :tempfile)
                     (= (:resource data))))))
 
         (testing "when deleting a resource that does not exist"
@@ -160,7 +163,25 @@
 
           (testing "does not publish an event"
             (is (= upload-data @uploads))
-            (is (spies/never-called? activity/publish))))))))
+            (is (spies/never-called? activity/publish))))
+
+        (testing "when deleting a resource that has no tempfile"
+          (reset! uploads upload-data)
+          (spies/reset! streams/delete)
+          (resources/remove! ::env 333)
+          (testing "clears uploads"
+            (is (= (dissoc (::env upload-data) 333) (::env @uploads)))
+            (is (->> (spies/calls streams/delete)
+                     (remove (partial every? nil?))
+                     (empty?))))
+
+          (testing "publishes an event"
+            (let [[_ event data] (first (spies/calls activity/publish))]
+              (is (= :resources/remove event))
+              (is (-> upload-data
+                      (get-in [::env 333])
+                      (dissoc :file)
+                      (= (:resource data)))))))))))
 
 (deftest ^:unit list-files-test
   (testing "(list-files)"

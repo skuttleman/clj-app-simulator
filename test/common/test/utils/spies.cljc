@@ -58,13 +58,6 @@
 (defn constantly [value]
   (create (clojure.core/constantly value)))
 
-(defn and-then [& responses]
-  (let [responses (atom responses)]
-    (create (fn [& _]
-              (let [response (first @responses)]
-                (swap! responses #(if (= 1 (count %)) % (rest %)))
-                response)))))
-
 (defn calls [spy]
   (when (spy? spy)
     @(::calls (meta spy))))
