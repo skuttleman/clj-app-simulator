@@ -159,6 +159,9 @@
     (testing "handles :files.replace/succeed"
       (is (= {:status :available :data [{:id 111 :data ::data-111} {:id 222 :data ::data-new}]}
              (reducers/resources {:data [{:id 111 :data ::data-111} {:id 222 :data ::data-222}]}
+                                 [:files.replace/succeed {:resource {:id 222 :data ::data-new}}])))
+      (is (= {:status :available :data [{:id 111 :data ::data-111} {:id 222 :data ::data-new}]}
+             (reducers/resources {:data [{:id 111 :data ::data-111}]}
                                  [:files.replace/succeed {:resource {:id 222 :data ::data-new}}]))))
 
     (testing "returns unchanged state for any random action"

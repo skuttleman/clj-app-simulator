@@ -2,6 +2,7 @@
   (:require
     [com.ben-allred.app-simulator.services.env :as env]
     [com.ben-allred.app-simulator.services.ws :as ws]
+    [com.ben-allred.app-simulator.ui.utils.macros :as macros]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.transit :as transit]))
 
@@ -34,8 +35,11 @@
                 :query-params {:accept "application/transit"}
                 :to-string transit/stringify
                 :to-clj transit/parse
-                :on-msg (partial on-msg dispatch)
-                :on-err (partial reconnect dispatch))))
+                :on-msg (fn [_ msg] (on-msg dispatch msg))
+                :on-close (fn [_ _]
+                            (macros/after 100 (reconnect dispatch)))
+                :on-err (fn [this _]
+                          (ws/close! this)))))
 
 (defn sub [{:keys [dispatch] :as store}]
   (reconnect dispatch)

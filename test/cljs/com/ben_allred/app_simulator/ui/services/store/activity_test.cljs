@@ -5,16 +5,19 @@
     [com.ben-allred.app-simulator.services.ws :as ws]
     [com.ben-allred.app-simulator.ui.services.store.activity :as activity]
     [com.ben-allred.app-simulator.utils.transit :as transit]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies]
+    [com.ben-allred.app-simulator.ui.utils.macros :as macros]))
 
 (deftest ^:unit sub-test
   (testing "(sub)"
     (with-redefs [ws/connect (spies/create)
-                  env/get (spies/constantly "some-host:123")]
+                  env/get (spies/constantly "some-host:123")
+                  ws/close! (spies/create)
+                  macros/set-timeout (spies/create)]
       (let [dispatch-spy (spies/create)
             store {:dispatch dispatch-spy :store ::store}
             result (activity/sub store)
-            [url & {:keys [on-err] :as opts}] (first (spies/calls ws/connect))]
+            [url & {:keys [on-err on-close] :as opts}] (first (spies/calls ws/connect))]
         (testing "connects a websocket"
           (is (spies/called? ws/connect))
           (is (spies/called-with? env/get :host))
@@ -22,13 +25,20 @@
           (is (= {:query-params {:accept "application/transit"}
                   :to-string    transit/stringify
                   :to-clj       transit/parse}
-                 (dissoc opts :on-msg :on-err))))
+                 (dissoc opts :on-msg :on-err :on-close))))
 
-        (testing "reconnects on error"
+        (testing "closes on error"
           (spies/reset! ws/connect)
-          (on-err ::error)
-          (let [[url] (first (spies/calls ws/connect))]
-            (is (= url "ws://some-host:123/api/simulators/activity"))))
+          (on-err ::ws ::error)
+          (is (spies/called-with? ws/close! ::ws)))
+
+        (testing "reconnects on close"
+          (on-close ::ws ::event)
+          (is (spies/called-with? macros/set-timeout (spies/matcher fn?) 100))
+          (let [[f] (first (spies/calls macros/set-timeout))]
+            (spies/reset! ws/connect)
+            (f)
+            (is (spies/called? ws/connect))))
 
         (testing "returns the store"
           (is (= result store)))))))

@@ -32,7 +32,7 @@
         (testing "when connecting a websocket"
           ((:on-connect opts) ::event)
           (testing "calls :on-open"
-            (is (spies/called-with? open-spy ::event))))
+            (is (spies/called-with? open-spy ws ::event))))
 
         (testing "when a message is received"
           ((:on-receive opts) :a-message)
@@ -40,18 +40,18 @@
             (spies/called-with? clj-spy :a-message))
 
           (testing "calls :on-msg"
-            (spies/called-with? msg-spy ":a-message")))
+            (spies/called-with? msg-spy ws ":a-message")))
 
         (testing "when an error happens"
           ((:on-error opts) ::error)
           (testing "calls :on-err"
-            (is (spies/called-with? err-spy ::error))))
+            (is (spies/called-with? err-spy ws ::error))))
 
         (testing "when the socket is closed"
           ((:on-close opts) #?@(:clj  [::code ::reason]
                                 :cljs [#js {:code ::code :reason ::reason}]))
           (testing "calls :on-close"
-            (is (spies/called-with? close-spy [::code ::reason]))))
+            (is (spies/called-with? close-spy ws [::code ::reason]))))
 
         (testing "adds to-string meta data"
           (let [to-string (:com.ben-allred.app-simulator.services.ws/to-string (meta ws))]

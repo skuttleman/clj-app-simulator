@@ -49,7 +49,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when initializing the simulators"
           (let [response (test.http/post "/api/simulators/init" content-type {:body {:simulators start-configs}})]
@@ -170,7 +170,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when initializing the simulators"
           (sim-core/init-simulators start-configs)
@@ -275,12 +275,12 @@
           (let [chan (async/chan 64)
                 ws (test.ws/connect "/api/simulators/activity"
                                     :query-params {:accept content-type}
-                                    :on-msg (partial async/put! chan)
+                                    :on-msg (fn [_ msg] (async/put! chan msg))
                                     :to-clj (content-type->parser content-type))]
             (testing "when connecting to a socket simulator"
               (let [chan-1 (async/chan 64)
                     ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (partial async/put! chan-1)
+                                          :on-msg (fn [_ msg] (async/put! chan msg))
                                           :to-clj edn/read-string)
                     {:keys [event data]} (chans/<⏰!! chan)
                     socket-id-1 (:socket-id data)]
@@ -291,7 +291,7 @@
                 (testing "and when connecting a second socket"
                   (let [chan-2 (async/chan 64)
                         ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                              :on-msg (partial async/put! chan-2)
+                                              :on-msg (fn [_ msg] (async/put! chan msg))
                                               :to-clj edn/read-string)
                         {:keys [event data]} (chans/<⏰!! chan)
                         socket-id-2 (:socket-id data)]
@@ -391,13 +391,13 @@
               (chans/flush! chan)
               (let [chan-1 (async/chan 64)
                     ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (partial async/put! chan-1)
+                                          :on-msg (fn [_ msg] (async/put! chan msg))
                                           :to-clj edn/read-string)
                     {event-1 :event data-1 :data} (chans/<⏰!! chan)
                     socket-id-1 (:socket-id data-1)
                     chan-2 (async/chan 64)
                     ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (partial async/put! chan-2)
+                                          :on-msg (fn [_ msg] (async/put! chan msg))
                                           :to-clj edn/read-string)
                     {event-2 :event data-2 :data} (chans/<⏰!! chan)
                     socket-id-2 (:socket-id data-2)]
@@ -468,13 +468,13 @@
               (chans/flush! chan)
               (let [chan-1 (async/chan 64)
                     ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (partial async/put! chan-1)
+                                          :on-msg (fn [_ msg] (async/put! chan msg))
                                           :to-clj edn/read-string)
                     {event-1 :event data-1 :data} (chans/<⏰!! chan)
                     socket-id-1 (:socket-id data-1)
                     chan-2 (async/chan 64)
                     ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (partial async/put! chan-2)
+                                          :on-msg (fn [_ msg] (async/put! chan msg))
                                           :to-clj edn/read-string)
                     {event-2 :event data-2 :data} (chans/<⏰!! chan)
                     socket-id-2 (:socket-id data-2)]
@@ -534,12 +534,12 @@
               chan (async/chan 64)
               ws (test.ws/connect "/api/simulators/activity"
                                   :query-params {:accept content-type}
-                                  :on-msg (partial async/put! chan)
+                                  :on-msg (fn [_ msg] (async/put! chan msg))
                                   :to-clj (content-type->parser content-type))]
           (testing "when connecting to a socket simulator"
             (let [chan-1 (async/chan 64)
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (partial async/put! chan-1)
+                                        :on-msg (fn [_ msg] (async/put! chan msg))
                                         :to-clj edn/read-string)
                   {:keys [event data]} (chans/<⏰!! chan)
                   socket-id-1 (uuids/->uuid (:socket-id data))]
@@ -550,7 +550,7 @@
               (testing "and when connecting a second socket"
                 (let [chan-2 (async/chan 64)
                       ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                            :on-msg (partial async/put! chan-2)
+                                            :on-msg (fn [_ msg] (async/put! chan msg))
                                             :to-clj edn/read-string)
                       {:keys [event data]} (chans/<⏰!! chan)
                       socket-id-2 (uuids/->uuid (:socket-id data))]
@@ -628,13 +628,13 @@
             (chans/flush! chan)
             (let [chan-1 (async/chan 64)
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (partial async/put! chan-1)
+                                        :on-msg (fn [_ msg] (async/put! chan msg))
                                         :to-clj edn/read-string)
                   {event-1 :event data-1 :data} (chans/<⏰!! chan)
                   socket-id-1 (:socket-id data-1)
                   chan-2 (async/chan 64)
                   ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (partial async/put! chan-2)
+                                        :on-msg (fn [_ msg] (async/put! chan msg))
                                         :to-clj edn/read-string)
                   {event-2 :event data-2 :data} (chans/<⏰!! chan)
                   socket-id-2 (:socket-id data-2)]
@@ -689,13 +689,13 @@
             (chans/flush! chan)
             (let [chan-1 (async/chan 64)
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (partial async/put! chan-1)
+                                        :on-msg (fn [_ msg] (async/put! chan msg))
                                         :to-clj edn/read-string)
                   {event-1 :event data-1 :data} (chans/<⏰!! chan)
                   socket-id-1 (:socket-id data-1)
                   chan-2 (async/chan 64)
                   ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (partial async/put! chan-2)
+                                        :on-msg (fn [_ msg] (async/put! chan msg))
                                         :to-clj edn/read-string)
                   {event-2 :event data-2 :data} (chans/<⏰!! chan)
                   socket-id-2 (:socket-id data-2)]

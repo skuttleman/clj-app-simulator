@@ -28,7 +28,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when uploading a resource"
           (let [response (test.http/upload "/api/resources" content-type "sample.txt")]
@@ -125,7 +125,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when uploading a resource"
           (sim-core/save-resources [(test.api/fixture->file "sample.txt")])
@@ -218,7 +218,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when saving two resources"
           (test.http/upload "/api/resources" content-type "sample.txt" "sample2.txt")
@@ -325,7 +325,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing "when saving two resources"
           (sim-core/save-resources (map test.api/fixture->file ["sample.txt" "sample2.txt"]))

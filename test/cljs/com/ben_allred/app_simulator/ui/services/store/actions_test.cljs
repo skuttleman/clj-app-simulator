@@ -39,6 +39,25 @@
               ::value [::error] [::error ::value]
               ::value [::error ::details] [::error ::details ::value]))
 
+          (testing "does not dispatch on success when success-type is nil"
+            (spies/reset! dispatch)
+            (let [result (async/<! (actions/request*
+                                     (async/go [:success ::value])
+                                     dispatch
+                                     nil
+                                     ::error))]
+              (is (spies/never-called? dispatch))
+              (is (= [:success ::value] result))))
+
+          (testing "does not dispatch on error when error-type is nil"
+            (spies/reset! dispatch)
+            (let [result (async/<! (actions/request*
+                                     (async/go [:error ::value])
+                                     dispatch
+                                     ::success))]
+              (is (spies/never-called? dispatch))
+              (is (= [:error ::value] result))))
+
           (done))))))
 
 (deftest ^:unit request-simulators-test
@@ -66,11 +85,7 @@
               result ((actions/delete-simulator 12345) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.delete/request]))
           (is (spies/called-with? http/delete "/api/simulators/12345"))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.delete/succeed
-                                  :simulators.delete/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit create-simulator-test
@@ -82,11 +97,7 @@
               result ((actions/create-simulator ::simulator) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.create/request]))
           (is (spies/called-with? http/post "/api/simulators" {:body {:simulator ::simulator}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.create/succeed
-                                  :simulators.create/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit clear-requests-test
@@ -98,11 +109,7 @@
               result ((actions/clear-requests 12345 ::action) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.clear-requests/request]))
           (is (spies/called-with? http/patch "/api/simulators/12345" {:body {:action :simulators/reset :type ::action}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.clear-requests/succeed
-                                  :simulators.clear-requests/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit reset-simulator-config-test
@@ -115,11 +122,7 @@
           (is (spies/called-with? dispatch-spy [:simulators.reset/request]))
           (is (spies/called-with? http/patch "/api/simulators/12345" {:body {:action :simulators/reset
                                                                            :type   :type/config}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.reset/succeed
-                                  :simulators.reset/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit update-simulator-test
@@ -132,11 +135,7 @@
           (is (spies/called-with? dispatch-spy [:simulators.change/request]))
           (is (spies/called-with? http/patch "/api/simulators/12345" {:body {:action :simulators/change
                                                                              :config ::config}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.change/succeed
-                                  :simulators.change/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit disconnect-test
@@ -149,11 +148,7 @@
           (is (spies/called-with? dispatch-spy [:simulators.disconnect/request]))
           (is (spies/called-with? http/patch "/api/simulators/123" {:body {:action    :simulators.ws/disconnect
                                                                          :socket-id 456}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.disconnect/succeed
-                                  :simulators.disconnect/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit disconnect-all-test
@@ -165,11 +160,7 @@
               result ((actions/disconnect-all 12345) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.disconnect-all/request]))
           (is (spies/called-with? http/patch "/api/simulators/12345" {:body {:action :simulators.ws/disconnect}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.disconnect-all/succeed
-                                  :simulators.disconnect-all/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit send-message-test
@@ -181,11 +172,7 @@
               result ((actions/send-message 123 456 ::some-message) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.send-message/request]))
           (is (spies/called-with? http/post "/api/simulators/123/sockets/456" {:body ::some-message :headers {:content-type "text/plain"}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.send-message/succeed
-                                  :simulators.send-message/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result))))
 
       (testing "broadcasts a message"
@@ -193,11 +180,7 @@
               result ((actions/send-message 123 nil ::some-message) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:simulators.send-message/request]))
           (is (spies/called-with? http/post "/api/simulators/123" {:body ::some-message :headers {:content-type "text/plain"}}))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :simulators.send-message/succeed
-                                  :simulators.send-message/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit upload-test
@@ -209,11 +192,7 @@
               result ((actions/upload ::files) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:files.upload/request]))
           (is (spies/called-with? files/upload "/api/resources" :post ::files))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :files.upload/succeed
-                                  :files.upload/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit upload-replace-test
@@ -225,11 +204,7 @@
               result ((actions/upload-replace 123 ::files) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:files.replace/request]))
           (is (spies/called-with? files/upload "/api/resources/123" :put ::files))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :files.replace/succeed
-                                  :files.replace/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit get-uploads-test
@@ -257,11 +232,7 @@
               result ((actions/delete-upload 123) [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:files.delete/request]))
           (is (spies/called-with? http/delete "/api/resources/123"))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  [:files.delete/succeed {:id 123}]
-                                  :files.delete/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit delete-uploads-test
@@ -273,11 +244,7 @@
               result (actions/delete-uploads [dispatch-spy])]
           (is (spies/called-with? dispatch-spy [:files.delete-all/request]))
           (is (spies/called-with? http/delete "/api/resources"))
-          (is (spies/called-with? actions/request*
-                                  ::request
-                                  dispatch-spy
-                                  :files.delete-all/succeed
-                                  :files.delete-all/fail))
+          (is (spies/called-with? actions/request* ::request dispatch-spy))
           (is (= result ::result)))))))
 
 (deftest ^:unit show-modal-test

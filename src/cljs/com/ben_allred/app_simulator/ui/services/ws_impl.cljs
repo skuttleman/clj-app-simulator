@@ -7,8 +7,8 @@
      (aset "onerror" on-error)
      (aset "onclose" on-close))])
 
-(defn send-msg [ws msg]
+(defn send-msg [[ws] msg]
   (.send ws msg))
 
-(defn close [ws]
+(defn close [[ws]]
   (.close ws))

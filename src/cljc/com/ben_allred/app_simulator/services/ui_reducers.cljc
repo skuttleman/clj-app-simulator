@@ -85,8 +85,8 @@
       ([state [type data]]
        (case type
          :files.upload/succeed (into state (:resources data))
-         :files.replace/succeed (colls/replace-by :id (:resource data) state)
-         :files.delete/succeed (vec (remove (comp #{(:id data)} :id) state))
+         :files.replace/succeed (colls/assoc state :id (:resource data))
+         :files.delete/succeed (vec (remove (comp #{(get-in data [:resource :id])} :id) state))
          :files.delete-all/succeed []
          :files.fetch-all/succeed (:resources data)
          state)))))

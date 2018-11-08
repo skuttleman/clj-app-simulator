@@ -75,7 +75,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing (str "when saving initial simulators with content-type: " (pr-str content-type))
           (let [response (test.http/post "/api/simulators/init" content-type {:body {:simulators start-configs}})]
@@ -178,7 +178,7 @@
       (let [chan (async/chan 64)
             ws (test.ws/connect "/api/simulators/activity"
                                 :query-params {:accept content-type}
-                                :on-msg (partial async/put! chan)
+                                :on-msg (fn [_ msg] (async/put! chan msg))
                                 :to-clj (content-type->parser content-type))]
         (testing (str "when saving initial simulators with content-type: " (pr-str content-type))
           (let [sims (sim-core/init-simulators start-configs)]
@@ -264,7 +264,7 @@
           (let [chan (async/chan 64)
                 ws (test.ws/connect "/api/simulators/activity"
                                     :query-params {:accept content-type}
-                                    :on-msg (partial async/put! chan)
+                                    :on-msg (fn [_ msg] (async/put! chan msg))
                                     :to-clj (content-type->parser content-type))]
             (testing "when sending request to the simulator"
               (let [response (test.http/get "/simulators/some/param?with=some&qps=included"
@@ -542,7 +542,7 @@
           (let [chan (async/chan 64)
                 ws (test.ws/connect "/api/simulators/activity"
                                     :query-params {:accept content-type}
-                                    :on-msg (partial async/put! chan)
+                                    :on-msg (fn [_ msg] (async/put! chan msg))
                                     :to-clj (content-type->parser content-type))]
             (testing "when sending request to the simulator"
               (let [response (test.http/get "/simulators/some/param?with=some&qps=included"
