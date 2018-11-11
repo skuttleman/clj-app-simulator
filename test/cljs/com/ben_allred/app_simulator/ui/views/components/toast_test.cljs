@@ -9,16 +9,19 @@
 
 (deftest ^:unit toast-test
   (testing "(toast)"
-    (let [toast (toast/toast {:key-3 {:ref   (atom "Toast 3")
-                                      :level :success}
-                              :key-5 {:ref (atom "Toast 5")
-                                      :level :error}
-                              :key-1 {:ref   (atom "Toast 1")
-                                      :level :success}
-                              :key-2 {:ref   (atom "Toast 2")
-                                      :level :error}
-                              :key-4 {:ref (atom "Toast 4")
-                                      :level :success}})]
+    (let [toast (-> {:key-3 {:ref   (atom "Toast 3")
+                             :level :success}
+                     :key-5 {:ref   (atom "Toast 5")
+                             :level :error}
+                     :key-1 {:ref   (atom "Toast 1")
+                             :level :success}
+                     :key-2 {:ref   (atom "Toast 2")
+                             :level :error}
+                     :key-4 {:ref   (atom "Toast 4")
+                             :level :success}}
+                    (toast/toast)
+                    (update-in [1 1] (partial map (fn [[f & args]]
+                                                    (apply (apply f args) args)))))]
       (let [[toast-1 toast-2 toast-3 toast-4 :as toast-messages] (test.dom/query-all toast :.toast-message)]
         (testing "limits display of toasts"
           (is (= 4 (count toast-messages)))

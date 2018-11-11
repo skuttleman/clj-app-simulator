@@ -19,7 +19,8 @@
             box-shadow: 1px 1px 2px 1px rgba(0, 0, 0, .2);
             margin: 1px;
             pointer-events: auto;
-            transition: margin-right 0.2s linear;
+            transition: margin-right 0.25s linear,
+                        margin-top 0.25s linear 0.25s;
             width: 400px;
 
             &.adding {

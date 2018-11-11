@@ -303,21 +303,19 @@
           (let [[f ms] (first (spies/calls macros/set-timeout))]
             (f)
             (is (spies/called-with? dispatch [:toast/remove ::key]))
-            (is (= 201 ms))))))))
+            (is (= 501 ms))))))))
 
 (deftest ^:unit show-toast-test
   (testing "(show-toast)"
-    (let [dispatch (spies/create)
-          key (gensym)]
-      (with-redefs [gensym (spies/constantly key)
+    (let [dispatch (spies/create)]
+      (with-redefs [actions/toast-id (atom 3)
                     macros/set-timeout (spies/create)]
         ((actions/show-toast ::level "Some text") [dispatch])
-        (let [[action-type key' level ref] (ffirst (spies/calls dispatch))]
+        (let [[action-type key level ref] (ffirst (spies/calls dispatch))]
           (testing "adds the toast"
             (is (spies/called-times? dispatch 1))
-            (is (spies/called? gensym))
             (is (= :toast/adding action-type))
-            (is (= key key'))
+            (is (= 4 key))
             (is (= ::level level)))
 
           (testing "does no async actions"
@@ -332,13 +330,13 @@
                 (spies/reset! dispatch)
                 (let [[f] (first (filter (comp #{1} second) calls))]
                   (f)
-                  (spies/called-with? dispatch [:toast/display key])))
+                  (spies/called-with? dispatch [:toast/display 3])))
 
               (testing "removes the toast"
                 (spies/reset! dispatch)
                 (let [[f] (first (filter (comp #{7000} second) calls))]
                   (f)
-                  (spies/called-with? dispatch [:toast/remove key]))))))))))
+                  (spies/called-with? dispatch [:toast/remove 3]))))))))))
 
 (defn run-tests []
   (t/run-tests))

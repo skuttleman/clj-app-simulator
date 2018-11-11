@@ -6,6 +6,8 @@
     [com.ben-allred.app-simulator.ui.utils.macros :as macros :include-macros true]
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
+(defonce ^:private toast-id (atom 0))
+
 (defn ^:private dispatcher [dispatch type value]
   (cond
     (vector? type) (dispatch (conj type value))
@@ -133,11 +135,11 @@
 (defn remove-toast [key]
   (fn [[dispatch]]
     (dispatch [:toast/removing key])
-    (macros/after 201 (dispatch [:toast/remove key]))))
+    (macros/after 501 (dispatch [:toast/remove key]))))
 
 (defn show-toast [level text]
   (fn [[dispatch]]
-    (let [key (gensym)
+    (let [key (swap! toast-id inc)
           ref (delay
                 (macros/after 1 (dispatch [:toast/display key]))
                 (macros/after 7000 (dispatch (remove-toast key)))
