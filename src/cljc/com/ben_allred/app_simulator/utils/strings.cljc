@@ -23,3 +23,11 @@
                (map string/capitalize)
                (string/join sep))
           trail-dash))))
+
+(defn commanate [xs]
+  (if (<= (count xs) 2)
+    (string/join " and " xs)
+    (loop [result (first xs) [s & more] (rest xs)]
+      (if (empty? more)
+        (str result ", and " s)
+        (recur (str result ", " s) more)))))

@@ -36,7 +36,7 @@
 
 (defn update-simulator [form model->source id]
   (fn [e]
-    (let [current-model (forms/current-model form)]
+    (let [current-model @form]
       (dom/prevent-default e)
       (forms/verify! form)
       (when (and (not (forms/errors form))
@@ -45,7 +45,7 @@
                          (model->source)
                          (actions/update-simulator id)
                          (store/dispatch))
-                    (comp (resetter forms/reset! form current-model)
+                    (comp (resetter reset! form current-model)
                           (toaster :success "The simulator has been updated"))
                     (comp (resetter forms/ready! form)
                           (toaster :error "The simulator could not be updated")))))))
@@ -74,13 +74,13 @@
   (fn [_]
     (do-request
       (store/dispatch (actions/reset-simulator-config id type))
-      (comp (fns/=>> (:simulator) (sim->model) (forms/reset! form))
+      (comp (fns/=>> (:simulator) (sim->model) (reset! form))
             (toaster :success "The simulator's configuration has been reset"))
       (toaster :error "The simulator's configuration could not be reset"))))
 
 (defn create-simulator [form model->source]
   (fn [e]
-    (let [current-model (forms/current-model form)]
+    (let [current-model @form]
       (dom/prevent-default e)
       (forms/verify! form)
       (when-not (forms/errors form)
@@ -92,7 +92,7 @@
                                    (:id)
                                    (hash-map :id)
                                    (nav/nav-and-replace! :details))
-                          (resetter forms/reset! form current-model)
+                          (resetter reset! form current-model)
                           (toaster :success "The simulator has been created"))
                     (comp (resetter forms/ready! form)
                           (toaster :error "The simulator could not be created")))))))

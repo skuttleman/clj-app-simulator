@@ -78,24 +78,25 @@
                   shared.interactions/toaster (spies/create (fn [level _] level))
                   shared.interactions/resetter (spies/create (fn [f & _] f))
                   shared.interactions/do-request (spies/create)
-                  forms/current-model (spies/constantly ::model)
                   forms/sync! (spies/create)
-                  forms/reset! :reset!
                   forms/ready! :ready!]
-      (testing "replaces a resource"
-        ((interactions/replace-resource ::form ::id) ::files)
-        (is (spies/called-with? forms/current-model ::form))
-        (is (spies/called-with? forms/sync! ::form (spies/matcher any?)))
-        (is (spies/called-with? actions/upload-replace ::id ::files))
-        (is (spies/called-with? store/dispatch ::action))
-        (is (spies/called-with? shared.interactions/resetter :reset! ::form ::model))
-        (is (spies/called-with? shared.interactions/resetter :ready! ::form))
-        (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
-        (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
-        (let [[request success-fn error-fn] (first (spies/calls shared.interactions/do-request))]
-          (is (= ::request request))
-          (is (= ::reset (success-fn {:success {:reset! ::reset}})))
-          (is (= ::ready (error-fn {:error {:ready! ::ready}}))))))))
+      (let [form (reify
+                   IDeref
+                   (-deref [_]
+                     ::model))]
+        (testing "replaces a resource"
+          ((interactions/replace-resource form ::id) ::files)
+          (is (spies/called-with? forms/sync! form))
+          (is (spies/called-with? actions/upload-replace ::id ::files))
+          (is (spies/called-with? store/dispatch ::action))
+          (is (spies/called-with? shared.interactions/resetter reset! form ::model))
+          (is (spies/called-with? shared.interactions/resetter :ready! form))
+          (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
+          (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
+          (let [[request success-fn error-fn] (first (spies/calls shared.interactions/do-request))]
+            (is (= ::request request))
+            (is (= ::reset (success-fn {:success (reify IReset (-reset! [_ _] ::reset))})))
+            (is (= ::ready (error-fn {:error {:ready! ::ready}})))))))))
 
 (deftest ^:unit upload-resources-test
   (testing "(upload-resources)"
@@ -104,24 +105,25 @@
                   shared.interactions/toaster (spies/create (fn [level _] level))
                   shared.interactions/resetter (spies/create (fn [f & _] f))
                   shared.interactions/do-request (spies/create)
-                  forms/current-model (spies/constantly ::model)
                   forms/sync! (spies/create)
-                  forms/reset! :reset!
                   forms/ready! :ready!]
-      (testing "replaces a resource"
-        ((interactions/upload-resources ::form) ::files)
-        (is (spies/called-with? forms/current-model ::form))
-        (is (spies/called-with? forms/sync! ::form (spies/matcher any?)))
-        (is (spies/called-with? actions/upload ::files))
-        (is (spies/called-with? store/dispatch ::action))
-        (is (spies/called-with? shared.interactions/resetter :reset! ::form ::model))
-        (is (spies/called-with? shared.interactions/resetter :ready! ::form))
-        (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
-        (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
-        (let [[request success-fn error-fn] (first (spies/calls shared.interactions/do-request))]
-          (is (= ::request request))
-          (is (= ::reset (success-fn {:success {:reset! ::reset}})))
-          (is (= ::ready (error-fn {:error {:ready! ::ready}}))))))))
+      (let [form (reify
+                   IDeref
+                   (-deref [_]
+                     ::model))]
+        (testing "replaces a resource"
+          ((interactions/upload-resources form) ::files)
+          (is (spies/called-with? forms/sync! form))
+          (is (spies/called-with? actions/upload ::files))
+          (is (spies/called-with? store/dispatch ::action))
+          (is (spies/called-with? shared.interactions/resetter reset! form ::model))
+          (is (spies/called-with? shared.interactions/resetter :ready! form))
+          (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
+          (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
+          (let [[request success-fn error-fn] (first (spies/calls shared.interactions/do-request))]
+            (is (= ::request request))
+            (is (= ::reset (success-fn {:success (reify IReset (-reset! [_ _] ::reset))})))
+            (is (= ::ready (error-fn {:error {:ready! ::ready}})))))))))
 
 (defn run-tests []
   (t/run-tests))

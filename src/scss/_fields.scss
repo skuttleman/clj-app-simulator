@@ -1,7 +1,3 @@
-.errors {
-    border: 2px solid red;
-}
-
 .add-item, .remove-item {
     cursor: pointer;
 }
@@ -14,6 +10,7 @@
     .input, .select {
         height: 30px;
         font-size: 1em;
+        width: 100%;
     }
 
     .input, .select, .textarea {
@@ -36,9 +33,44 @@
         }
     }
 
-    .error {
-        font-weight: bold;
-        font-style: italic;
-        color: $red;
+    &.errors {
+        .input, .select, .textarea {
+            border-color: $red;
+
+            &:focus {
+                border-color: $red;
+                box-shadow: 0 0 0 0.125em rgba($red,.25);
+            }
+        }
+    }
+
+    .error-list {
+        display: flex;
+        flex-wrap: wrap;
+
+        .error {
+            font-weight: bold;
+            color: $red;
+            font-style: italic;
+
+            &:not(:last-child):not(:nth-last-child(2))::after,
+            &:not(:nth-child(1)):nth-last-child(2)::after {
+                content: ',\0000a0';
+                font-style: normal;
+                color: $gray;
+            }
+
+            &:nth-child(1):nth-last-child(2)::after {
+                content: '\0000a0';
+                font-style: normal;
+                color: $gray;
+            }
+
+            &:not(:nth-child(1)):last-child::before {
+                content: 'and\0000a0';
+                font-style: normal;
+                color: $gray;
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.ws
   (:require
     #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]
                [reagent.core :as r]])
@@ -14,11 +15,14 @@
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.templates.fields :as fields]))
 
+(defn ^:private with-attrs [attrs form path]
+  (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
+
 (defn path-field [form]
   [fields/input
    (-> {:label       "Path"
         :auto-focus? true}
-       (shared.views/with-attrs form [:path] tr/model->view tr/view->model))])
+       (with-attrs form [:path]))])
 
 (defn name-field
   ([form]
@@ -27,7 +31,7 @@
    [fields/input
     (-> {:label       "Name"
          :auto-focus? auto-focus?}
-        (shared.views/with-attrs form [:name] tr/model->view tr/view->model))]))
+        (with-attrs form [:name]))]))
 
 (defn group-field [form]
   [shared.views/group-field form tr/model->view tr/view->model])
@@ -73,7 +77,8 @@
       :text       "Save"
       :sync-text  "Saving"
       :class-name "is-info save-button"
-      :disabled   #?(:clj true :cljs (or (forms/display-errors form)
+      :disabled   #?(:clj true :cljs (or (and (forms/verified? form)
+                                              (forms/errors form))
                                          (not (forms/changed? form))))}]
     [shared.views/sync-button
      {:form       form
@@ -87,7 +92,7 @@
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [model (tr/sim->model sim)
         form #?(:clj  model
-                :cljs (forms/create model))]
+                :cljs (form/create model))]
     (fn [_simulator]
       [sim-edit-form* id form])))
 
@@ -142,7 +147,8 @@
      {:form       form
       :text       "Save"
       :sync-text  "Saving"
-      :disabled   #?(:clj true :cljs (forms/display-errors form))
+      :disabled   #?(:clj true :cljs (and (forms/verified? form)
+                                          (forms/errors form)))
       :class-name "is-info save-button"}]
     [:a.button.is-warning.reset-button
      {:href (nav*/path-for :home)}
@@ -152,7 +158,7 @@
   (let [model {:method :ws/ws
                :path   "/"}
         form #?(:clj  model
-                :cljs (forms/create model resources/validate-new))]
+                :cljs (form/create model resources/validate-new))]
     (fn []
       [:div.simulator
        [sim-create-form* form]])))

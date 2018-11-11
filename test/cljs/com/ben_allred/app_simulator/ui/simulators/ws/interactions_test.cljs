@@ -5,6 +5,7 @@
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+    [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
     [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
@@ -67,7 +68,7 @@
 (deftest ^:unit send-message-test
   (testing "(send-message)"
     (let [hide-spy (spies/create)]
-      (with-redefs [forms/syncing? (constantly ::syncing)
+      (with-redefs [forms/syncing? (constantly true)
                     shared.interactions/resetter (constantly identity)
                     shared.interactions/do-request (spies/constantly ::request)
                     store/dispatch (spies/constantly ::dispatch)
@@ -75,32 +76,34 @@
                     actions/send-message (spies/constantly ::action)
                     actions/show-toast (constantly ::toast)
                     forms/verify! (constantly nil)
-                    forms/errors (constantly nil)
-                    forms/current-model (constantly {:message ::message})]
-        (testing "handles the request"
-          (((interactions/send-message ::form ::simulator-id ::socket-id) hide-spy) ::event)
-          (is (spies/called-with? actions/send-message ::simulator-id ::socket-id ::message))
-          (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
-          (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
-          (let [[dispatch on-success on-error] (first (spies/calls shared.interactions/do-request))]
-            (is (= dispatch ::dispatch))
-            (on-success ::result)
-            (is (spies/called? hide-spy))
-            (is (= :error (on-error ::result)))))))))
+                    forms/errors (constantly nil)]
+        (let [form (reify
+                     IDeref
+                     (-deref [_]
+                       {:message ::message}))]
+          (testing "handles the request"
+            (((interactions/send-message form ::simulator-id ::socket-id) hide-spy) ::event)
+            (is (spies/called-with? actions/send-message ::simulator-id ::socket-id ::message))
+            (is (spies/called-with? store/dispatch ::action))
+            (is (spies/called-with? shared.interactions/toaster :success (spies/matcher string?)))
+            (is (spies/called-with? shared.interactions/toaster :error (spies/matcher string?)))
+            (let [[dispatch on-success on-error] (first (spies/calls shared.interactions/do-request))]
+              (is (= dispatch ::dispatch))
+              (on-success ::result)
+              (is (spies/called? hide-spy))
+              (is (= :error (on-error ::result))))))))))
 
 (deftest ^:unit show-send-modal-test
   (testing "(show-send-modal)"
-    (with-redefs [forms/display-errors (constantly nil)
-                  forms/current-model (constantly {:message ::message})
-                  forms/create (spies/constantly ::form)
+    (with-redefs [forms/errors (constantly nil)
+                  form/create (spies/constantly ::form)
                   actions/show-modal (spies/constantly ::action)
                   store/dispatch (spies/create)
                   interactions/send-message (spies/constantly ::send)]
       (let [handler (interactions/show-send-modal ::simulator-id ::socket-id)]
         (handler ::event)
         (testing "creates a form"
-          (is (spies/called-with? forms/create {} resources/socket-message)))
+          (is (spies/called-with? form/create {} resources/socket-message)))
 
         (testing "shows the modal"
           (is (spies/called-with? actions/show-modal

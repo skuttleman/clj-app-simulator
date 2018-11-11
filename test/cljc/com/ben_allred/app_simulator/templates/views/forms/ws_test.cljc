@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.ws-test
   (:require
     #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]])
     [clojure.test :as t :refer [deftest is testing]]
@@ -142,7 +143,8 @@
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
-    (with-redefs [#?@(:cljs [forms/display-errors (spies/create)
+    (with-redefs [#?@(:cljs [forms/errors (spies/create)
+                             forms/verified? (spies/create)
                              forms/changed? (spies/constantly true)
                              interactions/update-simulator (spies/constantly ::submit)
                              interactions/reset-simulator (constantly ::reset)])]
@@ -163,9 +165,10 @@
                        (not)))))))
 
       #?(:cljs
-         (testing "when there are errors"
-           (spies/reset! interactions/update-simulator forms/display-errors forms/changed?)
-           (spies/respond-with! forms/display-errors (constantly ::errors))
+         (testing "when there are verified errors"
+           (spies/reset! interactions/update-simulator forms/verified? forms/errors forms/changed?)
+           (spies/respond-with! forms/errors (constantly ::errors))
+           (spies/respond-with! forms/verified? (constantly true))
            (testing "form is not submittable"
              (let [root (ws.views/sim-edit-form* ::id ::form)]
                (is (-> root
@@ -175,7 +178,7 @@
 
       #?(:cljs
          (testing "when the form has no changes"
-           (spies/reset! interactions/update-simulator forms/display-errors forms/changed?)
+           (spies/reset! interactions/update-simulator forms/errors forms/verified? forms/changed?)
            (spies/respond-with! forms/changed? (constantly false))
            (testing "form is not submittable"
              (let [root (ws.views/sim-edit-form* ::id ::form)]
@@ -187,12 +190,12 @@
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
     (with-redefs [tr/sim->model (spies/constantly ::model)
-                  #?@(:cljs [forms/create (spies/constantly ::form)])]
+                  #?@(:cljs [form/create (spies/constantly ::form)])]
       (let [component (ws.views/sim-edit-form {:id ::id ::other ::things})]
         #?(:cljs
            (testing "creates a form"
              (is (spies/called-with? tr/sim->model {:id ::id ::other ::things}))
-             (is (spies/called-with? forms/create ::model))))
+             (is (spies/called-with? form/create ::model))))
 
         (testing "returns a component"
           (let [node (component ::simulator)]
@@ -314,13 +317,13 @@
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
     (with-redefs [nav*/path-for (spies/constantly ::home)
-                  #?@(:cljs [forms/display-errors (spies/create)
-                             interactions/create-simulator (spies/constantly ::submit)])]
+                  #?@(:cljs [forms/errors (spies/create)
+                             interactions/create-simulator (spies/constantly ::submit)
+                             forms/verified? (spies/create)])]
       (let [root (ws.views/sim-create-form* ::form)
             form (test.dom/query-one root :.simulator-create)]
         #?(:cljs
            (testing "can submit the form"
-             (is (spies/called-with? forms/display-errors ::form))
              (is (spies/called-with? interactions/create-simulator ::form))
              (is (-> form
                      (test.dom/attrs)
@@ -365,7 +368,8 @@
 
       #?(:cljs
          (testing "when there are errors"
-           (spies/respond-with! forms/display-errors (constantly ::errors))
+           (spies/respond-with! forms/errors (constantly ::errors))
+           (spies/respond-with! forms/verified? (constantly true))
            (spies/reset! interactions/create-simulator)
            (let [root (ws.views/sim-create-form* ::form)
                  form (test.dom/query-one root :.simulator-create)]
@@ -377,12 +381,12 @@
 
 (deftest ^:unit sim-create-form-test
   (testing "(sim-create-form)"
-    (with-redefs [#?@(:cljs [forms/create (spies/constantly ::form)])]
+    (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
       (let [component (ws.views/sim-create-form)
             model {:method :ws/ws :path "/"}]
         #?(:cljs
            (testing "creates a form"
-             (is (spies/called-with? forms/create model resources/validate-new))))
+             (is (spies/called-with? form/create model resources/validate-new))))
 
         (testing "renders the create form"
           (let [root (component)]

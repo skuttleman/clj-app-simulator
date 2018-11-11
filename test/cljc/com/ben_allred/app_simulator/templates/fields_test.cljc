@@ -73,14 +73,12 @@
                      :class-name ::class-name
                      :ref        ::ref
                      :label      ::label
-                     :errors     {:has :errors}}
+                     :errors     {:has :errors}
+                     :touched?   true}
               root (render (fields/-select) attrs options)
               form-field (test.dom/query-one root :.form-field)]
           (testing "renders a form-field"
-            (is (-> form-field
-                    (test.dom/attrs)
-                    (:class-name)
-                    (= :errors))))
+            (is (test.dom/query-one form-field :.form-field.errors)))
 
           (testing "renders a :label element"
             (is (-> form-field
@@ -127,7 +125,7 @@
             (let [root (render (fields/-select) (dissoc attrs :errors) options)
                   form-field (test.dom/query-one root :.form-field)]
               (testing "does not have an :errors class"
-                (is (not (:class-name (test.dom/attrs form-field)))))))
+                (is (not (test.dom/query-one form-field :.form-field.errors))))))
 
           (testing "and when :to-view is nil"
             (let [root (render (fields/-select) (dissoc attrs :to-view) options)
@@ -161,14 +159,12 @@
                      :class-name ::class-name
                      :ref        ::ref
                      :label      ::label
-                     :errors     {:has :errors}}
+                     :errors     {:has :errors}
+                     :touched?   true}
               root (render (fields/-textarea) attrs)
               form-field (test.dom/query-one root :.form-field)]
           (testing "renders a form-field"
-            (is (-> form-field
-                    (test.dom/attrs)
-                    (:class-name)
-                    (= :errors))))
+            (is (test.dom/query-one form-field :.form-field.errors)))
 
           (testing "renders a :label element"
             (is (-> form-field
@@ -204,7 +200,7 @@
             (let [root (render (fields/-textarea) (dissoc attrs :errors))
                   form-field (test.dom/query-one root :.form-field)]
               (testing "does not have an :errors class"
-                (is (not (:class-name (test.dom/attrs form-field)))))))
+                (is (not (test.dom/query-one form-field :.form-field.errors))))))
 
           (testing "and when :to-view is nil"
             (let [root (render (fields/-textarea) (dissoc attrs :to-view))
@@ -239,14 +235,12 @@
                      :ref        ::ref
                      :label      ::label
                      :errors     {:has :errors}
+                     :touched?   true
                      :type       ::type}
               root (render (fields/-input) attrs)
               form-field (test.dom/query-one root :.form-field)]
           (testing "renders a form-field"
-            (is (-> form-field
-                    (test.dom/attrs)
-                    (:class-name)
-                    (= :errors))))
+            (is (test.dom/query-one form-field :.form-field.errors)))
 
           (testing "renders a :label element"
             (is (-> form-field
@@ -283,7 +277,7 @@
             (let [root (render (fields/-input) (dissoc attrs :errors))
                   form-field (test.dom/query-one root :.form-field)]
               (testing "does not have an :errors class"
-                (is (not (:class-name (test.dom/attrs form-field)))))))
+                (is (not (test.dom/query-one form-field :.form-field.errors))))))
 
           (testing "and when :type is nil"
             (let [root (render (fields/-input) (dissoc attrs :type))
@@ -321,14 +315,12 @@
                      :on-change on-change
                      :value     [::model-key ::model-value]
                      :label     ::label
-                     :errors    [:has :errors]}
+                     :errors    [:has :errors]
+                     :touched?  true}
               root (render fields/header attrs)
               form-field (test.dom/query-one root :.form-field)]
           (testing "renders a form-field"
-            (is (-> form-field
-                    (test.dom/attrs)
-                    (:class-name)
-                    (= :errors))))
+            (is (test.dom/query-one form-field :.form-field.errors)))
 
           (testing "renders a :label element"
             (is (-> form-field
@@ -376,7 +368,7 @@
             (let [root (render fields/header (dissoc attrs :errors))
                   form-field (test.dom/query-one root :.form-field)]
               (testing "does not have an :errors class"
-                (is (not (:class-name (test.dom/attrs form-field)))))))
+                (is (not (test.dom/query-one form-field :.form-field.errors))))))
 
           (testing "and when :to-view is nil"
             (let [root (render fields/header (dissoc attrs :to-view))
@@ -414,7 +406,7 @@
                  :errors     errors
                  :key-fn     key-spy
                  :new-fn     new-spy
-                 :change-fn  change-spy
+                 :on-change  change-spy
                  :class-name ::class-name
                  :value      values}
           root (render fields/multi attrs :component)
@@ -444,8 +436,7 @@
                        (spies/reset! change-spy)
                        (test.dom/simulate-event button :click)
 
-                       (let [[f & args] (first (spies/calls change-spy))
-                             result (apply f values args)]
+                       (let [result (ffirst (spies/calls change-spy))]
                          (is (vector? result))
                          (is (->> values
                                   (map-indexed vector)
@@ -470,8 +461,7 @@
                        (spies/reset! change-spy)
                        (test.dom/simulate-event component :change ::new-value)
 
-                       (let [[f & args] (first (spies/calls change-spy))
-                             result (apply f values args)]
+                       (let [result (ffirst (spies/calls change-spy))]
                          (is (vector? result))
                          (is (= result (assoc values idx ::new-value))))))))))
 
@@ -482,8 +472,7 @@
                    (spies/reset! change-spy)
                    (test.dom/simulate-event button :click)
 
-                   (let [[f & args] (first (spies/calls change-spy))
-                         result (apply f values args)]
+                   (let [result (ffirst (spies/calls change-spy))]
                      (is (spies/called-with? new-spy 3))
                      (is (vector? result))
                      (is (= result (conj values ::new-value)))))))))))))

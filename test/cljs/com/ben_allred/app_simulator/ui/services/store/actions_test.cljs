@@ -336,7 +336,7 @@
 
               (testing "removes the toast"
                 (spies/reset! dispatch)
-                (let [[f] (first (filter (comp #{6000} second) calls))]
+                (let [[f] (first (filter (comp #{7000} second) calls))]
                   (f)
                   (spies/called-with? dispatch [:toast/remove key]))))))))))
 

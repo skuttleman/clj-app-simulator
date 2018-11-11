@@ -23,7 +23,7 @@
         (comp hide (shared.interactions/toaster :success "The resource has been deleted"))
         (shared.interactions/toaster :error "The resource could not be deleted")))))
 
-(defn show-delete-modal [title msg action] ;;disably
+(defn show-delete-modal [title msg action]
   (fn [_]
     (store/dispatch
       (actions/show-modal
@@ -37,22 +37,22 @@
 
 (defn replace-resource [form id]
   (fn [files]
-    (let [current-model (forms/current-model form)]
-      (forms/sync! form (gensym))
+    (let [current-model @form]
+      (forms/sync! form)
       (shared.interactions/do-request
         (store/dispatch (actions/upload-replace id files))
-        (comp (shared.interactions/resetter forms/reset! form current-model)
+        (comp (shared.interactions/resetter reset! form current-model)
               (shared.interactions/toaster :success "The resource has been replaced"))
         (comp (shared.interactions/resetter forms/ready! form)
               (shared.interactions/toaster :error "The resource could not be replaced"))))))
 
 (defn upload-resources [form]
   (fn [files]
-    (let [current-model (forms/current-model form)]
-      (forms/sync! form (gensym))
+    (let [current-model @form]
+      (forms/sync! form)
       (shared.interactions/do-request
         (store/dispatch (actions/upload files))
-        (comp (shared.interactions/resetter forms/reset! form current-model)
+        (comp (shared.interactions/resetter reset! form current-model)
               (shared.interactions/toaster :success
                                            "The resources have been uploaded and are available for use in a file simulator"))
         (comp (shared.interactions/resetter forms/ready! form)

@@ -25,6 +25,7 @@
     [com.ben-allred.app-simulator.ui.app :as app]
     [com.ben-allred.app-simulator.ui.app-test :as app-test]
     [com.ben-allred.app-simulator.ui.services.forms.core-test :as forms.core-test]
+    [com.ben-allred.app-simulator.ui.services.forms.standard-test :as forms.standard-test]
     [com.ben-allred.app-simulator.ui.services.navigation-test :as navigation-test]
     [com.ben-allred.app-simulator.ui.services.store.actions-test :as actions-test]
     [com.ben-allred.app-simulator.ui.services.store.activity-test :as activity-test]
@@ -80,6 +81,7 @@
   (strings-test/run-tests)
   (actions-test/run-tests)
   (forms.core-test/run-tests)
+  (forms.standard-test/run-tests)
   (navigation-test/run-tests)
   (activity-test/run-tests)
   (middleware-test/run-tests)

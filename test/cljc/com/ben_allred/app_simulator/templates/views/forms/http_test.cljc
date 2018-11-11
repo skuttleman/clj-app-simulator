@@ -2,6 +2,7 @@
   (:require
     #?@(:cljs
         [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+         [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
          [com.ben-allred.app-simulator.ui.simulators.http.interactions :as interactions]
          [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
     [clojure.test :as t :refer [deftest is testing]]
@@ -17,16 +18,8 @@
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"
-    (with-redefs [shared.views/with-attrs (spies/create (fn [attrs & _] attrs))]
-      (let [[component attrs] (http.views/path-field ::form)]
-        (is (spies/called-with? shared.views/with-attrs
-                                (spies/matcher map?)
-                                ::form
-                                [:path]
-                                tr/model->view
-                                tr/view->model))
-        (is (= fields/input component))
-        (is (= "Path" (:label attrs)))))))
+    (is (= [shared.views/path-field ::form tr/model->view tr/view->model]
+           (http.views/path-field ::form)))))
 
 (deftest ^:unit name-field-test
   (testing "(name-field)"
@@ -69,81 +62,18 @@
 
 (deftest ^:unit status-field-test
   (testing "(status-field)"
-    (with-redefs [shared.views/with-attrs (spies/create (fn [v & _] (assoc v :more ::attrs)))]
-      (testing "renders the form field"
-        (let [[node attrs resource] (http.views/status-field ::form)]
-          (is (spies/called-with? shared.views/with-attrs
-                                  (spies/matcher any?)
-                                  ::form
-                                  [:response :status]
-                                  tr/model->view
-                                  tr/view->model))
-          (is (= fields/select node))
-          (is (= "Status" (:label attrs)))
-          (is (= ::attrs (:more attrs)))
-          (is (= resources/statuses resource)))))))
+    (is (= [shared.views/status-field ::form tr/model->view tr/view->model]
+           (http.views/status-field ::form)))))
 
 (deftest ^:unit delay-field-test
   (testing "(delay-field)"
-    (with-redefs [shared.views/with-attrs (spies/create (fn [v & _] (assoc v :more ::attrs)))]
-      (testing "renders the form field"
-        (let [[node attrs] (http.views/delay-field ::form)]
-          (is (spies/called-with? shared.views/with-attrs
-                                  (spies/matcher any?)
-                                  ::form
-                                  [:delay]
-                                  tr/model->view
-                                  tr/view->model))
-          (is (= fields/input node))
-          (is (= "Delay (ms)" (:label attrs)))
-          (is (= ::attrs (:more attrs))))))))
+    (is (= [shared.views/delay-field ::form tr/model->view tr/view->model]
+           (http.views/delay-field ::form)))))
 
 (deftest ^:unit headers-field-test
   (testing "(headers-field)"
-    (with-redefs [#?@(:cljs [forms/update-in (spies/create)
-                             forms/current-model (constantly {:response {:headers ::headers}})
-                             forms/display-errors (constantly {:response {:headers ::errors}})
-                             forms/syncing? (constantly ::syncing)])]
-      (let [root (http.views/headers-field ::form)
-            multi (test.dom/query-one root fields/multi)
-            attrs (test.dom/attrs multi)]
-        (testing "renders multi field"
-          (is (= fields/header (last multi))))
-
-        (testing "has a :label"
-          (is (= "Headers" (:label attrs))))
-
-        (testing "has a :key-fn function which produces a key"
-          (let [key-fn (:key-fn attrs)]
-            (is (= "header-key" (key-fn ["key" ::whatever])))))
-
-        (testing "has a :new-fn function"
-          (let [new-fn (:new-fn attrs)]
-            (is (= ["" ""] (new-fn ::anything-at-all)))))
-
-        #?(:cljs
-           (testing "has a :change-fn function which updates the form"
-             (let [change-fn (:change-fn attrs)]
-               (change-fn :a :b :c)
-               (is (spies/called-with? forms/update-in ::form [:response :headers] :a :b :c)))))
-
-        #?(:cljs
-           (testing "has a :value"
-             (is (= ::headers (:value attrs)))))
-
-        #?(:cljs
-           (testing "has a :to-view function"
-             (let [to-view (:to-view attrs)]
-               (is (= ["Some-Header" "some-value"] (to-view [:some-header "some-value"]))))))
-
-        #?(:cljs
-           (testing "has a :to-model function"
-             (let [to-model (:to-model attrs)]
-               (is (= [:some-header "some-value"] (to-model ["Some-Header" "some-value"]))))))
-
-        #?(:cljs
-           (testing "has :errors"
-             (is (= ::errors (:errors attrs)))))))))
+    (is (= [shared.views/headers-field ::form tr/model->view tr/view->model]
+           (http.views/headers-field ::form)))))
 
 (deftest ^:unit body-field-test
   (testing "(body-field)"
@@ -162,24 +92,13 @@
 
 (deftest ^:unit method-field-test
   (testing "(method-field)"
-    (with-redefs [shared.views/with-attrs (spies/create (fn [v & _] (assoc v :more ::attrs)))]
-      (testing "renders the form field"
-        (let [[node attrs resource] (http.views/method-field ::form)]
-          (is (spies/called-with? shared.views/with-attrs
-                                  (spies/matcher any?)
-                                  ::form
-                                  [:method]
-                                  tr/model->view
-                                  tr/view->model))
-          (is (= fields/select node))
-          (is (= "HTTP Method" (:label attrs)))
-          (is (true? (:auto-focus? attrs)))
-          (is (= ::attrs (:more attrs)))
-          (is (= resources/http-methods resource)))))))
+    (is (= [shared.views/method-field ::form resources/http-methods tr/model->view tr/view->model]
+           (http.views/method-field ::form)))))
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
-    (with-redefs [#?@(:cljs [forms/display-errors (spies/create)
+    (with-redefs [#?@(:cljs [forms/errors (spies/create)
+                             forms/verified? (spies/create)
                              forms/changed? (spies/constantly true)
                              interactions/update-simulator (spies/constantly ::submit)
                              interactions/reset-simulator (spies/constantly ::reset)])]
@@ -226,9 +145,10 @@
 
         #?(:cljs
            (testing "and when submitting the form"
-             (testing "and when there are errors"
-               (spies/reset! interactions/update-simulator forms/display-errors forms/changed?)
-               (spies/respond-with! forms/display-errors (constantly ::errors))
+             (testing "and when there are verified errors"
+               (spies/reset! interactions/update-simulator forms/errors forms/changed?)
+               (spies/respond-with! forms/errors (constantly ::errors))
+               (spies/respond-with! forms/verified? (constantly true))
                (let [root (http.views/sim-edit-form* ::id ::form)
                      edit-form (test.dom/query-one root :.simulator-edit)]
                  (testing "has an :on-submit attr"
@@ -245,7 +165,7 @@
                            (:disabled))))))
 
              (testing "and when there are no changes"
-               (spies/reset! interactions/update-simulator forms/display-errors forms/changed?)
+               (spies/reset! interactions/update-simulator forms/errors forms/verified? forms/changed?)
                (spies/respond-with! forms/changed? (constantly false))
                (let [root (http.views/sim-edit-form* ::id ::form)
                      edit-form (test.dom/query-one root :.simulator-edit)]
@@ -263,7 +183,7 @@
                            (:disabled))))))
 
              (testing "and when there are no errors and changes"
-               (spies/reset! interactions/update-simulator forms/display-errors forms/changed?)
+               (spies/reset! interactions/update-simulator forms/errors forms/changed?)
                (let [root (http.views/sim-edit-form* ::id ::form)
                      edit-form (test.dom/query-one root :.simulator-edit)]
                  (testing "has an :on-submit attr"
@@ -296,7 +216,7 @@
                                                       :header-a "thing"
                                                       :header-b ["double" "things"]}}}
                      :id     ::id}]
-      (with-redefs [#?@(:cljs [forms/create (spies/constantly ::form)])]
+      (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
         (let [root (http.views/sim-edit-form simulator)
               expected {:group       ::group
                         :name        ::name
@@ -310,7 +230,7 @@
                                                 [:header-c "header-c"]]}}]
           #?(:cljs
              (testing "creates a form from source data"
-               (is (spies/called-with? forms/create expected resources/validate-existing))))
+               (is (spies/called-with? form/create expected resources/validate-existing))))
 
           (testing "returns a function that renders the form"
             (is (= [http.views/sim-edit-form* ::id #?(:clj expected :cljs ::form)]
@@ -370,7 +290,8 @@
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
     (with-redefs [nav*/path-for (spies/constantly ::href)
-                  #?@(:cljs [forms/display-errors (spies/create)
+                  #?@(:cljs [forms/errors (spies/create)
+                             forms/verified? (spies/create)
                              interactions/create-simulator (spies/constantly ::submit)])]
       (let [root (http.views/sim-create-form* ::form)
             form (test.dom/query-one root :.simulator-create)]
@@ -409,12 +330,14 @@
                    :cljs (not (:disabled attrs)))))))
 
       #?(:cljs
-         (testing "when there are errors"
-           (spies/reset! forms/display-errors interactions/create-simulator)
-           (spies/respond-with! forms/display-errors (constantly ::errors))
+         (testing "when there are verified errors"
+           (spies/reset! forms/errors forms/verified? interactions/create-simulator)
+           (spies/respond-with! forms/errors (constantly ::errors))
+           (spies/respond-with! forms/verified? (constantly true))
            (testing "renders a disabled save button"
              (let [root (http.views/sim-create-form* ::form)]
-               (is (spies/called-with? forms/display-errors ::form))
+               (is (spies/called-with? forms/errors ::form))
+               (is (spies/called-with? forms/verified? ::form))
                (is (spies/called-with? interactions/create-simulator ::form))
                (is (-> root
                        (test.dom/query-one shared.views/sync-button)
@@ -423,7 +346,7 @@
 
 (deftest ^:unit sim-create-form-test
   (testing "(sim-create-form)"
-    (with-redefs [#?@(:cljs [forms/create (spies/constantly ::form)])]
+    (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
       (testing "renders the form"
         (let [component (http.views/sim-create-form)
               model {:response {:status 200
@@ -432,7 +355,7 @@
                      :path     "/"
                      :delay    0}]
           #?(:cljs
-             (is (spies/called-with? forms/create model resources/validate-new)))
+             (is (spies/called-with? form/create model resources/validate-new)))
           (let [root (component)]
             (is (test.dom/contains? root [http.views/sim-create-form* #?(:clj model :cljs ::form)]))))))))
 

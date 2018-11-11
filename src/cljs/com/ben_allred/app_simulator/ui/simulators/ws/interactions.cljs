@@ -2,12 +2,13 @@
   (:require
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
+    [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+    [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
     [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-    [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]))
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 
 (defn update-simulator [form id]
@@ -34,21 +35,21 @@
 (defn send-message [form simulator-id socket-id]
   (fn [hide]
     (fn [_]
-      (let [current-model (forms/current-model form)]
+      (let [current-model @form]
         (forms/verify! form)
         (when-not (forms/errors form)
           (-> simulator-id
               (actions/send-message socket-id (:message current-model))
               (store/dispatch)
               (shared.interactions/do-request (comp hide
-                                                    (shared.interactions/resetter forms/reset! form current-model)
+                                                    (shared.interactions/resetter reset! form current-model)
                                                     (shared.interactions/toaster :success "The message has been sent"))
                                               (comp (shared.interactions/resetter forms/ready! form)
                                                     (shared.interactions/toaster :error "The message could not be sent")))))))))
 
 (defn show-send-modal [simulator-id socket-id]
   (fn [_]
-    (let [form (forms/create {} resources/socket-message)]
+    (let [form (form/create {} resources/socket-message)]
       (store/dispatch
         (actions/show-modal
           [:modals/message-editor form nil resources/view->model]

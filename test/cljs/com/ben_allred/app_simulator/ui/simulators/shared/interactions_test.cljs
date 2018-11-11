@@ -77,19 +77,22 @@
 
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
-    (with-redefs [forms/current-model (constantly ::model)
-                  forms/verify! (constantly nil)
+    (with-redefs [forms/verify! (constantly nil)
                   forms/changed? (constantly true)
                   dom/prevent-default (spies/create)
                   actions/update-simulator (spies/constantly ::action)
                   store/dispatch (spies/constantly ::dispatch)
-                  forms/reset! (spies/create)
                   forms/errors (spies/create)
                   shared.interactions/do-request (spies/create)]
-      (let [source-spy (spies/constantly ::source)]
+      (let [source-spy (spies/constantly ::source)
+            form (reify
+                   IDeref
+                   (-deref [_] ::model)
+                   IReset
+                   (-reset! [_ _]))]
         (testing "when form is submittable"
-          (spies/reset! dom/prevent-default shared.interactions/do-request source-spy actions/update-simulator store/dispatch forms/reset!)
-          ((shared.interactions/update-simulator ::form source-spy ::id) ::event)
+          (spies/reset! dom/prevent-default shared.interactions/do-request source-spy actions/update-simulator store/dispatch reset!)
+          ((shared.interactions/update-simulator form source-spy ::id) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? dom/prevent-default ::event)))
@@ -104,15 +107,13 @@
                 (is (= ::dispatch request)))
 
               (testing "handles success"
-                (spies/reset! source-spy actions/update-simulator store/dispatch forms/reset!)
-                (on-success ::ignored)
-
-                (is (spies/called-with? forms/reset! ::form ::model))))))
+                (spies/reset! source-spy actions/update-simulator store/dispatch reset!)
+                (on-success ::ignored)))))
 
         (testing "when form has errors"
           (spies/reset! dom/prevent-default shared.interactions/do-request)
           (spies/respond-with! forms/errors (constantly ::errors))
-          ((shared.interactions/update-simulator ::form source-spy ::id) ::event)
+          ((shared.interactions/update-simulator form source-spy ::id) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? dom/prevent-default ::event)))
@@ -167,14 +168,15 @@
 
 (deftest ^:unit reset-config-test
   (testing "(reset-config)"
-    (let [model-spy (spies/constantly ::model)]
-      (with-redefs [actions/reset-simulator-config (spies/constantly ::action)
-                    store/dispatch (spies/constantly ::dispatch)
-                    forms/reset! (spies/create)
-                    shared.interactions/do-request (spies/create)]
+    (with-redefs [actions/reset-simulator-config (spies/constantly ::action)
+                  store/dispatch (spies/constantly ::dispatch)
+                  shared.interactions/do-request (spies/create)]
+      (let [model-spy (spies/constantly ::model)
+            form (reify
+                   IReset (-reset! [_ _]))]
         (testing "when making the request"
-          (spies/reset! actions/reset-simulator-config store/dispatch forms/reset! model-spy)
-          ((shared.interactions/reset-config ::form model-spy ::id ::type) ::event)
+          (spies/reset! actions/reset-simulator-config store/dispatch reset! model-spy)
+          ((shared.interactions/reset-config form model-spy ::id ::type) ::event)
           (let [[request on-success] (first (spies/calls shared.interactions/do-request))]
             (testing "dispatches an action"
 
@@ -183,28 +185,29 @@
               (is (= ::dispatch request)))
 
             (testing "handles success"
-              (spies/reset! actions/reset-simulator-config store/dispatch forms/reset! model-spy)
+              (spies/reset! actions/reset-simulator-config store/dispatch reset! model-spy)
               (on-success {:simulator ::response})
 
-              (is (spies/called-with? model-spy ::response))
-              (is (spies/called-with? forms/reset! ::form ::model)))))))))
+              (is (spies/called-with? model-spy ::response)))))))))
 
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
-    (let [source-spy (spies/constantly ::source)]
-      (with-redefs [forms/current-model (constantly ::model)
-                    forms/verify! (constantly nil)
-                    forms/errors (spies/constantly nil)
-                    dom/prevent-default (spies/create)
-                    actions/create-simulator (spies/constantly ::action)
-                    store/dispatch (spies/constantly ::dispatch)
-                    nav/nav-and-replace! (spies/create)
-                    shared.interactions/do-request (spies/create)
-                    shared.interactions/resetter (spies/create (constantly identity))]
+    (with-redefs [forms/verify! (constantly nil)
+                  forms/errors (spies/constantly nil)
+                  dom/prevent-default (spies/create)
+                  actions/create-simulator (spies/constantly ::action)
+                  store/dispatch (spies/constantly ::dispatch)
+                  nav/nav-and-replace! (spies/create)
+                  shared.interactions/do-request (spies/create)
+                  shared.interactions/resetter (spies/create (constantly identity))]
+      (let [source-spy (spies/constantly ::source)
+            form (reify
+                   IDeref
+                   (-deref [_] ::model))]
         (testing "when form is submittable"
           (spies/reset! dom/prevent-default shared.interactions/do-request source-spy
                         actions/create-simulator store/dispatch nav/nav-and-replace!)
-          ((shared.interactions/create-simulator ::form source-spy) ::event)
+          ((shared.interactions/create-simulator form source-spy) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? dom/prevent-default ::event)))
@@ -216,8 +219,8 @@
                 (is (spies/called-with? source-spy ::model))
                 (is (spies/called-with? actions/create-simulator ::source))
                 (is (spies/called-with? store/dispatch ::action))
-                (is (spies/called-with? shared.interactions/resetter forms/reset! ::form ::model))
-                (is (spies/called-with? shared.interactions/resetter forms/ready! ::form))
+                (is (spies/called-with? shared.interactions/resetter reset! form ::model))
+                (is (spies/called-with? shared.interactions/resetter forms/ready! form))
                 (is (= ::dispatch request)))
 
               (testing "handles success"
@@ -229,7 +232,7 @@
         (testing "when form is not submittable"
           (spies/reset! dom/prevent-default shared.interactions/do-request)
           (spies/respond-with! forms/errors (constantly ::errors))
-          ((shared.interactions/create-simulator ::form source-spy) ::event)
+          ((shared.interactions/create-simulator form source-spy) ::event)
 
           (testing "prevents default behavior"
             (is (spies/called-with? dom/prevent-default ::event)))

@@ -140,6 +140,6 @@
     (let [key (gensym)
           ref (delay
                 (macros/after 1 (dispatch [:toast/display key]))
-                (macros/after 6000 (dispatch (remove-toast key)))
+                (macros/after 7000 (dispatch (remove-toast key)))
                 text)]
       (dispatch [:toast/adding key level ref]))))

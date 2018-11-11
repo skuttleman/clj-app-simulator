@@ -1,11 +1,8 @@
 (ns com.ben-allred.app-simulator.templates.resources.http
   (:require
     [clojure.string :as string]
-    [com.ben-allred.app-simulator.templates.resources.shared :as shared.resources]
     [com.ben-allred.app-simulator.utils.numbers :as nums]
     [com.ben-allred.formation.core :as f]))
-
-(def statuses shared.resources/statuses)
 
 (def http-methods
   (->> [:http/get :http/post :http/put :http/patch :http/delete]

@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.file
   (:require
     #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
                [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
     [com.ben-allred.app-simulator.services.navigation :as nav*]
@@ -15,9 +16,25 @@
   (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
 
 (defn path-field [form]
-  [fields/input
-   (-> {:label "Path"}
-       (with-attrs form [:path]))])
+  [shared.views/path-field form tr/model->view tr/view->model])
+
+(defn group-field [form]
+  [shared.views/group-field form tr/model->view tr/view->model])
+
+(defn description-field [form]
+  [shared.views/description-field form tr/model->view tr/view->model])
+
+(defn status-field [form]
+  [shared.views/status-field form tr/model->view tr/view->model])
+
+(defn delay-field [form]
+  [shared.views/delay-field form tr/model->view tr/view->model])
+
+(defn headers-field [form]
+  [shared.views/headers-field form tr/model->view tr/view->model])
+
+(defn method-field [form]
+  [shared.views/method-field form resources/file-methods tr/model->view tr/view->model])
 
 (defn name-field
   ([form]
@@ -28,33 +45,6 @@
          :auto-focus? auto-focus?}
         (with-attrs form [:name]))]))
 
-(defn group-field [form]
-  [shared.views/group-field form tr/model->view tr/view->model])
-
-(defn description-field [form]
-  [shared.views/description-field form tr/model->view tr/view->model])
-
-(defn status-field [form]
-  [fields/select
-   (-> {:label "Status"}
-       (with-attrs form [:response :status]))
-   resources/statuses])
-
-(defn delay-field [form]
-  [fields/input
-   (-> {:label "Delay (ms)"}
-       (with-attrs form [:delay]))])
-
-(defn headers-field [form]
-  [fields/multi
-   (-> {:label  "Headers"
-        :key-fn #(str "header-" (first %))
-        :new-fn (constantly ["" ""])
-        #?@(:cljs [:change-fn #(apply forms/update-in form [:response :headers] %&)])}
-       (with-attrs form [:response :headers])
-       (dissoc :on-change))
-   fields/header])
-
 (defn file-field [form resources]
   [fields/select
    (-> {:label "File"}
@@ -62,13 +52,6 @@
    (->> resources
         (map (juxt :id :filename))
         (sort-by second))])
-
-(defn method-field [form]
-  [fields/select
-   (-> {:label       "HTTP Method"
-        :auto-focus? true}
-       (with-attrs form [:method]))
-   resources/file-methods])
 
 (defn sim-edit-form* [id form resources]
   [:form.simulator-edit
@@ -86,7 +69,8 @@
       :text       "Save"
       :sync-text  "Saving"
       :class-name "is-info save-button"
-      :disabled   #?(:clj true :cljs (or (forms/display-errors form)
+      :disabled   #?(:clj true :cljs (or (and (forms/verified? form)
+                                              (forms/errors form))
                                          (not (forms/changed? form))))}]
     [shared.views/sync-button
      {:form       form
@@ -103,7 +87,7 @@
                  (not (contains? (set (map :id resources)) (get-in model [:response :file])))
                  (update :response dissoc :file))
         form #?(:clj  model'
-                :cljs (forms/create model' resources/validate-existing))]
+                :cljs (form/create model' resources/validate-existing))]
     (fn [_simulator resources]
       [sim-edit-form* id form resources])))
 
@@ -144,7 +128,8 @@
      {:form       form
       :text       "Save"
       :sync-text  "Saving"
-      :disabled   #?(:clj true :cljs (forms/display-errors form))
+      :disabled   #?(:clj true :cljs (and (forms/errors form)
+                                          (forms/verified? form)))
       :class-name "is-info save-button"}]
     [:a.button.is-warning.reset-button
      {:href (nav*/path-for :home)}
@@ -156,7 +141,7 @@
                :method   :file/get
                :response {:status 200}}
         form #?(:clj  model
-                :cljs (forms/create model resources/validate-new))]
+                :cljs (form/create model resources/validate-new))]
     (fn [resources]
       [:div.simulator
        [sim-create-form* form resources]])))

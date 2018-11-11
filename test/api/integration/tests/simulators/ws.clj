@@ -280,7 +280,7 @@
             (testing "when connecting to a socket simulator"
               (let [chan-1 (async/chan 64)
                     ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                          :on-msg (fn [_ msg] (async/put! chan msg))
+                                          :on-msg (fn [_ msg] (async/put! chan-1 msg))
                                           :to-clj edn/read-string)
                     {:keys [event data]} (chans/<⏰!! chan)
                     socket-id-1 (:socket-id data)]
@@ -291,7 +291,7 @@
                 (testing "and when connecting a second socket"
                   (let [chan-2 (async/chan 64)
                         ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                              :on-msg (fn [_ msg] (async/put! chan msg))
+                                              :on-msg (fn [_ msg] (async/put! chan-2 msg))
                                               :to-clj edn/read-string)
                         {:keys [event data]} (chans/<⏰!! chan)
                         socket-id-2 (:socket-id data)]
@@ -539,7 +539,7 @@
           (testing "when connecting to a socket simulator"
             (let [chan-1 (async/chan 64)
                   ws-1 (test.ws/connect "/simulators/some/:url-param"
-                                        :on-msg (fn [_ msg] (async/put! chan msg))
+                                        :on-msg (fn [_ msg] (async/put! chan-1 msg))
                                         :to-clj edn/read-string)
                   {:keys [event data]} (chans/<⏰!! chan)
                   socket-id-1 (uuids/->uuid (:socket-id data))]
@@ -550,7 +550,7 @@
               (testing "and when connecting a second socket"
                 (let [chan-2 (async/chan 64)
                       ws-2 (test.ws/connect "/simulators/some/:url-param"
-                                            :on-msg (fn [_ msg] (async/put! chan msg))
+                                            :on-msg (fn [_ msg] (async/put! chan-2 msg))
                                             :to-clj edn/read-string)
                       {:keys [event data]} (chans/<⏰!! chan)
                       socket-id-2 (uuids/->uuid (:socket-id data))]

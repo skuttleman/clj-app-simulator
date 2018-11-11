@@ -1,12 +1,9 @@
 (ns com.ben-allred.app-simulator.templates.resources.file
   (:require
     [clojure.string :as string]
-    [com.ben-allred.app-simulator.templates.resources.shared :as shared.resources]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.numbers :as nums]
     [com.ben-allred.formation.core :as f]))
-
-(def statuses shared.resources/statuses)
 
 (def file-methods
   (->> [:file/get :file/post :file/put :file/patch :file/delete]

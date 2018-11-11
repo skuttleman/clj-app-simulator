@@ -16,7 +16,12 @@
 (deftest ^:unit view->model-test
   (testing "(view->model)"
     (testing "trims the path to nil"
-      (is (identical? strings/trim-to-nil (:path tr/view->model))))
+      (let [view->model (:path tr/view->model)]
+        (are [input expected] (= expected (view->model input))
+          "" nil
+          " \t \n" nil
+          "something" "something"
+          "\tsomething\n" "something")))
 
     (testing "converts the method to a keyword"
       (is (= keyword (:method tr/view->model))))))
