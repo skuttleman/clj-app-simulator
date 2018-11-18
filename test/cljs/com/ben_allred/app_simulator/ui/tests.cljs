@@ -24,7 +24,6 @@
     [com.ben-allred.app-simulator.templates.views.simulators-test :as views.simulators-test]
     [com.ben-allred.app-simulator.ui.app :as app]
     [com.ben-allred.app-simulator.ui.app-test :as app-test]
-    [com.ben-allred.app-simulator.ui.services.forms.core-test :as forms.core-test]
     [com.ben-allred.app-simulator.ui.services.forms.standard-test :as forms.standard-test]
     [com.ben-allred.app-simulator.ui.services.navigation-test :as navigation-test]
     [com.ben-allred.app-simulator.ui.services.store.actions-test :as actions-test]
@@ -41,6 +40,7 @@
     [com.ben-allred.app-simulator.ui.views.components.toast-test :as toast-test]
     [com.ben-allred.app-simulator.ui.views.main-test :as main-test]
     [com.ben-allred.app-simulator.ui.views.resources-test :as resources-test]
+    [com.ben-allred.app-simulator.utils.chans-test :as chans-test]
     [com.ben-allred.app-simulator.utils.colls-test :as colls-test]
     [com.ben-allred.app-simulator.utils.keywords-test :as keywords-test]
     [com.ben-allred.app-simulator.utils.maps-test :as maps-test]
@@ -74,13 +74,13 @@
   (views.forms.shared-test/run-tests)
   (views.forms.ws-test/run-tests)
   (views.simulators-test/run-tests)
+  (chans-test/run-tests)
   (colls-test/run-tests)
   (keywords-test/run-tests)
   (maps-test/run-tests)
   (query-params-test/run-tests)
   (strings-test/run-tests)
   (actions-test/run-tests)
-  (forms.core-test/run-tests)
   (forms.standard-test/run-tests)
   (navigation-test/run-tests)
   (activity-test/run-tests)

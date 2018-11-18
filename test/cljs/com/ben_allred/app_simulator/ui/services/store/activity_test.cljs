@@ -4,9 +4,9 @@
     [com.ben-allred.app-simulator.services.env :as env]
     [com.ben-allred.app-simulator.services.ws :as ws]
     [com.ben-allred.app-simulator.ui.services.store.activity :as activity]
+    [com.ben-allred.app-simulator.ui.utils.macros :as macros :include-macros true]
     [com.ben-allred.app-simulator.utils.transit :as transit]
-    [test.utils.spies :as spies]
-    [com.ben-allred.app-simulator.ui.utils.macros :as macros]))
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit sub-test
   (testing "(sub)"

@@ -33,6 +33,19 @@
         }
     }
 
+    .field-info {
+        display: flex;
+
+        .label {
+            min-height: 24px;
+        }
+
+        & > *:not(:last-child) {
+            margin-right: 10px;
+            margin-bottom: 0px;
+        }
+    }
+
     &.errors {
         .input, .select, .textarea {
             border-color: $red;

@@ -663,10 +663,11 @@
                         (is (empty? requests))))))
 
                 (testing "and when disconnecting all sockets"
+                  (chans/flush! chan)
                   (sim-core/disconnect! (sim->id "/some/:url-param"))
                   (let [{event-1 :event data-1 :data} (chans/<⏰!! chan)
                         {event-2 :event data-2 :data} (chans/<⏰!! chan)
-                        sockets #{(:socket-id data-1) (:socket-id data-2)}]
+                        sockets (into #{} (map :socket-id) [data-1 data-2])]
                     (testing "publishes an event for the first socket"
                       (is (= :simulators.ws/disconnect (keyword event-1)))
                       (is (contains? sockets socket-id-1)))
@@ -706,6 +707,7 @@
                 (is (= :simulators.ws/connect (keyword event-2))))
 
               (testing "and when resetting the simulator"
+                (chans/flush! chan)
                 (sim-core/reset! (sim->id "/some/:url-param"))
                 (testing "publishes an event for each socket that was disconnected"
                   (let [{event-1 :event data-1 :data} (chans/<⏰!! chan)

@@ -1,10 +1,10 @@
 (ns com.ben-allred.app-simulator.ui.services.store.actions
   (:require
-    [cljs.core.async :as async]
     [com.ben-allred.app-simulator.services.files :as files]
     [com.ben-allred.app-simulator.services.http :as http]
     [com.ben-allred.app-simulator.ui.utils.macros :as macros :include-macros true]
-    [com.ben-allred.app-simulator.utils.logging :as log]))
+    [com.ben-allred.app-simulator.utils.logging :as log]
+    [com.ben-allred.app-simulator.utils.chans :as ch]))
 
 (defonce ^:private toast-id (atom 0))
 
@@ -20,10 +20,9 @@
   ([request dispatch success-type]
    (request* request dispatch success-type nil))
   ([request dispatch success-type error-type]
-   (async/go
-     (let [[status result :as response] (async/<! request)]
-       (dispatcher dispatch (if (= :success status) success-type error-type) result)
-       response))))
+   (-> request
+       (ch/->peek [status result]
+         (dispatcher dispatch (if (= :success status) success-type error-type) result)))))
 
 (def request-simulators
   (fn [[dispatch]]

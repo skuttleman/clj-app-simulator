@@ -1,10 +1,10 @@
 (ns com.ben-allred.app-simulator.ui.simulators.file.interactions
   (:require
     [com.ben-allred.app-simulator.templates.transformations.file :as tr]
-    [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
-    [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]))
+    [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+    [com.ben-allred.app-simulator.utils.chans :as ch :include-macros true]))
 
 (defn update-simulator [form id]
   (shared.interactions/update-simulator form tr/model->source id))
@@ -18,10 +18,13 @@
 (defn ^:private delete-file [action]
   (fn [hide]
     (fn [_]
-      (shared.interactions/do-request
-        (store/dispatch action)
-        (comp hide (shared.interactions/toaster :success "The resource has been deleted"))
-        (shared.interactions/toaster :error "The resource could not be deleted")))))
+      (-> action
+          (store/dispatch)
+          (ch/->then body
+            (shared.interactions/toast body :success "The resource has been deleted"))
+          (ch/->catch body
+            (shared.interactions/toast body :error "The resource could not be deleted"))
+          (ch/finally hide)))))
 
 (defn show-delete-modal [title msg action]
   (fn [_]
@@ -38,23 +41,26 @@
 (defn replace-resource [form id]
   (fn [files]
     (let [current-model @form]
-      (forms/sync! form)
-      (shared.interactions/do-request
-        (store/dispatch (actions/upload-replace id files))
-        (comp (shared.interactions/resetter reset! form current-model)
-              (shared.interactions/toaster :success "The resource has been replaced"))
-        (comp (shared.interactions/resetter forms/ready! form)
-              (shared.interactions/toaster :error "The resource could not be replaced"))))))
+      (-> (actions/upload-replace id files)
+          (store/dispatch)
+          (ch/->then body
+            (shared.interactions/toast body :success "The resource has been replaced")
+            (reset! form current-model))
+          (ch/->catch body
+            (shared.interactions/toast body :error "The resource could not be replaced"))))))
 
 (defn upload-resources [form]
   (fn [files]
     (let [current-model @form]
-      (forms/sync! form)
-      (shared.interactions/do-request
-        (store/dispatch (actions/upload files))
-        (comp (shared.interactions/resetter reset! form current-model)
-              (shared.interactions/toaster :success
-                                           "The resources have been uploaded and are available for use in a file simulator"))
-        (comp (shared.interactions/resetter forms/ready! form)
-              (shared.interactions/toaster :error
-                                           "The resources could not be uploaded"))))))
+      (-> files
+          (actions/upload)
+          (store/dispatch)
+          (ch/->then body
+            (shared.interactions/toast body
+                                       :success
+                                       "The resources have been uploaded and are available for use in a file simulator")
+            (reset! form current-model))
+          (ch/->catch body
+            (shared.interactions/toast body
+                                       :error
+                                       "The resources could not be uploaded"))))))

@@ -115,12 +115,6 @@
                 (is (= option (:value attrs)))
                 (is (test.dom/contains? elem label)))))
 
-          (testing "and when rendering without a label"
-            (let [root (render (fields/-select) (dissoc attrs :label) options)
-                  form-field (test.dom/query-one root :.form-field)]
-              (testing "does not render a :label element"
-                (is (not (test.dom/query-one form-field :label))))))
-
           (testing "and when rendering without errors"
             (let [root (render (fields/-select) (dissoc attrs :errors) options)
                   form-field (test.dom/query-one root :.form-field)]
@@ -189,12 +183,6 @@
                  (is (spies/called-with? dom/target-value [{:new :value}]))
                  (is (spies/called-with? to-model {:new :value}))
                  (is (spies/called-with? on-change {:new :value :to-model true})))))
-
-          (testing "and when rendering without a label"
-            (let [root (render (fields/-textarea) (dissoc attrs :label))
-                  form-field (test.dom/query-one root :.form-field)]
-              (testing "does not render a :label element"
-                (is (not (test.dom/query-one form-field :label))))))
 
           (testing "and when rendering without errors"
             (let [root (render (fields/-textarea) (dissoc attrs :errors))
@@ -266,12 +254,6 @@
                  (is (spies/called-with? dom/target-value [{:new :value}]))
                  (is (spies/called-with? to-model {:new :value}))
                  (is (spies/called-with? on-change {:new :value :to-model true})))))
-
-          (testing "and when rendering without a label"
-            (let [root (render (fields/-input) (dissoc attrs :label))
-                  form-field (test.dom/query-one root :.form-field)]
-              (testing "does not render a :label element"
-                (is (not (test.dom/query-one form-field :label))))))
 
           (testing "and when rendering without errors"
             (let [root (render (fields/-input) (dissoc attrs :errors))
@@ -357,12 +339,6 @@
                  (is (spies/called-with? dom/target-value [::new-header]))
                  (is (spies/called-with? to-model [::view-key ::new-header]))
                  (is (spies/called-with? on-change ::model)))))
-
-          (testing "and when rendering without a label"
-            (let [root (render fields/header (dissoc attrs :label))
-                  form-field (test.dom/query-one root :.form-field)]
-              (testing "does not render a :label element"
-                (is (not (test.dom/query-one form-field :label))))))
 
           (testing "and when rendering without errors"
             (let [root (render fields/header (dissoc attrs :errors))

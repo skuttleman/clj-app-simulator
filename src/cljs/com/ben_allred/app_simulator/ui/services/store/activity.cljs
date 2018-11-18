@@ -2,7 +2,7 @@
   (:require
     [com.ben-allred.app-simulator.services.env :as env]
     [com.ben-allred.app-simulator.services.ws :as ws]
-    [com.ben-allred.app-simulator.ui.utils.macros :as macros]
+    [com.ben-allred.app-simulator.ui.utils.macros :as macros :include-macros true]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.transit :as transit]))
 

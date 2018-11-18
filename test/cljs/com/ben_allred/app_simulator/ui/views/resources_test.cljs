@@ -1,9 +1,9 @@
 (ns com.ben-allred.app-simulator.ui.views.resources-test
   (:require
     [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.views.resources :as views.res]
-    [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
-    [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
+    [com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
     [com.ben-allred.app-simulator.ui.views.components.core :as components]
@@ -16,7 +16,7 @@
     (with-redefs [actions/delete-upload (spies/constantly ::delete)
                   interactions/replace-resource (spies/constantly ::action)
                   interactions/show-delete-modal (spies/constantly ::on-click)
-                  form/create (constantly ::form)
+                  form.std/create (constantly ::form)
                   forms/syncing? (spies/constantly true)]
       (let [upload {:id ::id :other :stuff}
             [_ attrs arg upload-btn] (-> upload
@@ -46,7 +46,7 @@
   (testing "(root)"
     (with-redefs [interactions/upload-resources (spies/constantly ::action)
                   interactions/show-delete-modal (spies/constantly ::on-click)
-                  form/create (constantly ::form)
+                  form.std/create (constantly ::form)
                   forms/syncing? (spies/constantly true)]
       (let [root (resources/root ::ignored)
             [_ attrs upload-btn res resources] (-> (root [::resource])

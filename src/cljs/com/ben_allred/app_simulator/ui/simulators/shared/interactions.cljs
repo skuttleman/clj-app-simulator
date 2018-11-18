@@ -1,101 +1,90 @@
 (ns com.ben-allred.app-simulator.ui.simulators.shared.interactions
   (:require
-    [cljs.core.async :as async]
-    [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.ui.services.navigation :as nav]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
-    [com.ben-allred.app-simulator.ui.utils.dom :as dom]
-    [com.ben-allred.app-simulator.utils.fns :as fns :include-macros true]
+    [com.ben-allred.app-simulator.utils.chans :as ch :include-macros true]
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
-(defn toaster [level default-msg]
-  (fn [body]
-    (let [message (:message body default-msg)]
-      (->> message
-           (actions/show-toast level)
-           (store/dispatch))
-      body)))
+(defn creatable? [form]
+  (forms/valid? form))
 
-(defn resetter [f form & args]
-  (fn [body]
-    (apply f form args)
-    body))
+(defn updatable? [form]
+  (and (creatable? form)
+       (forms/changed? form)))
 
-(defn do-request
-  ([request]
-   (do-request request identity))
-  ([request on-success]
-   (do-request request on-success identity))
-  ([request on-success on-failure]
-   (async/go
-     (let [[status body] (async/<! request)]
-       (if (= :success status)
-         (on-success body)
-         (on-failure body))))))
+(defn toast [body level default-msg]
+  (->> (:message body default-msg)
+       (actions/show-toast level)
+       (store/dispatch)))
 
 (defn update-simulator [form model->source id]
-  (fn [e]
-    (let [current-model @form]
-      (dom/prevent-default e)
-      (forms/verify! form)
-      (when (and (not (forms/errors form))
-                 (forms/changed? form))
-        (do-request (->> current-model
-                         (model->source)
-                         (actions/update-simulator id)
-                         (store/dispatch))
-                    (comp (resetter reset! form current-model)
-                          (toaster :success "The simulator has been updated"))
-                    (comp (resetter forms/ready! form)
-                          (toaster :error "The simulator could not be updated")))))))
+  (fn [_]
+    (if (updatable? form)
+      (let [current-model @form]
+        (-> current-model
+            (model->source)
+            (->> (actions/update-simulator id))
+            (store/dispatch)
+            (ch/->then body
+              (reset! form current-model)
+              (toast body :success "The simulator has been updated"))
+            (ch/->catch body
+              (toast body :error "The simulator could not be updated"))))
+      (ch/reject))))
 
 (defn clear-requests [type id]
   (fn [_]
     (let [name (if (= type :ws)
                  "messages"
                  "requests")]
-      (do-request (store/dispatch (actions/clear-requests id (keyword type :requests)))
-                  (toaster :success (str "The " name " have been cleared"))
-                  (toaster :error (str "The " name " could not be cleared"))))))
+      (-> (actions/clear-requests id (keyword type :requests))
+          (store/dispatch)
+          (ch/->then body
+            (toast body :success (str "The " name " have been cleared")))
+          (ch/->catch body
+            (toast body :error (str "The " name " could not be cleared")))))))
 
 (defn delete-sim [id]
   (fn [hide]
     (fn [_]
-      (do-request (store/dispatch (actions/delete-simulator id))
-                  (comp (fn [_]
-                          (when hide
-                            (hide))
-                          (nav/navigate! :home))
-                        (toaster :success "The simulator has been deleted"))
-                  (toaster :error "The simulator could not be deleted")))))
+      (-> id
+          (actions/delete-simulator)
+          (store/dispatch)
+          (ch/->then body
+            (toast body :success "The simulator has been deleted")
+            (nav/navigate! :home))
+          (ch/->catch body
+            (toast body :error "The simulator could not be deleted"))
+          (ch/finally hide)))))
 
 (defn reset-config [form sim->model id type]
   (fn [_]
-    (do-request
-      (store/dispatch (actions/reset-simulator-config id type))
-      (comp (fns/=>> (:simulator) (sim->model) (reset! form))
-            (toaster :success "The simulator's configuration has been reset"))
-      (toaster :error "The simulator's configuration could not be reset"))))
+    (-> (actions/reset-simulator-config id type)
+        (store/dispatch)
+        (ch/->then body
+          (reset! form (sim->model (:simulator body)))
+          (toast body :success "The simulator's configuration has been reset"))
+        (ch/->catch body
+          (toast body :error "The simulator's configuration could not be reset")))))
 
 (defn create-simulator [form model->source]
-  (fn [e]
-    (let [current-model @form]
-      (dom/prevent-default e)
-      (forms/verify! form)
-      (when-not (forms/errors form)
-        (do-request (-> current-model
-                        (model->source)
-                        (actions/create-simulator)
-                        (store/dispatch))
-                    (comp (fns/=>> (:simulator)
-                                   (:id)
-                                   (hash-map :id)
-                                   (nav/nav-and-replace! :details))
-                          (resetter reset! form current-model)
-                          (toaster :success "The simulator has been created"))
-                    (comp (resetter forms/ready! form)
-                          (toaster :error "The simulator could not be created")))))))
+  (fn [_]
+    (if (creatable? form)
+      (let [current-model @form]
+        (-> current-model
+            (model->source)
+            (actions/create-simulator)
+            (store/dispatch)
+            (ch/->then body
+              (reset! form current-model)
+              (toast body :success "The simulator has been created")
+              (->> (select-keys (:simulator body) #{:id})
+                   (nav/nav-and-replace! :details)))
+            (ch/->catch body
+              (toast body :error "The simulator could not be created"))))
+      (ch/reject))))
 
 (defn show-delete-modal [id]
   (fn [_]

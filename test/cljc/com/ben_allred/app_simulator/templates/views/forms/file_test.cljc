@@ -1,13 +1,13 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.file-test
   (:require
-    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
-               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
+    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
                [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
                [com.ben-allred.app-simulator.ui.services.store.core :as store]
                [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                [com.ben-allred.app-simulator.ui.utils.dom :as dom]])
     [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.app-simulator.services.forms.noop :as form.no]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.templates.fields :as fields]
     [com.ben-allred.app-simulator.templates.resources.file :as resources]
@@ -106,12 +106,10 @@
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
-    (with-redefs [#?@(:cljs [forms/changed? (constantly nil)
-                             forms/verified? (constantly true)
-                             forms/errors (constantly nil)
-                             dom/prevent-default (constantly nil)
+    (with-redefs [#?@(:cljs [dom/prevent-default (constantly nil)
                              actions/update-simulator (constantly ::action)
-                             store/dispatch (constantly nil)])]
+                             store/dispatch (constantly nil)
+                             shared.views/edit-disabled? (spies/constantly ::enabled)])]
       (testing "when rendering a form"
         (let [root (file.views/sim-edit-form* ::id ::form ::uploads)
               edit-form (test.dom/query-one root :.simulator-edit)]
@@ -141,7 +139,21 @@
 
           (testing "renders a file field"
             (let [node (test.dom/query-one edit-form file.views/file-field)]
-              (is (= [file.views/file-field ::form ::uploads] node)))))))))
+              (is (= [file.views/file-field ::form ::uploads] node))))
+
+          (testing "has a save button"
+            (let [[component attrs] (test.dom/query-one edit-form :.save-button)]
+              (is (= shared.views/sync-button component))
+              (is (= ::form (:form attrs)))
+              #?@(:clj  [(is (:disabled attrs))]
+                  :cljs [(is (= ::enabled (:disabled attrs)))
+                         (is (spies/called-with? shared.views/edit-disabled? ::form))])))
+
+          (testing "has a reset button"
+            (let [[component attrs] (test.dom/query-one edit-form :.reset-button)]
+              (is (= shared.views/sync-button component))
+              (is (= ::form (:form attrs)))
+              (is #?(:clj (:disabled attrs) :cljs (not (:disabled attrs)))))))))))
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
@@ -155,9 +167,10 @@
                                             :headers {:header-c ["header-c"]
                                                       :header-a "thing"
                                                       :header-b ["double" "things"]}}}
-                     :id     ::id}]
-      (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
-        (let [root (file.views/sim-edit-form simulator [{:id 1 :data ::data-1} {:id 2 :data ::data-2}])
+                     :id     ::id}
+          resources [{:id 1 :data ::data-1} {:id 2 :data ::data-2}]]
+      (with-redefs [#?(:clj form.no/create :cljs form.std/create) (spies/constantly ::form)]
+        (let [root (file.views/sim-edit-form simulator resources)
               expected {:group       ::group
                         :name        ::name
                         :description ::description
@@ -168,16 +181,13 @@
                                                 [:header-b "double"]
                                                 [:header-b "things"]
                                                 [:header-c "header-c"]]}}]
-          #?(:cljs
-             (testing "creates a form from source data"
-               (is (spies/called-with? form/create expected resources/validate-existing))))
+          (testing "creates a form from source data"
+            (is (spies/called-with? #?@(:clj  [form.no/create expected]
+                                        :cljs [form.std/create expected resources/validate-existing]))))
 
           (testing "returns a function that renders the form"
-            (is (= [file.views/sim-edit-form*
-                    ::id
-                    #?(:clj expected :cljs ::form)
-                    [{:id 1 :data ::data-1} {:id 2 :data ::data-2}]]
-                   (root simulator [{:id 1 :data ::data-1} {:id 2 :data ::data-2}])))))))))
+            (is (= [file.views/sim-edit-form* ::id ::form ::resources]
+                   (root simulator ::resources)))))))))
 
 (deftest ^:unit sim-test
   (testing "(sim)"
@@ -233,18 +243,19 @@
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
     (with-redefs [nav*/path-for (spies/constantly ::href)
-                  #?@(:cljs [forms/errors (spies/create)
-                             forms/verified? (spies/create)
-                             interactions/create-simulator (spies/constantly ::submit)])]
+                  #?@(:cljs [interactions/create-simulator (spies/constantly ::submit)
+                             shared.views/with-sync-action (spies/create (fn [attrs & _] (assoc attrs :on-submit ::synced)))
+                             shared.views/create-disabled? (spies/constantly ::enabled)])]
       (let [root (file.views/sim-create-form* ::form ::uploads)
             form (test.dom/query-one root :.simulator-create)]
         #?(:cljs
            (testing "handles submit"
              (is (spies/called-with? interactions/create-simulator ::form))
+             (is (spies/called-with? shared.views/with-sync-action {:on-submit ::submit} ::form :on-submit))
              (is (-> form
                      (test.dom/attrs)
                      (:on-submit)
-                     (= ::submit)))))
+                     (= ::synced)))))
 
         (testing "renders the form components"
           (is (test.dom/contains? form [file.views/method-field ::form]))
@@ -257,47 +268,34 @@
           (is (test.dom/contains? form [file.views/headers-field ::form]))
           (is (test.dom/contains? form [file.views/file-field ::form ::uploads])))
 
+        (testing "renders a save button"
+          (let [button (test.dom/query-one form :.save-button)
+                attrs (test.dom/attrs button)]
+            #?@(:clj  [(is (:disabled attrs))]
+                :cljs [(is (= ::enabled (:disabled attrs)))
+                       (is (spies/called-with? shared.views/create-disabled? ::form))])))
+
         (testing "renders a reset button"
           (is (spies/called-with? nav*/path-for :home))
           (is (-> form
                   (test.dom/query-one :.reset-button)
                   (test.dom/attrs)
                   (:href)
-                  (= ::href))))
-
-        (let [button (test.dom/query-one form :.save-button)
-              attrs (test.dom/attrs button)]
-          (testing "renders a save button"
-            (is button)
-            (is #?(:clj  (:disabled attrs)
-                   :cljs (not (:disabled attrs)))))))
-
-      #?(:cljs
-         (testing "when there are verified errors"
-           (spies/reset! interactions/create-simulator forms/verified? forms/errors)
-           (spies/respond-with! forms/verified? (constantly true))
-           (spies/respond-with! forms/errors (constantly :errors))
-           (testing "disables the save button"
-             (let [root (file.views/sim-create-form* ::form ::uploads)]
-               (is (spies/called-with? forms/verified? ::form))
-               (is (-> root
-                       (test.dom/query-one :.save-button)
-                       (test.dom/attrs)
-                       (:disabled))))))))))
+                  (= ::href))))))))
 
 (deftest ^:unit sim-create-form-test
   (testing "(sim-create-form)"
-    (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
+    (with-redefs [#?(:clj form.no/create :cljs form.std/create) (spies/constantly ::form)]
       (testing "renders the form"
         (let [component (file.views/sim-create-form ::uploads)
               model {:response {:status 200}
                      :method   :file/get
                      :path     "/"
                      :delay    0}]
-          #?(:cljs
-             (is (spies/called-with? form/create model resources/validate-new)))
+          (is (spies/called-with? #?@(:clj  [form.no/create model]
+                                      :cljs [form.std/create model resources/validate-new])))
           (let [root (component ::uploads)]
-            (is (test.dom/contains? root [file.views/sim-create-form* #?(:clj model :cljs ::form) ::uploads]))))))))
+            (is (test.dom/contains? root [file.views/sim-create-form* ::form ::uploads]))))))))
 
 (defn run-tests []
   (t/run-tests))

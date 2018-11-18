@@ -1,10 +1,10 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.ws
   (:require
-    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
-               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
+    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]
                [reagent.core :as r]])
+    [com.ben-allred.app-simulator.services.forms.noop :as form.no]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
@@ -67,7 +67,8 @@
 
 (defn sim-edit-form* [id form]
   [:form.simulator-edit
-   #?(:cljs {:on-submit (interactions/update-simulator form id)})
+   #?(:cljs (-> {:on-submit (interactions/update-simulator form id)}
+                (shared.views/with-sync-action form :on-submit)))
    [name-field form true]
    [group-field form]
    [description-field form]
@@ -77,9 +78,7 @@
       :text       "Save"
       :sync-text  "Saving"
       :class-name "is-info save-button"
-      :disabled   #?(:clj true :cljs (or (and (forms/verified? form)
-                                              (forms/errors form))
-                                         (not (forms/changed? form))))}]
+      :disabled   #?(:clj true :cljs (shared.views/edit-disabled? form))}]
     [shared.views/sync-button
      {:form       form
       :text       "Reset"
@@ -87,12 +86,13 @@
       :type       :button
       :class-name "is-warning reset-button"
       :disabled   #?(:clj true :cljs false)
-      #?@(:cljs [:on-click (interactions/reset-simulator form id)])}]]])
+      #?@(:cljs [:on-click (interactions/reset-simulator form id)
+                 :on-event :on-click])}]]])
 
 (defn sim-edit-form [{:keys [id] :as sim}]
   (let [model (tr/sim->model sim)
-        form #?(:clj  model
-                :cljs (form/create model))]
+        form #?(:clj  (form.no/create model)
+                :cljs (form.std/create model))]
     (fn [_simulator]
       [sim-edit-form* id form])))
 
@@ -137,7 +137,8 @@
 
 (defn sim-create-form* [form]
   [:form.simulator-create
-   #?(:cljs {:on-submit (interactions/create-simulator form)})
+   #?(:cljs (-> {:on-submit (interactions/create-simulator form)}
+                (shared.views/with-sync-action form :on-submit)))
    [path-field form]
    [name-field form]
    [group-field form]
@@ -147,8 +148,7 @@
      {:form       form
       :text       "Save"
       :sync-text  "Saving"
-      :disabled   #?(:clj true :cljs (and (forms/verified? form)
-                                          (forms/errors form)))
+      :disabled   #?(:clj true :cljs (shared.views/create-disabled? form))
       :class-name "is-info save-button"}]
     [:a.button.is-warning.reset-button
      {:href (nav*/path-for :home)}
@@ -157,8 +157,8 @@
 (defn sim-create-form []
   (let [model {:method :ws/ws
                :path   "/"}
-        form #?(:clj  model
-                :cljs (form/create model resources/validate-new))]
+        form #?(:clj  (form.no/create model)
+                :cljs (form.std/create model resources/validate-new))]
     (fn []
       [:div.simulator
        [sim-create-form* form]])))

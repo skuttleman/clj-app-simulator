@@ -1,64 +1,50 @@
 (ns com.ben-allred.app-simulator.ui.services.store.actions-test
   (:require
-    [cljs.core.async :as async]
     [clojure.test :as t :refer-macros [are async deftest is testing]]
     [com.ben-allred.app-simulator.services.files :as files]
     [com.ben-allred.app-simulator.services.http :as http]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.utils.macros :as macros]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies]
+    [com.ben-allred.app-simulator.utils.chans :as ch]))
 
 (deftest ^:unit request*-test
   (testing "(request*)"
-    (async done
-      (async/go
-        (let [dispatch (spies/create)]
-          (testing "handles success responses"
-            (are [input event call] (let [response [:success input]
-                                          result (async/<! (actions/request*
-                                                             (async/go response)
-                                                             dispatch
-                                                             event
-                                                             nil))]
-                                      (is (spies/called-with? dispatch call))
-                                      (= response result))
-              ::value ::success [::success ::value]
-              ::value [::success] [::success ::value]
-              ::value [::success ::details] [::success ::details ::value]))
+    (with-redefs [ch/peek (spies/constantly ::peek'd)]
+      (let [dispatch (spies/create)]
+        (testing "handles the response"
+          (spies/reset! dispatch ch/peek)
+          (let [result (actions/request* ::request dispatch ::success :error)]
+            (is (spies/called-with? ch/peek ::request (spies/matcher fn?)))
+            (is (= ::peek'd result))))
 
-          (testing "handles failure responses"
-            (are [input event call] (let [response [:error input]
-                                          result (async/<! (actions/request*
-                                                             (async/go response)
-                                                             dispatch
-                                                             nil
-                                                             event))]
-                                      (is (spies/called-with? dispatch call))
-                                      (= response result))
-              ::value ::error [::error ::value]
-              ::value [::error] [::error ::value]
-              ::value [::error ::details] [::error ::details ::value]))
+        (testing "handles success and errors responses correctly"
+          (are [success-type error-type result dispatched] (do
+                                                             (spies/reset! dispatch ch/peek)
+                                                             (actions/request* ::request dispatch success-type error-type)
+                                                             (let [[_ f] (first (spies/calls ch/peek))]
+                                                               (f result)
+                                                               (spies/called-with? dispatch dispatched)))
+            ::success ::error [:success ::value] [::success ::value]
+            [::success] ::error [:success ::value] [::success ::value]
+            [::success ::partial] ::error [:success ::value] [::success ::partial ::value]
+            ::success ::error [:error ::value] [::error ::value]
+            ::success [::error] [:error ::value] [::error ::value]
+            ::success [::error ::partial] [:error ::value] [::error ::partial ::value]))
 
-          (testing "does not dispatch on success when success-type is nil"
-            (spies/reset! dispatch)
-            (let [result (async/<! (actions/request*
-                                     (async/go [:success ::value])
-                                     dispatch
-                                     nil
-                                     ::error))]
-              (is (spies/never-called? dispatch))
-              (is (= [:success ::value] result))))
+        (testing "does not dispatch on success when success-type is nil"
+          (spies/reset! dispatch ch/peek)
+          (actions/request* ::request dispatch nil ::error-type)
+          (let [[_ f] (first (spies/calls ch/peek))]
+            (f [:success ::value])
+            (spies/never-called? dispatch)))
 
-          (testing "does not dispatch on error when error-type is nil"
-            (spies/reset! dispatch)
-            (let [result (async/<! (actions/request*
-                                     (async/go [:error ::value])
-                                     dispatch
-                                     ::success))]
-              (is (spies/never-called? dispatch))
-              (is (= [:error ::value] result))))
-
-          (done))))))
+        (testing "does not dispatch on error when error-type is nil"
+          (spies/reset! dispatch ch/peek)
+          (actions/request* ::request dispatch ::success-type nil)
+          (let [[_ f] (first (spies/calls ch/peek))]
+            (f [:error ::value])
+            (spies/never-called? dispatch)))))))
 
 (deftest ^:unit request-simulators-test
   (testing "(request-simulators)"

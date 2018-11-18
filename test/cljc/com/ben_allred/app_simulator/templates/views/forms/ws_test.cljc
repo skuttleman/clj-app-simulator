@@ -1,10 +1,10 @@
 (ns com.ben-allred.app-simulator.templates.views.forms.ws-test
   (:require
-    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.core :as forms]
-               [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
+    #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
                [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]])
     [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.app-simulator.services.forms.noop :as form.no]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.templates.fields :as fields]
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
@@ -143,11 +143,10 @@
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"
-    (with-redefs [#?@(:cljs [forms/errors (spies/create)
-                             forms/verified? (spies/create)
-                             forms/changed? (spies/constantly true)
-                             interactions/update-simulator (spies/constantly ::submit)
-                             interactions/reset-simulator (constantly ::reset)])]
+    (with-redefs [#?@(:cljs [interactions/update-simulator (spies/constantly ::submit)
+                             interactions/reset-simulator (constantly ::reset)
+                             shared.views/edit-disabled? (spies/constantly ::enabled)
+                             shared.views/with-sync-action (spies/constantly {:on-submit ::synced})])]
       (let [root (ws.views/sim-edit-form* ::id ::form)
             form (test.dom/query-one root :.simulator-edit)]
         (testing "has a name field"
@@ -157,49 +156,27 @@
            (testing "when there are no errors and the form has changes"
              (testing "handles on submit"
                (is (spies/called-with? interactions/update-simulator ::form ::id))
-               (is (= ::submit (:on-submit (test.dom/attrs form))))
+               (is (spies/called-with? shared.views/with-sync-action {:on-submit ::submit} ::form :on-submit))
+               (is (= ::synced (:on-submit (test.dom/attrs form))))
                (is (-> form
                        (test.dom/query-one :.save-button)
                        (test.dom/attrs)
                        (:disabled)
-                       (not)))))))
-
-      #?(:cljs
-         (testing "when there are verified errors"
-           (spies/reset! interactions/update-simulator forms/verified? forms/errors forms/changed?)
-           (spies/respond-with! forms/errors (constantly ::errors))
-           (spies/respond-with! forms/verified? (constantly true))
-           (testing "form is not submittable"
-             (let [root (ws.views/sim-edit-form* ::id ::form)]
-               (is (-> root
-                       (test.dom/query-one :.save-button)
-                       (test.dom/attrs)
-                       (:disabled)))))))
-
-      #?(:cljs
-         (testing "when the form has no changes"
-           (spies/reset! interactions/update-simulator forms/errors forms/verified? forms/changed?)
-           (spies/respond-with! forms/changed? (constantly false))
-           (testing "form is not submittable"
-             (let [root (ws.views/sim-edit-form* ::id ::form)]
-               (is (-> root
-                       (test.dom/query-one :.save-button)
-                       (test.dom/attrs)
-                       (:disabled))))))))))
+                       (= ::enabled))))))))))
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
     (with-redefs [tr/sim->model (spies/constantly ::model)
-                  #?@(:cljs [form/create (spies/constantly ::form)])]
+                  #?(:clj form.no/create :cljs form.std/create) (spies/constantly ::form)]
       (let [component (ws.views/sim-edit-form {:id ::id ::other ::things})]
         #?(:cljs
            (testing "creates a form"
              (is (spies/called-with? tr/sim->model {:id ::id ::other ::things}))
-             (is (spies/called-with? form/create ::model))))
+             (is (spies/called-with? #?(:clj form.no/create :cljs form.std/create) ::model))))
 
         (testing "returns a component"
           (let [node (component ::simulator)]
-            (is (= [ws.views/sim-edit-form* ::id #?(:clj ::model :cljs ::form)]
+            (is (= [ws.views/sim-edit-form* ::id ::form]
                    node))))))))
 
 (deftest ^:unit sim-test
@@ -317,18 +294,19 @@
 (deftest ^:unit sim-create-form*-test
   (testing "(sim-create-form*)"
     (with-redefs [nav*/path-for (spies/constantly ::home)
-                  #?@(:cljs [forms/errors (spies/create)
-                             interactions/create-simulator (spies/constantly ::submit)
-                             forms/verified? (spies/create)])]
+                  #?@(:cljs [interactions/create-simulator (spies/constantly ::submit)
+                             shared.views/create-disabled? (spies/constantly ::enabled)
+                             shared.views/with-sync-action (spies/constantly {:on-submit ::synced})])]
       (let [root (ws.views/sim-create-form* ::form)
             form (test.dom/query-one root :.simulator-create)]
         #?(:cljs
            (testing "can submit the form"
              (is (spies/called-with? interactions/create-simulator ::form))
+             (is (spies/called-with? shared.views/with-sync-action {:on-submit ::submit} ::form :on-submit))
              (is (-> form
                      (test.dom/attrs)
                      (:on-submit)
-                     (= ::submit)))))
+                     (= ::synced)))))
 
         (testing "renders the path field"
           (is (-> form
@@ -352,11 +330,12 @@
 
         #?(:cljs
            (testing "renders an enabled save button"
+             (is (spies/called-with? shared.views/create-disabled? ::form))
              (is (-> form
                      (test.dom/query-one :.save-button)
                      (test.dom/attrs)
                      (:disabled)
-                     (not)))))
+                     (= ::enabled)))))
 
         (testing "has a cancel link"
           (is (spies/called-with? nav*/path-for :home))
@@ -364,35 +343,23 @@
                   (test.dom/query-one :a.reset-button)
                   (test.dom/attrs)
                   (:href)
-                  (= ::home)))))
-
-      #?(:cljs
-         (testing "when there are errors"
-           (spies/respond-with! forms/errors (constantly ::errors))
-           (spies/respond-with! forms/verified? (constantly true))
-           (spies/reset! interactions/create-simulator)
-           (let [root (ws.views/sim-create-form* ::form)
-                 form (test.dom/query-one root :.simulator-create)]
-             (testing "disables the form"
-               (is (-> form
-                       (test.dom/query-one :.save-button)
-                       (test.dom/attrs)
-                       (:disabled))))))))))
+                  (= ::home))))))))
 
 (deftest ^:unit sim-create-form-test
   (testing "(sim-create-form)"
-    (with-redefs [#?@(:cljs [form/create (spies/constantly ::form)])]
+    (with-redefs [#?(:clj form.no/create :cljs form.std/create) (spies/constantly ::form)]
       (let [component (ws.views/sim-create-form)
             model {:method :ws/ws :path "/"}]
         #?(:cljs
            (testing "creates a form"
-             (is (spies/called-with? form/create model resources/validate-new))))
+             (is (spies/called-with? #?@(:clj  [form.no/create model]
+                                         :cljs [form.std/create model resources/validate-new])))))
 
         (testing "renders the create form"
           (let [root (component)]
             (is (-> root
                     (test.dom/query-one ws.views/sim-create-form*)
-                    (= [ws.views/sim-create-form* #?(:clj model :cljs ::form)])))))))))
+                    (= [ws.views/sim-create-form* ::form])))))))))
 
 (defn run-tests []
   (t/run-tests))

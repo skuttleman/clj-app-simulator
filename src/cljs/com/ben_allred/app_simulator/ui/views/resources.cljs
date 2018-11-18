@@ -1,14 +1,14 @@
 (ns com.ben-allred.app-simulator.ui.views.resources
   (:require
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.views.resources :as views.res]
-    [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
-    [com.ben-allred.app-simulator.ui.services.forms.standard :as form]
+    [com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
     [com.ben-allred.app-simulator.ui.views.components.core :as components]))
 
 (defn resource [_resource]
-  (let [form (form/create {})]
+  (let [form (form.std/create {})]
     (fn [{:keys [id] :as resource}]
       [views.res/resource
        {:disabled (forms/syncing? form)
@@ -23,7 +23,7 @@
          :persisting-content "Replacing"}]])))
 
 (defn root [_resources]
-  (let [form (form/create {})]
+  (let [form (form.std/create {})]
     (fn [resources]
       [views.res/resources
        {:disabled (or (empty? resources) (forms/syncing? form))

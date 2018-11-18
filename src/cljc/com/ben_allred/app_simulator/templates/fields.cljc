@@ -27,21 +27,20 @@
 (defn ^:private remove-by-idx [idx coll]
   (modify-coll (comp (remove (comp #{idx} first)) (map second)) coll))
 
-(defn ^:private form-field [{:keys [errors label verified? touched?]} & body]
+(defn ^:private form-field [{:keys [errors label touched? tried?]} & body]
   (let [errors (seq (remove nil? errors))
-        tooltip? (and errors touched? (not verified?))]
+        tooltip? (and errors touched? (not tried?))
+        inline? (and errors tried?)]
     [:div.form-field
-     (templates/classes {:errors (and errors (or touched? verified?))})
-     (when (or label errors)
-       [:div.field-info
-        (when label
-          [:label.label label])
-        (when (and errors verified?)
-          [:ul.error-list
-           (for [error errors]
-             [:li.error
-              {:key error}
-              error])])])
+     (templates/classes {:errors (or tooltip? inline?)})
+     [:div.field-info
+      [:label.label label]
+      (when inline?
+        [:ul.error-list
+         (for [error errors]
+           [:li.error
+            {:key error}
+            error])])]
      (into [:div
             (cond-> {}
               :always (templates/classes {:tooltip              tooltip?

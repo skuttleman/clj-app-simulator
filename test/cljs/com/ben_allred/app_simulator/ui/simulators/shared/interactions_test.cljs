@@ -1,244 +1,269 @@
 (ns com.ben-allred.app-simulator.ui.simulators.shared.interactions-test
   (:require
-    [cljs.core.async :as async]
-    [clojure.test :as t :refer [async deftest is testing]]
-    [com.ben-allred.app-simulator.ui.services.forms.core :as forms]
+    [clojure.test :as t :refer [deftest is testing]]
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.ui.services.navigation :as nav]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
     [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
     [com.ben-allred.app-simulator.ui.utils.dom :as dom]
     [test.utils.dom :as test.dom]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies]
+    [com.ben-allred.app-simulator.utils.chans :as ch]))
 
-(deftest ^:unit toaster-test
-  (testing "(toaster)"
+(deftest ^:unit creatable?-test
+  (testing "(creatable?)"
+    (testing "when the form is valid"
+      (with-redefs [forms/valid? (constantly true)]
+        (testing "is creatable"
+          (is (shared.interactions/creatable? ::form)))))
+
+    (testing "when the form is not valid"
+      (with-redefs [forms/valid? (constantly false)]
+        (testing "is not creatable"
+          (is (not (shared.interactions/creatable? ::form))))))))
+
+(deftest ^:unit updatable?-test
+  (testing "(updatable?)"
+    (testing "when the form is not creatable"
+      (with-redefs [shared.interactions/creatable? (constantly false)
+                    forms/changed? (constantly true)]
+        (testing "is not updatable"
+          (is (not (shared.interactions/updatable? :form))))))
+
+    (testing "when the form in not changed"
+      (with-redefs [shared.interactions/creatable? (constantly true)
+                    forms/changed? (constantly false)]
+        (testing "is not updatable"
+          (is (not (shared.interactions/updatable? :form))))))
+
+    (testing "when the form is creatable and changed"
+      (with-redefs [shared.interactions/creatable? (constantly true)
+                    forms/changed? (constantly true)]
+        (testing "is updatable"
+          (is (shared.interactions/updatable? :form)))))))
+
+(deftest ^:unit toast-test
+  (testing "(toast)"
     (with-redefs [actions/show-toast (spies/constantly ::action)
                   store/dispatch (spies/create)]
-      (let [toast (shared.interactions/toaster ::level ::default-message)]
-        (testing "returns a function that returns the body"
-          (is (= ::body (toast ::body))))
+      (testing "when the body has a message"
+        (spies/reset! actions/show-toast store/dispatch)
+        (shared.interactions/toast {:message ::message} ::level ::default-message)
+        (testing "shows a toast with the body's message"
+          (is (spies/called-with? actions/show-toast ::level ::message))
+          (is (spies/called-with? store/dispatch ::action))))
 
-        (testing "when the body has a message"
+      (testing "when the body does not have a message"
+        (testing "shows a toast with the default message"
           (spies/reset! actions/show-toast store/dispatch)
-          (toast {:message ::some-message})
-
-          (testing "toasts the message"
-            (is (spies/called-with? actions/show-toast ::level ::some-message))
-            (is (spies/called-with? store/dispatch ::action))))
-
-        (testing "when the body has no message"
-          (spies/reset! actions/show-toast store/dispatch)
-          (toast {})
-
-          (testing "toasts the default message"
+          (shared.interactions/toast {} ::level ::default-message)
+          (testing "shows a toast with the default message"
             (is (spies/called-with? actions/show-toast ::level ::default-message))
             (is (spies/called-with? store/dispatch ::action))))))))
 
-(deftest ^:unit resetter-test
-  (testing "(resetter)"
-    (let [spy (spies/create)
-          reset (shared.interactions/resetter spy ::form ::arg-1 ::arg-2 ::arg-3)
-          result (reset ::body)]
-      (testing "applies f with args"
-        (is (spies/called-with? spy ::form ::arg-1 ::arg-2 ::arg-3)))
-
-      (testing "returns the body"
-        (is (= ::body result))))))
-
-(deftest ^:unit do-request-test
-  (testing "(do-request)"
-    (async done
-      (async/go
-        (let [chan (async/chan)
-              on-success (spies/create)
-              on-failure (spies/create)]
-          (testing "when status is :success"
-            (let [result-ch (shared.interactions/do-request chan on-success on-failure)]
-              (spies/reset! on-success on-failure)
-              (async/>! chan [:success ::value])
-              (async/<! result-ch)
-
-              (testing "calls on-success"
-                (is (spies/called-with? on-success ::value))
-                (is (spies/never-called? on-failure)))))
-
-          (testing "when status is not :success"
-            (let [result-ch (shared.interactions/do-request chan on-success on-failure)]
-              (spies/reset! on-success on-failure)
-              (async/>! chan [:error ::value])
-              (async/<! result-ch)
-
-              (testing "calls on-failure"
-                (is (spies/called-with? on-failure ::value))
-                (is (spies/never-called? on-success)))))
-
-          (done))))))
-
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
-    (with-redefs [forms/verify! (constantly nil)
-                  forms/changed? (constantly true)
-                  dom/prevent-default (spies/create)
-                  actions/update-simulator (spies/constantly ::action)
-                  store/dispatch (spies/constantly ::dispatch)
-                  forms/errors (spies/create)
-                  shared.interactions/do-request (spies/create)]
-      (let [source-spy (spies/constantly ::source)
-            form (reify
-                   IDeref
-                   (-deref [_] ::model)
-                   IReset
-                   (-reset! [_ _]))]
-        (testing "when form is submittable"
-          (spies/reset! dom/prevent-default shared.interactions/do-request source-spy actions/update-simulator store/dispatch reset!)
-          ((shared.interactions/update-simulator form source-spy ::id) ::event)
+    (testing "when the form is updatable"
+      (with-redefs [shared.interactions/updatable? (constantly true)
+                    shared.interactions/toast (spies/create)
+                    actions/update-simulator (spies/constantly ::action)
+                    store/dispatch (spies/constantly ::request)
+                    ch/then (spies/create (fn [ch _] ch))
+                    ch/catch (spies/constantly ::handled)]
+        (let [reset-spy (spies/create)
+              form (reify
+                     IDeref
+                     (-deref [_]
+                       ::model)
+                     IReset
+                     (-reset! [_ value]
+                       (reset-spy value)))
+              result ((shared.interactions/update-simulator form {::model ::source} ::id) ::event)]
+          (testing "updates the simulator"
+            (is (spies/called-with? actions/update-simulator ::id ::source))
+            (is (spies/called-with? store/dispatch ::action))
+            (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
+            (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+            (is (= result ::handled)))
 
-          (testing "prevents default behavior"
-            (is (spies/called-with? dom/prevent-default ::event)))
+          (testing "handles a success"
+            (let [[_ on-success] (first (spies/calls ch/then))]
+              (spies/reset! reset-spy shared.interactions/toast)
+              (on-success ::body)
+              (is (spies/called-with? reset-spy ::model))
+              (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
-          (testing "and when making the request"
-            (let [[request on-success] (first (spies/calls shared.interactions/do-request))]
-              (testing "dispatches an action"
+          (testing "handles an error"
+            (let [[_ on-error] (first (spies/calls ch/catch))]
+              (spies/reset! reset-spy shared.interactions/toast)
+              (on-error ::body)
+              (is (spies/never-called? reset-spy))
+              (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?))))))))
 
-                (is (spies/called-with? source-spy ::model))
-                (is (spies/called-with? actions/update-simulator ::id ::source))
-                (is (spies/called-with? store/dispatch ::action))
-                (is (= ::dispatch request)))
-
-              (testing "handles success"
-                (spies/reset! source-spy actions/update-simulator store/dispatch reset!)
-                (on-success ::ignored)))))
-
-        (testing "when form has errors"
-          (spies/reset! dom/prevent-default shared.interactions/do-request)
-          (spies/respond-with! forms/errors (constantly ::errors))
-          ((shared.interactions/update-simulator form source-spy ::id) ::event)
-
-          (testing "prevents default behavior"
-            (is (spies/called-with? dom/prevent-default ::event)))
-
-          (testing "does not make a request"
-            (is (spies/never-called? shared.interactions/do-request))))))))
+    (testing "when the form is not updatable"
+      (with-redefs [shared.interactions/updatable? (constantly false)
+                    ch/reject (constantly ::rejected)]
+        (let [form (reify
+                     IDeref
+                     (-deref [_]))]
+          (is (= ::rejected ((shared.interactions/update-simulator form ::model->source ::id) ::event))))))))
 
 (deftest ^:unit clear-requests-test
   (testing "(clear-requests)"
-    (with-redefs [actions/clear-requests (spies/constantly ::action)
-                  store/dispatch (spies/constantly ::dispatch)
-                  shared.interactions/do-request (spies/create)]
-      (testing "when making the request with type :http"
-        (spies/reset! actions/clear-requests store/dispatch)
-        ((shared.interactions/clear-requests :http ::id) ::event)
-        (let [[request] (first (spies/calls shared.interactions/do-request))]
-          (testing "dispatches an action"
-            (is (spies/called-with? actions/clear-requests ::id :http/requests))
-            (is (spies/called-with? store/dispatch ::action))
-            (is (= ::dispatch request)))))
+    (with-redefs [shared.interactions/toast (spies/create)
+                  actions/clear-requests (spies/constantly ::action)
+                  store/dispatch (spies/constantly ::request)
+                  ch/then (spies/create (fn [ch _] ch))
+                  ch/catch (spies/constantly ::handled)]
+      (let [result ((shared.interactions/clear-requests :some-type ::id) ::event)]
+        (testing "clears the requests"
+          (is (spies/called-with? actions/clear-requests ::id :some-type/requests))
+          (is (spies/called-with? store/dispatch ::action))
+          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (= result ::handled)))
 
-      (testing "when making the request with type :ws"
-        (spies/reset! actions/clear-requests store/dispatch)
-        ((shared.interactions/clear-requests :ws ::id) ::event)
-        (let [[request] (first (spies/calls shared.interactions/do-request))]
-          (testing "dispatches an action"
-            (is (spies/called-with? actions/clear-requests ::id :ws/requests))
-            (is (spies/called-with? store/dispatch ::action))
-            (is (= ::dispatch request))))))))
+        (testing "handles a success"
+          (let [[_ on-success] (first (spies/calls ch/then))]
+            (spies/reset! shared.interactions/toast)
+            (on-success ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
+
+        (testing "handles an error"
+          (let [[_ on-error] (first (spies/calls ch/catch))]
+            (spies/reset! shared.interactions/toast)
+            (on-error ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
 
 (deftest ^:unit delete-sim-test
   (testing "(delete-sim)"
-    (let [hide-spy (spies/create)]
-      (with-redefs [actions/delete-simulator (spies/constantly ::action)
-                    store/dispatch (spies/constantly ::dispatch)
-                    shared.interactions/do-request (spies/create)
-                    nav/navigate! (spies/create)]
-        (testing "when making the request"
-          (spies/reset! actions/delete-simulator store/dispatch hide-spy)
-          (((shared.interactions/delete-sim ::id) hide-spy) ::event)
-          (let [[request on-success] (first (spies/calls shared.interactions/do-request))]
-            (testing "deletes the simulator"
-              (is (spies/called-with? actions/delete-simulator ::id))
-              (is (spies/called-with? store/dispatch ::action))
-              (is (= ::dispatch request)))
+    (with-redefs [shared.interactions/toast (spies/create)
+                  actions/delete-simulator (spies/constantly ::action)
+                  store/dispatch (spies/constantly ::request)
+                  ch/then (spies/create (fn [ch _] ch))
+                  ch/catch (spies/create (fn [ch _] ch))
+                  ch/finally (spies/constantly ::handled)
+                  nav/navigate! (spies/create)]
+      (let [hide-spy (spies/create)
+            result (((shared.interactions/delete-sim ::id) hide-spy) ::event)]
+        (testing "deletes the simulator"
+          (is (spies/called-with? actions/delete-simulator ::id))
+          (is (spies/called-with? store/dispatch ::action))
+          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/finally ::request (spies/matcher fn?)))
+          (is (= result ::handled)))
 
-            (testing "handles success"
-              (spies/reset! hide-spy nav/navigate!)
-              (on-success ::ignored)
-              (is (spies/called? hide-spy))
-              (is (spies/called-with? nav/navigate! :home)))))))))
+        (testing "handles a success"
+          (let [[_ on-success] (first (spies/calls ch/then))]
+            (spies/reset! hide-spy nav/navigate! shared.interactions/toast)
+            (on-success ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))
+            (is (spies/never-called? hide-spy))
+            (is (spies/called-with? nav/navigate! :home))))
+
+        (testing "handles an error"
+          (let [[_ on-error] (first (spies/calls ch/catch))]
+            (spies/reset! hide-spy nav/navigate! shared.interactions/toast)
+            (on-error ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))
+            (is (spies/never-called? hide-spy))
+            (is (spies/never-called? nav/navigate!))))
+
+        (testing "hides the modal"
+          (let [[_ on-finally] (first (spies/calls ch/finally))]
+            (spies/reset! hide-spy)
+            (on-finally ::result)
+            (is (spies/called? hide-spy))))))))
 
 (deftest ^:unit reset-config-test
   (testing "(reset-config)"
-    (with-redefs [actions/reset-simulator-config (spies/constantly ::action)
-                  store/dispatch (spies/constantly ::dispatch)
-                  shared.interactions/do-request (spies/create)]
-      (let [model-spy (spies/constantly ::model)
+    (with-redefs [shared.interactions/toast (spies/create)
+                  actions/reset-simulator-config (spies/constantly ::action)
+                  store/dispatch (spies/constantly ::request)
+                  ch/then (spies/create (fn [ch _] ch))
+                  ch/catch (spies/constantly ::handled)]
+      (let [reset-spy (spies/create)
+            sim->model-spy (spies/constantly ::new-model)
             form (reify
-                   IReset (-reset! [_ _]))]
-        (testing "when making the request"
-          (spies/reset! actions/reset-simulator-config store/dispatch reset! model-spy)
-          ((shared.interactions/reset-config form model-spy ::id ::type) ::event)
-          (let [[request on-success] (first (spies/calls shared.interactions/do-request))]
-            (testing "dispatches an action"
+                   IReset
+                   (-reset! [_ model]
+                     (reset-spy model)))
+            result ((shared.interactions/reset-config form sim->model-spy ::id ::type) ::event)]
+        (testing "resets the config"
+          (is (spies/called-with? actions/reset-simulator-config ::id ::type))
+          (is (spies/called-with? store/dispatch ::action))
+          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (= result ::handled)))
 
-              (is (spies/called-with? actions/reset-simulator-config ::id ::type))
-              (is (spies/called-with? store/dispatch ::action))
-              (is (= ::dispatch request)))
+        (testing "handles a success"
+          (let [[_ on-success] (first (spies/calls ch/then))]
+            (spies/reset! reset-spy sim->model-spy shared.interactions/toast)
+            (on-success {:simulator ::simulator})
+            (is (spies/called-with? sim->model-spy ::simulator))
+            (is (spies/called-with? reset-spy ::new-model))
+            (is (spies/called-with? shared.interactions/toast {:simulator ::simulator} :success (spies/matcher string?)))))
 
-            (testing "handles success"
-              (spies/reset! actions/reset-simulator-config store/dispatch reset! model-spy)
-              (on-success {:simulator ::response})
-
-              (is (spies/called-with? model-spy ::response)))))))))
+        (testing "handles an error"
+          (let [[_ on-error] (first (spies/calls ch/catch))]
+            (spies/reset! reset-spy sim->model-spy shared.interactions/toast)
+            (on-error ::body)
+            (is (spies/never-called? sim->model-spy))
+            (is (spies/never-called? reset-spy))
+            (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
 
 (deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
-    (with-redefs [forms/verify! (constantly nil)
-                  forms/errors (spies/constantly nil)
-                  dom/prevent-default (spies/create)
-                  actions/create-simulator (spies/constantly ::action)
-                  store/dispatch (spies/constantly ::dispatch)
-                  nav/nav-and-replace! (spies/create)
-                  shared.interactions/do-request (spies/create)
-                  shared.interactions/resetter (spies/create (constantly identity))]
-      (let [source-spy (spies/constantly ::source)
-            form (reify
-                   IDeref
-                   (-deref [_] ::model))]
-        (testing "when form is submittable"
-          (spies/reset! dom/prevent-default shared.interactions/do-request source-spy
-                        actions/create-simulator store/dispatch nav/nav-and-replace!)
-          ((shared.interactions/create-simulator form source-spy) ::event)
+    (testing "when the form is creatable"
+      (with-redefs [shared.interactions/creatable? (constantly true)
+                    shared.interactions/toast (spies/create)
+                    actions/create-simulator (spies/constantly ::action)
+                    store/dispatch (spies/constantly ::request)
+                    ch/then (spies/create (fn [ch _] ch))
+                    ch/catch (spies/constantly ::handled)
+                    nav/nav-and-replace! (spies/create)]
+        (let [reset-spy (spies/create)
+              form (reify
+                     IDeref
+                     (-deref [_]
+                       ::model)
+                     IReset
+                     (-reset! [_ value]
+                       (reset-spy value)))
+              result ((shared.interactions/create-simulator form {::model ::source}) ::event)]
+          (testing "updates the simulator"
+            (is (spies/called-with? actions/create-simulator ::source))
+            (is (spies/called-with? store/dispatch ::action))
+            (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
+            (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+            (is (= result ::handled)))
 
-          (testing "prevents default behavior"
-            (is (spies/called-with? dom/prevent-default ::event)))
+          (testing "handles a success"
+            (let [[_ on-success] (first (spies/calls ch/then))
+                  body {:simulator {:id ::id ::with ::more}}]
+              (spies/reset! reset-spy nav/nav-and-replace! shared.interactions/toast)
+              (on-success body)
+              (is (spies/called-with? reset-spy ::model))
+              (is (spies/called-with? nav/nav-and-replace! :details {:id ::id}))
+              (is (spies/called-with? shared.interactions/toast body :success (spies/matcher string?)))))
 
-          (testing "and when making the request"
-            (let [[request on-success] (first (spies/calls shared.interactions/do-request))]
-              (testing "dispatches an action"
+          (testing "handles an error"
+            (let [[_ on-error] (first (spies/calls ch/catch))]
+              (spies/reset! reset-spy nav/nav-and-replace! shared.interactions/toast)
+              (on-error ::body)
+              (is (spies/never-called? reset-spy))
+              (is (spies/never-called? nav/nav-and-replace!))
+              (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?))))))))
 
-                (is (spies/called-with? source-spy ::model))
-                (is (spies/called-with? actions/create-simulator ::source))
-                (is (spies/called-with? store/dispatch ::action))
-                (is (spies/called-with? shared.interactions/resetter reset! form ::model))
-                (is (spies/called-with? shared.interactions/resetter forms/ready! form))
-                (is (= ::dispatch request)))
-
-              (testing "handles success"
-                (spies/reset! source-spy actions/create-simulator store/dispatch nav/nav-and-replace!)
-                (on-success {:simulator {:id ::id}})
-
-                (is (spies/called-with? nav/nav-and-replace! :details {:id ::id}))))))
-
-        (testing "when form is not submittable"
-          (spies/reset! dom/prevent-default shared.interactions/do-request)
-          (spies/respond-with! forms/errors (constantly ::errors))
-          ((shared.interactions/create-simulator form source-spy) ::event)
-
-          (testing "prevents default behavior"
-            (is (spies/called-with? dom/prevent-default ::event)))
-
-          (testing "does not make a request"
-            (is (spies/never-called? shared.interactions/do-request))))))))
+    (testing "when the form is not creatable"
+      (with-redefs [shared.interactions/creatable? (constantly false)
+                    ch/reject (constantly ::rejected)]
+        (let [form (reify
+                     IDeref
+                     (-deref [_]))]
+          (is (= ::rejected ((shared.interactions/create-simulator form ::model->source) ::event))))))))
 
 (deftest ^:unit show-delete-modal-test
   (testing "(show-delete-modal)"
