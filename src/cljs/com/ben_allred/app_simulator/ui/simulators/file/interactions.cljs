@@ -20,10 +20,8 @@
     (fn [_]
       (-> action
           (store/dispatch)
-          (ch/->then body
-            (shared.interactions/toast body :success "The resource has been deleted"))
-          (ch/->catch body
-            (shared.interactions/toast body :error "The resource could not be deleted"))
+          (ch/peek #(shared.interactions/toast % :success "The resource has been deleted")
+                   #(shared.interactions/toast % :error "The resource could not be deleted"))
           (ch/finally hide)))))
 
 (defn show-delete-modal [title msg action]
@@ -43,11 +41,10 @@
     (let [current-model @form]
       (-> (actions/upload-replace id files)
           (store/dispatch)
-          (ch/->then body
-            (shared.interactions/toast body :success "The resource has been replaced")
-            (reset! form current-model))
-          (ch/->catch body
-            (shared.interactions/toast body :error "The resource could not be replaced"))))))
+          (ch/peek (fn [body]
+                     (shared.interactions/toast body :success "The resource has been replaced")
+                     (reset! form current-model))
+                   #(shared.interactions/toast % :error "The resource could not be replaced"))))))
 
 (defn upload-resources [form]
   (fn [files]
@@ -55,12 +52,11 @@
       (-> files
           (actions/upload)
           (store/dispatch)
-          (ch/->then body
-            (shared.interactions/toast body
-                                       :success
-                                       "The resources have been uploaded and are available for use in a file simulator")
-            (reset! form current-model))
-          (ch/->catch body
-            (shared.interactions/toast body
-                                       :error
-                                       "The resources could not be uploaded"))))))
+          (ch/peek (fn [body]
+                     (shared.interactions/toast body
+                                                :success
+                                                "The resources have been uploaded and are available for use in a file simulator")
+                     (reset! form current-model))
+                   #(shared.interactions/toast %
+                                               :error
+                                               "The resources could not be uploaded"))))))

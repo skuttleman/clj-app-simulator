@@ -230,7 +230,7 @@
 (deftest ^:unit with-sync-action-test
   (testing "(with-sync-action)"
     (with-redefs [#?@(:cljs [dom/prevent-default (spies/create)])
-                  ch/peek (spies/constantly ::peek'd)
+                  ch/peek* (spies/constantly ::peek'd)
                   forms/try! (spies/create)
                   forms/valid? (spies/constantly true)
                   forms/sync! (spies/create)
@@ -280,11 +280,11 @@
                             (shared.views/with-sync-action ::form :on-event)
                             (:on-event))
                 result (handler ::event)
-                [_ f] (first (spies/calls ch/peek))]
+                [_ f] (first (spies/calls ch/peek*))]
             (testing "handles the event"
               (is (spies/called-with? forms/sync! ::form))
               (is (spies/called-with? handler-spy ::event))
-              (is (spies/called-with? ch/peek ::result (spies/matcher fn?)))
+              (is (spies/called-with? ch/peek* ::result (spies/matcher fn?)))
               (f [:status ::async])
               (is (spies/called-with? forms/ready! ::form [:status ::async]))
               (is (= ::peek'd result)))))))))

@@ -69,8 +69,7 @@
                     shared.interactions/toast (spies/create)
                     actions/update-simulator (spies/constantly ::action)
                     store/dispatch (spies/constantly ::request)
-                    ch/then (spies/create (fn [ch _] ch))
-                    ch/catch (spies/constantly ::handled)]
+                    ch/peek (spies/constantly ::handled)]
         (let [reset-spy (spies/create)
               form (reify
                      IDeref
@@ -83,19 +82,18 @@
           (testing "updates the simulator"
             (is (spies/called-with? actions/update-simulator ::id ::source))
             (is (spies/called-with? store/dispatch ::action))
-            (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-            (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+            (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
             (is (= result ::handled)))
 
           (testing "handles a success"
-            (let [[_ on-success] (first (spies/calls ch/then))]
+            (let [[_ on-success] (first (spies/calls ch/peek))]
               (spies/reset! reset-spy shared.interactions/toast)
               (on-success ::body)
               (is (spies/called-with? reset-spy ::model))
               (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
           (testing "handles an error"
-            (let [[_ on-error] (first (spies/calls ch/catch))]
+            (let [[_ _ on-error] (first (spies/calls ch/peek))]
               (spies/reset! reset-spy shared.interactions/toast)
               (on-error ::body)
               (is (spies/never-called? reset-spy))
@@ -114,24 +112,22 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/clear-requests (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/constantly ::handled)]
+                  ch/peek (spies/constantly ::handled)]
       (let [result ((shared.interactions/clear-requests :some-type ::id) ::event)]
         (testing "clears the requests"
           (is (spies/called-with? actions/clear-requests ::id :some-type/requests))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
           (is (= result ::handled)))
 
         (testing "handles a success"
-          (let [[_ on-success] (first (spies/calls ch/then))]
+          (let [[_ on-success] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-success ::body)
             (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
         (testing "handles an error"
-          (let [[_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ _ on-error] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-error ::body)
             (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
@@ -141,8 +137,7 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/delete-simulator (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/create (fn [ch _] ch))
+                  ch/peek (spies/create (fn [ch _] ch))
                   ch/finally (spies/constantly ::handled)
                   nav/navigate! (spies/create)]
       (let [hide-spy (spies/create)
@@ -150,13 +145,12 @@
         (testing "deletes the simulator"
           (is (spies/called-with? actions/delete-simulator ::id))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
           (is (spies/called-with? ch/finally ::request (spies/matcher fn?)))
           (is (= result ::handled)))
 
         (testing "handles a success"
-          (let [[_ on-success] (first (spies/calls ch/then))]
+          (let [[_ on-success] (first (spies/calls ch/peek))]
             (spies/reset! hide-spy nav/navigate! shared.interactions/toast)
             (on-success ::body)
             (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))
@@ -164,7 +158,7 @@
             (is (spies/called-with? nav/navigate! :home))))
 
         (testing "handles an error"
-          (let [[_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ _ on-error] (first (spies/calls ch/peek))]
             (spies/reset! hide-spy nav/navigate! shared.interactions/toast)
             (on-error ::body)
             (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))
@@ -182,8 +176,7 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/reset-simulator-config (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/constantly ::handled)]
+                  ch/peek (spies/constantly ::handled)]
       (let [reset-spy (spies/create)
             sim->model-spy (spies/constantly ::new-model)
             form (reify
@@ -194,12 +187,11 @@
         (testing "resets the config"
           (is (spies/called-with? actions/reset-simulator-config ::id ::type))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
           (is (= result ::handled)))
 
         (testing "handles a success"
-          (let [[_ on-success] (first (spies/calls ch/then))]
+          (let [[_ on-success] (first (spies/calls ch/peek))]
             (spies/reset! reset-spy sim->model-spy shared.interactions/toast)
             (on-success {:simulator ::simulator})
             (is (spies/called-with? sim->model-spy ::simulator))
@@ -207,7 +199,7 @@
             (is (spies/called-with? shared.interactions/toast {:simulator ::simulator} :success (spies/matcher string?)))))
 
         (testing "handles an error"
-          (let [[_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ _ on-error] (first (spies/calls ch/peek))]
             (spies/reset! reset-spy sim->model-spy shared.interactions/toast)
             (on-error ::body)
             (is (spies/never-called? sim->model-spy))
@@ -221,8 +213,7 @@
                     shared.interactions/toast (spies/create)
                     actions/create-simulator (spies/constantly ::action)
                     store/dispatch (spies/constantly ::request)
-                    ch/then (spies/create (fn [ch _] ch))
-                    ch/catch (spies/constantly ::handled)
+                    ch/peek (spies/constantly ::handled)
                     nav/nav-and-replace! (spies/create)]
         (let [reset-spy (spies/create)
               form (reify
@@ -236,12 +227,11 @@
           (testing "updates the simulator"
             (is (spies/called-with? actions/create-simulator ::source))
             (is (spies/called-with? store/dispatch ::action))
-            (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-            (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+            (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
             (is (= result ::handled)))
 
           (testing "handles a success"
-            (let [[_ on-success] (first (spies/calls ch/then))
+            (let [[_ on-success] (first (spies/calls ch/peek))
                   body {:simulator {:id ::id ::with ::more}}]
               (spies/reset! reset-spy nav/nav-and-replace! shared.interactions/toast)
               (on-success body)
@@ -250,7 +240,7 @@
               (is (spies/called-with? shared.interactions/toast body :success (spies/matcher string?)))))
 
           (testing "handles an error"
-            (let [[_ on-error] (first (spies/calls ch/catch))]
+            (let [[_ _ on-error] (first (spies/calls ch/peek))]
               (spies/reset! reset-spy nav/nav-and-replace! shared.interactions/toast)
               (on-error ::body)
               (is (spies/never-called? reset-spy))

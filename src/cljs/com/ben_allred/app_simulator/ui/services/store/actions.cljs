@@ -3,8 +3,8 @@
     [com.ben-allred.app-simulator.services.files :as files]
     [com.ben-allred.app-simulator.services.http :as http]
     [com.ben-allred.app-simulator.ui.utils.macros :as macros :include-macros true]
-    [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.utils.chans :as ch]))
+    [com.ben-allred.app-simulator.utils.chans :as ch]
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (defonce ^:private toast-id (atom 0))
 
@@ -21,8 +21,8 @@
    (request* request dispatch success-type nil))
   ([request dispatch success-type error-type]
    (-> request
-       (ch/->peek [status result]
-         (dispatcher dispatch (if (= :success status) success-type error-type) result)))))
+       (ch/peek (partial dispatcher dispatch success-type)
+                (partial dispatcher dispatch error-type)))))
 
 (def request-simulators
   (fn [[dispatch]]

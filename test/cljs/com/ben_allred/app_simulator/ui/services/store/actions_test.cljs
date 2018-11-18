@@ -15,22 +15,22 @@
         (testing "handles the response"
           (spies/reset! dispatch ch/peek)
           (let [result (actions/request* ::request dispatch ::success :error)]
-            (is (spies/called-with? ch/peek ::request (spies/matcher fn?)))
+            (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
             (is (= ::peek'd result))))
 
         (testing "handles success and errors responses correctly"
-          (are [success-type error-type result dispatched] (do
-                                                             (spies/reset! dispatch ch/peek)
-                                                             (actions/request* ::request dispatch success-type error-type)
-                                                             (let [[_ f] (first (spies/calls ch/peek))]
-                                                               (f result)
-                                                               (spies/called-with? dispatch dispatched)))
-            ::success ::error [:success ::value] [::success ::value]
-            [::success] ::error [:success ::value] [::success ::value]
-            [::success ::partial] ::error [:success ::value] [::success ::partial ::value]
-            ::success ::error [:error ::value] [::error ::value]
-            ::success [::error] [:error ::value] [::error ::value]
-            ::success [::error ::partial] [:error ::value] [::error ::partial ::value]))
+          (are [success-type error-type dispatched fnth] (do
+                                                           (spies/reset! dispatch ch/peek)
+                                                           (actions/request* ::request dispatch success-type error-type)
+                                                           (let [f (fnth (rest (first (spies/calls ch/peek))))]
+                                                             (f ::value)
+                                                             (spies/called-with? dispatch dispatched)))
+            ::success ::error [::success ::value] first
+            [::success] ::error [::success ::value] first
+            [::success ::partial] ::error [::success ::partial ::value] first
+            ::success ::error [::error ::value] second
+            ::success [::error] [::error ::value] second
+            ::success [::error ::partial] [::error ::partial ::value] second))
 
         (testing "does not dispatch on success when success-type is nil"
           (spies/reset! dispatch ch/peek)

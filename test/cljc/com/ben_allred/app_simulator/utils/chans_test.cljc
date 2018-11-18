@@ -3,9 +3,9 @@
     #?@(:clj  [[clojure.test :as t :refer [are deftest is testing]]
                [test.utils.async :refer [async]]]
         :cljs [[cljs.test :as t :refer [are async deftest is testing]]])
-               [clojure.core.async :as async]
-               [com.ben-allred.app-simulator.utils.chans :as ch]
-               [test.utils.spies :as spies]))
+    [clojure.core.async :as async]
+    [com.ben-allred.app-simulator.utils.chans :as ch]
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit resolve-test
   (testing "(resolve)"
@@ -129,14 +129,52 @@
   (testing "(peek)"
     (async done
       (async/go
-        (testing "peeks on the channel"
-          (doseq [[spy value] [[(spies/create) [:success ::value]]
-                               [(spies/create) [:error ::value]]
-                               [(spies/constantly (async/go [:error ::error])) [:success ::success]]
-                               [(spies/create (fn [_] (throw (ex-info "An exception" {})))) [:success ::ok]]]
-                  :let [result (async/<! (ch/peek (async/go value) spy))]]
-            (is (spies/called-with? spy value))
-            (is (= result value))))
+        (testing "when called with one callback"
+          (testing "peeks on the channel with a success value"
+            (let [on-success (spies/create)
+                  result (async/<! (ch/peek (async/go [:success ::value]) on-success))]
+              (is (spies/called-with? on-success ::value))
+              (is (= [:success ::value] result))))
+
+          (testing "does not peek on the channel with an error value"
+            (let [on-success (spies/create)
+                  result (async/<! (ch/peek (async/go [:error ::value]) on-success))]
+              (is (spies/never-called? on-success))
+              (is (= [:error ::value] result))))
+
+          (testing "swallows exceptions from peek fn"
+            (let [on-success (spies/create (fn [_] (throw (ex-info "An exception" {:some :data}))))
+                  result (async/<! (ch/peek (async/go [:success ::value]) on-success))]
+              (is (= [:success ::value] result)))))
+
+        (testing "when called with on-success and on-error callbacks"
+          (testing "peeks on the channel with a success value"
+            (let [on-success (spies/create)
+                  on-error (spies/create)
+                  result (async/<! (ch/peek (async/go [:success ::value]) on-success on-error))]
+              (is (spies/called-with? on-success ::value))
+              (is (spies/never-called? on-error))
+              (is (= [:success ::value] result))))
+
+          (testing "peeks on the channel with an error value"
+            (let [on-success (spies/create)
+                  on-error (spies/create)
+                  result (async/<! (ch/peek (async/go [:error ::ex]) on-success on-error))]
+              (is (spies/never-called? on-success))
+              (is (spies/called-with? on-error ::ex))
+              (is (= [:error ::ex] result))))
+
+          (testing "swallows exceptions from on-success fn"
+            (let [on-success (spies/create (fn [_] (throw (ex-info "An exception" {:some :data}))))
+                  on-error (spies/create)
+                  result (async/<! (ch/peek (async/go [:success ::value]) on-success on-error))]
+              (is (= [:success ::value] result))))
+
+          (testing "swallows exceptions from on-error fn"
+            (let [on-success (spies/create)
+                  on-error (spies/create (fn [_] (throw (ex-info "An exception" {:some :data}))))
+                  result (async/<! (ch/peek (async/go [:error ::value]) on-success on-error))]
+              (is (= [:error ::value] result)))))
 
         (done)))))
 

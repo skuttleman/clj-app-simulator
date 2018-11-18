@@ -1,7 +1,6 @@
 (ns com.ben-allred.app-simulator.ui.simulators.file.interactions-test
   (:require
     [clojure.test :as t :refer [deftest is testing]]
-    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.transformations.file :as tr]
     [com.ben-allred.app-simulator.ui.services.store.actions :as actions]
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
@@ -11,7 +10,7 @@
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
 
-(deftest ^:unit update-simulator
+(deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
     (with-redefs [shared.interactions/update-simulator (spies/constantly ::handler)]
       (testing "updates the simulator"
@@ -19,7 +18,7 @@
           (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source ::id))
           (is (= handler ::handler)))))))
 
-(deftest ^:unit reset-simulator
+(deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
     (with-redefs [shared.interactions/reset-config (spies/constantly ::handler)]
       (testing "resets the simulator"
@@ -27,7 +26,7 @@
           (is (spies/called-with? shared.interactions/reset-config ::form tr/sim->model ::id :file))
           (is (= handler ::handler)))))))
 
-(deftest ^:unit create-simulator
+(deftest ^:unit create-simulator-test
   (testing "(create-simulator)"
     (with-redefs [shared.interactions/create-simulator (spies/constantly ::handler)]
       (testing "creates the simulator"
@@ -38,8 +37,7 @@
 (deftest ^:unit show-delete-modal-test
   (testing "(show-delete-modal)"
     (with-redefs [store/dispatch (spies/constantly ::request)
-                  ch/then (spies/constantly ::then'd)
-                  ch/catch (spies/constantly ::catch'd)
+                  ch/peek (spies/constantly ::peek'd)
                   ch/finally (spies/create)
                   shared.interactions/toast (spies/create)
                   actions/show-modal (spies/constantly ::action)]
@@ -61,14 +59,12 @@
                              (test.dom/attrs)
                              (:on-click))
                 _ ((on-click hide-spy) ::ignored)
-                [_ then-f] (first (spies/calls ch/then))
-                [_ catch-f] (first (spies/calls ch/catch))
+                [_ then-f catch-f] (first (spies/calls ch/peek))
                 [_ finally-f] (first (spies/calls ch/finally))]
 
             (is (spies/called-with? store/dispatch ::click))
-            (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-            (is (spies/called-with? ch/catch ::then'd (spies/matcher fn?)))
-            (is (spies/called-with? ch/finally ::catch'd (spies/matcher fn?)))
+            (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
+            (is (spies/called-with? ch/finally ::peek'd (spies/matcher fn?)))
             (then-f ::success)
             (is (spies/called-with? shared.interactions/toast ::success :success (spies/matcher string?)))
             (catch-f ::error)
@@ -84,8 +80,7 @@
     (with-redefs [actions/upload-replace (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
                   shared.interactions/toast (spies/create)
-                  ch/then (spies/constantly ::then'd)
-                  ch/catch (spies/constantly ::catch'd)]
+                  ch/peek (spies/constantly ::peek'd)]
       (let [reset-spy (spies/create)
             form (reify
                    IDeref
@@ -98,11 +93,9 @@
           ((interactions/replace-resource form ::id) ::files)
           (is (spies/called-with? actions/upload-replace ::id ::files))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::then'd (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
 
-          (let [[_ on-success] (first (spies/calls ch/then))
-                [_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ on-success on-error] (first (spies/calls ch/peek))]
             (testing "handles a success response"
               (spies/reset! shared.interactions/toast reset-spy)
               (on-success ::body)
@@ -119,8 +112,7 @@
     (with-redefs [actions/upload (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
                   shared.interactions/toast (spies/create)
-                  ch/then (spies/constantly ::then'd)
-                  ch/catch (spies/constantly ::catch'd)]
+                  ch/peek (spies/constantly ::peek'd)]
       (let [reset-spy (spies/create)
             form (reify
                    IDeref
@@ -133,11 +125,9 @@
           ((interactions/upload-resources form) ::files)
           (is (spies/called-with? actions/upload ::files))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::then'd (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
 
-          (let [[_ on-success] (first (spies/calls ch/then))
-                [_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ on-success on-error] (first (spies/calls ch/peek))]
             (testing "handles a success response"
               (spies/reset! shared.interactions/toast reset-spy)
               (on-success ::body)

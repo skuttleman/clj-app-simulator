@@ -2,7 +2,6 @@
   (:refer-clojure :exclude [get])
   (:require
     [clojure.core.async :as async]
-    [clojure.java.io :as io]
     [clojure.test :refer :all]
     [com.ben-allred.app-simulator.services.files :as files]
     [com.ben-allred.app-simulator.services.http :as http]

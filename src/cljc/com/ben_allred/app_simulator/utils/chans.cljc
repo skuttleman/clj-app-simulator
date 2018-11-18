@@ -42,11 +42,20 @@
        (then on-success)
        (catch on-error))))
 
-(defn peek [ch cb]
+(defn peek* [ch cb]
   (async/go
     (let [result (async/<! ch)]
       (handle cb result)
       result)))
+
+(defn peek
+  ([ch cb]
+   (peek ch cb (constantly nil)))
+  ([ch on-success on-error]
+   (peek* ch (fn [[status value]]
+               (if (= :success status)
+                 (on-success value)
+                 (on-error value))))))
 
 (defn finally [ch cb]
   (async/go
@@ -57,7 +66,6 @@
               (then (fn [_] (async/go result)))
               (async/<!))
           result)))))
-
 
 (defmacro ->catch [ch binding & body]
   `(com.ben-allred.app-simulator.utils.chans/catch ~ch (fn [~binding] ~@body)))

@@ -1,6 +1,5 @@
 (ns com.ben-allred.app-simulator.ui.simulators.ws.interactions
   (:require
-    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
@@ -25,19 +24,15 @@
     (-> simulator-id
         (actions/disconnect-all)
         (store/dispatch)
-        (ch/->then body
-          (shared.interactions/toast body :success "The web sockets have been disconnected"))
-        (ch/->catch body
-          (shared.interactions/toast body :error "The web sockets could not be disconnected")))))
+        (ch/peek #(shared.interactions/toast % :success "The web sockets have been disconnected")
+                 #(shared.interactions/toast % :error "The web sockets could not be disconnected")))))
 
 (defn disconnect [simulator-id socket-id]
   (fn [_]
     (-> (actions/disconnect simulator-id socket-id)
         (store/dispatch)
-        (ch/->then body
-          (shared.interactions/toast body :success "The web socket has been disconnected"))
-        (ch/->catch body
-          (shared.interactions/toast body :error "The web socket could not be disconnected")))))
+        (ch/peek #(shared.interactions/toast % :success "The web socket has been disconnected")
+                 #(shared.interactions/toast % :error "The web socket could not be disconnected")))))
 
 (defn send-message [form simulator-id socket-id]
   (fn [hide]
@@ -47,11 +42,10 @@
           (-> simulator-id
               (actions/send-message socket-id (:message current-model))
               (store/dispatch)
-              (ch/->then body
-                (shared.interactions/toast body :success "The message has been sent")
-                (reset! form current-model))
-              (ch/->catch body
-                (shared.interactions/toast body :error "The message could not be sent"))
+              (ch/peek (fn [body]
+                         (shared.interactions/toast body :success "The message has been sent")
+                         (reset! form current-model))
+                       #(shared.interactions/toast % :error "The message could not be sent"))
               (ch/finally hide)))
         (ch/reject)))))
 
@@ -63,16 +57,16 @@
           [:modals/message-editor form nil resources/view->model]
           (str (if socket-id "Send" "Broadcast") " a Message")
           [shared.views/sync-button
-            {:form form
-             :text "Send"
-             :sync-text "Sending"
-             :on-click (send-message form simulator-id socket-id)
-             :on-event :on-click
-             :class-name "send-button is-info"}]
+           {:form       form
+            :text       "Send"
+            :sync-text  "Sending"
+            :on-click   (send-message form simulator-id socket-id)
+            :on-event   :on-click
+            :class-name "send-button is-info"}]
           [shared.views/sync-button
-           {:form form
-            :text "Cancel"
-            :sync-text "Cancel"
+           {:form       form
+            :text       "Cancel"
+            :sync-text  "Canceling"
             :class-name "cancel-button"}])))))
 
 (defn show-ws-modal [message]

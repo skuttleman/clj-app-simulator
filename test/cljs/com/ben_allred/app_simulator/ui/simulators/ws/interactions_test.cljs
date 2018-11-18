@@ -43,24 +43,22 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/disconnect-all (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/constantly ::handled)]
+                  ch/peek (spies/constantly ::handled)]
       (let [result ((interactions/disconnect-all ::id) ::event)]
         (testing "disconnects all sockets"
           (is (spies/called-with? actions/disconnect-all ::id))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
           (is (= result ::handled)))
 
         (testing "handles a success"
-          (let [[_ on-success] (first (spies/calls ch/then))]
+          (let [[_ on-success] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-success ::body)
             (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
         (testing "handles an error"
-          (let [[_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ _ on-error] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-error ::body)
             (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
@@ -70,24 +68,22 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/disconnect (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/constantly ::handled)]
+                  ch/peek (spies/constantly ::handled)]
       (let [result ((interactions/disconnect ::sim ::id) ::event)]
         (testing "disconnects all sockets"
           (is (spies/called-with? actions/disconnect ::sim ::id))
           (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-          (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
           (is (= result ::handled)))
 
         (testing "handles a success"
-          (let [[_ on-success] (first (spies/calls ch/then))]
+          (let [[_ on-success] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-success ::body)
             (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
         (testing "handles an error"
-          (let [[_ on-error] (first (spies/calls ch/catch))]
+          (let [[_ _ on-error] (first (spies/calls ch/peek))]
             (spies/reset! shared.interactions/toast)
             (on-error ::body)
             (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
@@ -97,8 +93,7 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/send-message (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/then (spies/create (fn [ch _] ch))
-                  ch/catch (spies/create (fn [ch _] ch))
+                  ch/peek (spies/create (fn [ch _] ch))
                   ch/finally (spies/constantly ::handled)]
       (testing "when the form is creatable"
         (with-redefs [shared.interactions/creatable? (constantly true)]
@@ -115,13 +110,12 @@
             (testing "sends a message"
               (is (spies/called-with? actions/send-message ::sim ::id ::message))
               (is (spies/called-with? store/dispatch ::action))
-              (is (spies/called-with? ch/then ::request (spies/matcher fn?)))
-              (is (spies/called-with? ch/catch ::request (spies/matcher fn?)))
+              (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
               (is (spies/called-with? ch/finally ::request (spies/matcher fn?)))
               (is (= result ::handled)))
 
             (testing "handles a success"
-              (let [[_ on-success] (first (spies/calls ch/then))]
+              (let [[_ on-success] (first (spies/calls ch/peek))]
                 (spies/reset! hide-spy reset-spy shared.interactions/toast)
                 (on-success ::body)
                 (is (spies/never-called? hide-spy))
@@ -129,7 +123,7 @@
                 (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
             (testing "handles an error"
-              (let [[_ on-error] (first (spies/calls ch/catch))]
+              (let [[_ _ on-error] (first (spies/calls ch/peek))]
                 (spies/reset! hide-spy reset-spy shared.interactions/toast)
                 (on-error ::body)
                 (is (spies/never-called? hide-spy))
@@ -152,8 +146,7 @@
 
 (deftest ^:unit show-send-modal-test
   (testing "(show-send-modal)"
-    (with-redefs [forms/errors (constantly nil)
-                  form.std/create (spies/constantly ::form)
+    (with-redefs [form.std/create (spies/constantly ::form)
                   actions/show-modal (spies/constantly ::action)
                   store/dispatch (spies/create)
                   interactions/send-message (spies/constantly ::send)]
