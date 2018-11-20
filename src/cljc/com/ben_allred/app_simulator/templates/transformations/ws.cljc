@@ -4,7 +4,7 @@
     [com.ben-allred.app-simulator.templates.transformations.shared :as shared.tr]
     [com.ben-allred.formation.core :as f]))
 
-(def source->model identity)
+(def source->model #(select-keys % #{:group :name :description}))
 
 (def model->view
   {:path   str
@@ -17,10 +17,3 @@
 (def model->source
   (f/make-transformer
     shared.tr/model->source))
-
-(defn sim->model [sim]
-  (-> sim
-      (:config)
-      (select-keys #{:group :name :description})
-      (source->model)))
-

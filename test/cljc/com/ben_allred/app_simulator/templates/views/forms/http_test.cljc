@@ -140,7 +140,7 @@
                          (test.dom/attrs)
                          (:on-click)
                          (= ::reset)))
-                 (is (spies/called-with? interactions/reset-simulator ::form ::id)))))
+                 (is (spies/called-with? interactions/reset-simulator ::id)))))
 
           #?(:cljs
              (testing "handles form submission"

@@ -19,15 +19,15 @@
     (with-redefs [shared.interactions/update-simulator (spies/constantly ::update)]
       (testing "updates the simulator"
         (let [handler (interactions/update-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source ::id))
+          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source tr/source->model ::id))
           (is (= ::update handler)))))))
 
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
     (with-redefs [shared.interactions/reset-config (spies/constantly ::reset)]
       (testing "resets the simulator"
-        (let [handler (interactions/reset-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/reset-config ::form tr/sim->model ::id :ws))
+        (let [handler (interactions/reset-simulator ::id)]
+          (is (spies/called-with? shared.interactions/reset-config tr/source->model ::id :ws))
           (is (= ::reset handler)))))))
 
 (deftest ^:unit create-simulator-test
@@ -93,49 +93,42 @@
     (with-redefs [shared.interactions/toast (spies/create)
                   actions/send-message (spies/constantly ::action)
                   store/dispatch (spies/constantly ::request)
-                  ch/peek (spies/create (fn [ch _] ch))
+                  ch/peek (spies/constantly ::peek'd)
                   ch/finally (spies/constantly ::handled)]
       (testing "when the form is creatable"
         (with-redefs [shared.interactions/creatable? (constantly true)]
-          (let [reset-spy (spies/create)
-                hide-spy (spies/create)
+          (let [hide-spy (spies/create)
                 form (reify
                        IDeref
                        (-deref [_]
-                         {:message ::message})
-                       IReset
-                       (-reset! [_ model]
-                         (reset-spy model)))
+                         {:message ::message}))
                 result (((interactions/send-message form ::sim ::id) hide-spy) ::event)]
             (testing "sends a message"
               (is (spies/called-with? actions/send-message ::sim ::id ::message))
               (is (spies/called-with? store/dispatch ::action))
               (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
-              (is (spies/called-with? ch/finally ::request (spies/matcher fn?)))
+              (is (spies/called-with? ch/finally ::peek'd (spies/matcher fn?)))
               (is (= result ::handled)))
 
             (testing "handles a success"
               (let [[_ on-success] (first (spies/calls ch/peek))]
-                (spies/reset! hide-spy reset-spy shared.interactions/toast)
+                (spies/reset! hide-spy shared.interactions/toast)
                 (on-success ::body)
                 (is (spies/never-called? hide-spy))
-                (is (spies/called-with? reset-spy {:message ::message}))
                 (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))))
 
             (testing "handles an error"
               (let [[_ _ on-error] (first (spies/calls ch/peek))]
-                (spies/reset! hide-spy reset-spy shared.interactions/toast)
+                (spies/reset! hide-spy shared.interactions/toast)
                 (on-error ::body)
                 (is (spies/never-called? hide-spy))
-                (is (spies/never-called? reset-spy))
                 (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))
 
             (testing "hides the modal"
               (let [[_ on-finally] (first (spies/calls ch/finally))]
-                (spies/reset! hide-spy reset-spy shared.interactions/toast)
+                (spies/reset! hide-spy shared.interactions/toast)
                 (on-finally)
                 (is (spies/called-with? hide-spy))
-                (is (spies/never-called? reset-spy))
                 (is (spies/never-called? shared.interactions/toast)))))))
 
       (testing "when the form is not creatable"

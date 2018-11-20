@@ -14,6 +14,18 @@
              paths
              new-model))
 
+(defn ^:private nest [paths path model]
+  (reduce-kv (fn [paths k v]
+               (let [path (conj path k)]
+                 (if (map? v)
+                   (nest paths path v)
+                   (assoc paths path v))))
+             paths
+             model))
+
+(defn ^:private roll-up [errors sync-state]
+  (reduce-kv assoc-in errors sync-state))
+
 (defn ^:private swap* [{:keys [current] :as state} validator f f-args]
   (let [model (apply f current f-args)]
     (-> state
@@ -37,8 +49,13 @@
    (let [state (r/atom (init model validator))]
      (reify
        forms/ISync
-       (ready! [_ result]
-         (swap! state assoc :syncing? false))
+       (ready! [_ status result]
+         (if (= :success status)
+           (reset! state (init result validator))
+           (swap! state assoc
+                  :syncing? false
+                  :server-errors (nest {} [] (:errors result))
+                  :sync-state (:current @state))))
        (sync! [_]
          (swap! state assoc :syncing? true))
        (syncing? [_]
@@ -62,9 +79,12 @@
 
        forms/IValidate
        (errors [_]
-         (:errors @state))
-       (valid? [_]
-         (empty? (:errors @state)))
+         (let [{:keys [errors server-errors sync-state current]} @state]
+           (cond-> errors
+             (and server-errors (= sync-state current))
+             (roll-up server-errors))))
+       (valid? [this]
+         (empty? (forms/errors this)))
 
        forms/ITry
        (try! [_]

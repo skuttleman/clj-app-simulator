@@ -286,7 +286,7 @@
               (is (spies/called-with? handler-spy ::event))
               (is (spies/called-with? ch/peek* ::result (spies/matcher fn?)))
               (f [:status ::async])
-              (is (spies/called-with? forms/ready! ::form [:status ::async]))
+              (is (spies/called-with? forms/ready! ::form :status ::async))
               (is (= ::peek'd result)))))))))
 
 (deftest ^:unit sync-button-test

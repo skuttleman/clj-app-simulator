@@ -8,7 +8,7 @@
 (defn create [model]
   (reify
     forms/ISync
-    (ready! [_ _])
+    (ready! [_ _ _])
     (sync! [_])
     (syncing? [_]
       false)

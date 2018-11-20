@@ -44,7 +44,7 @@
   (testing "(model->source)"
     (testing "transforms values"
       (are [key input expected] (-> input
-                                    ((get-in tr/model->source [0 key]))
+                                    ((get tr/model->source key))
                                     (= expected))
         :name "   name   " "name"
         :group "  group  " "group"

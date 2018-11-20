@@ -15,7 +15,7 @@
         :on-click (interactions/show-delete-modal "Delete Resource" "this resource" (actions/delete-upload id))}
        resource
        [components/upload
-        {:on-change          (interactions/replace-resource form id)
+        {:on-change          (interactions/replace-resource id)
          :class-name         "is-warning"
          :single?            true
          :sync-fn            #(forms/syncing? form)
@@ -29,7 +29,7 @@
        {:disabled (or (empty? resources) (forms/syncing? form))
         :on-click (interactions/show-delete-modal "Delete All Resources" "all resources" actions/delete-uploads)}
        [components/upload
-        {:on-change          (interactions/upload-resources form)
+        {:on-change          interactions/upload-resources
          :class-name         "is-primary"
          :sync-fn            #(forms/syncing? form)
          :static-content     "Upload"

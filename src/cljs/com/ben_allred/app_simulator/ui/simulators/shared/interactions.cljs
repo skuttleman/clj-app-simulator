@@ -19,7 +19,7 @@
        (actions/show-toast level)
        (store/dispatch)))
 
-(defn update-simulator [form model->source id]
+(defn update-simulator [form model->source source->model id]
   (fn [_]
     (if (updatable? form)
       (let [current-model @form]
@@ -27,10 +27,9 @@
             (model->source)
             (->> (actions/update-simulator id))
             (store/dispatch)
-            (ch/peek (fn [body]
-                       (reset! form current-model)
-                       (toast body :success "The simulator has been updated"))
-                     #(toast % :error "The simulator could not be updated"))))
+            (ch/peek #(toast % :success "The simulator has been updated")
+                     #(toast % :error "The simulator could not be updated"))
+            (ch/then (comp source->model :config :simulator))))
       (ch/reject))))
 
 (defn clear-requests [type id]
@@ -55,14 +54,13 @@
                    #(toast % :error "The simulator could not be deleted"))
           (ch/finally hide)))))
 
-(defn reset-config [form sim->model id type]
+(defn reset-config [source->model id type]
   (fn [_]
     (-> (actions/reset-simulator-config id type)
         (store/dispatch)
-        (ch/peek (fn [body]
-                   (reset! form (sim->model (:simulator body)))
-                   (toast body :success "The simulator's configuration has been reset"))
-                 #(toast % :error "The simulator's configuration could not be reset")))))
+        (ch/peek #(toast % :success "The simulator's configuration has been reset")
+                 #(toast % :error "The simulator's configuration could not be reset"))
+        (ch/then (comp source->model :config :simulator)))))
 
 (defn create-simulator [form model->source]
   (fn [_]
@@ -73,7 +71,6 @@
             (actions/create-simulator)
             (store/dispatch)
             (ch/peek (fn [body]
-                       (reset! form current-model)
                        (toast body :success "The simulator has been created")
                        (->> (select-keys (:simulator body) #{:id})
                             (nav/nav-and-replace! :details)))

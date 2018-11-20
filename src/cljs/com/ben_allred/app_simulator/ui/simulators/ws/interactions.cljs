@@ -11,10 +11,10 @@
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (defn update-simulator [form id]
-  (shared.interactions/update-simulator form tr/model->source id))
+  (shared.interactions/update-simulator form tr/model->source tr/source->model id))
 
-(defn reset-simulator [form id]
-  (shared.interactions/reset-config form tr/sim->model id :ws))
+(defn reset-simulator [id]
+  (shared.interactions/reset-config tr/source->model id :ws))
 
 (defn create-simulator [form]
   (shared.interactions/create-simulator form tr/model->source))
@@ -42,9 +42,7 @@
           (-> simulator-id
               (actions/send-message socket-id (:message current-model))
               (store/dispatch)
-              (ch/peek (fn [body]
-                         (shared.interactions/toast body :success "The message has been sent")
-                         (reset! form current-model))
+              (ch/peek #(shared.interactions/toast % :success "The message has been sent")
                        #(shared.interactions/toast % :error "The message could not be sent"))
               (ch/finally hide)))
         (ch/reject)))))

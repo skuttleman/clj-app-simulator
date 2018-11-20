@@ -15,15 +15,15 @@
     (with-redefs [shared.interactions/update-simulator (spies/constantly ::handler)]
       (testing "updates the simulator"
         (let [handler (interactions/update-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source ::id))
+          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source tr/source->model ::id))
           (is (= handler ::handler)))))))
 
 (deftest ^:unit reset-simulator-test
   (testing "(reset-simulator)"
     (with-redefs [shared.interactions/reset-config (spies/constantly ::handler)]
       (testing "resets the simulator"
-        (let [handler (interactions/reset-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/reset-config ::form tr/sim->model ::id :file))
+        (let [handler (interactions/reset-simulator ::id)]
+          (is (spies/called-with? shared.interactions/reset-config tr/source->model ::id :file))
           (is (= handler ::handler)))))))
 
 (deftest ^:unit create-simulator-test
@@ -81,31 +81,22 @@
                   store/dispatch (spies/constantly ::request)
                   shared.interactions/toast (spies/create)
                   ch/peek (spies/constantly ::peek'd)]
-      (let [reset-spy (spies/create)
-            form (reify
-                   IDeref
-                   (-deref [_]
-                     ::model)
-                   IReset
-                   (-reset! [_ model]
-                     (reset-spy model)))]
-        (testing "replaces a resource"
-          ((interactions/replace-resource form ::id) ::files)
-          (is (spies/called-with? actions/upload-replace ::id ::files))
-          (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
+      (testing "replaces a resource"
+        ((interactions/replace-resource ::id) ::files)
+        (is (spies/called-with? actions/upload-replace ::id ::files))
+        (is (spies/called-with? store/dispatch ::action))
+        (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
 
-          (let [[_ on-success on-error] (first (spies/calls ch/peek))]
-            (testing "handles a success response"
-              (spies/reset! shared.interactions/toast reset-spy)
-              (on-success ::body)
-              (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))
-              (is (spies/called-with? reset-spy ::model)))
+        (let [[_ on-success on-error] (first (spies/calls ch/peek))]
+          (testing "handles a success response"
+            (spies/reset! shared.interactions/toast)
+            (on-success ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?))))
 
-            (testing "handles an error response"
-              (spies/reset! shared.interactions/toast reset-spy)
-              (on-error ::body)
-              (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?))))))))))
+          (testing "handles an error response"
+            (spies/reset! shared.interactions/toast)
+            (on-error ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
 
 (deftest ^:unit upload-resources-test
   (testing "(upload-resources)"
@@ -113,31 +104,22 @@
                   store/dispatch (spies/constantly ::request)
                   shared.interactions/toast (spies/create)
                   ch/peek (spies/constantly ::peek'd)]
-      (let [reset-spy (spies/create)
-            form (reify
-                   IDeref
-                   (-deref [_]
-                     ::model)
-                   IReset
-                   (-reset! [_ model]
-                     (reset-spy model)))]
-        (testing "replaces a resource"
-          ((interactions/upload-resources form) ::files)
-          (is (spies/called-with? actions/upload ::files))
-          (is (spies/called-with? store/dispatch ::action))
-          (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
+      (testing "replaces a resource"
+        (interactions/upload-resources ::files)
+        (is (spies/called-with? actions/upload ::files))
+        (is (spies/called-with? store/dispatch ::action))
+        (is (spies/called-with? ch/peek ::request (spies/matcher fn?) (spies/matcher fn?)))
 
-          (let [[_ on-success on-error] (first (spies/calls ch/peek))]
-            (testing "handles a success response"
-              (spies/reset! shared.interactions/toast reset-spy)
-              (on-success ::body)
-              (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?)))
-              (is (spies/called-with? reset-spy ::model)))
+        (let [[_ on-success on-error] (first (spies/calls ch/peek))]
+          (testing "handles a success response"
+            (spies/reset! shared.interactions/toast)
+            (on-success ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :success (spies/matcher string?))))
 
-            (testing "handles an error response"
-              (spies/reset! shared.interactions/toast reset-spy)
-              (on-error ::body)
-              (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?))))))))))
+          (testing "handles an error response"
+            (spies/reset! shared.interactions/toast)
+            (on-error ::body)
+            (is (spies/called-with? shared.interactions/toast ::body :error (spies/matcher string?)))))))))
 
 (defn run-tests []
   (t/run-tests))

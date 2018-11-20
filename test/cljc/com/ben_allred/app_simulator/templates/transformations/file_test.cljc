@@ -69,24 +69,5 @@
         {:name ""}
         {:name nil}))))
 
-(deftest ^:unit sim->model-test
-  (testing "(sim->model)"
-    (testing "transforms values"
-      (with-redefs [tr/source->model (spies/constantly ::model)]
-        (let [config {:things      ::things
-                      :stuff       ::stuff
-                      :group       ::group
-                      :response    ::response
-                      :delay       ::delay
-                      :name        ::name
-                      :description ::description}
-              result (tr/sim->model {:config config})]
-          (is (spies/called-with? tr/source->model {:group       ::group
-                                                    :response    ::response
-                                                    :delay       ::delay
-                                                    :name        ::name
-                                                    :description ::description}))
-          (is (= ::model result)))))))
-
 (defn run-tests []
   (t/run-tests))

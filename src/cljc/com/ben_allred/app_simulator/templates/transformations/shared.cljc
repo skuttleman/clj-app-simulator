@@ -59,8 +59,6 @@
                      %)})
 
 (def model->source
-  [{:name        strings/trim-to-nil
-    :group       strings/trim-to-nil
-    :description strings/trim-to-nil}
-   (fns/=> (maps/update-maybe :response #(cond-> %
-                                           (nil? (:body % "")) (dissoc :body))))])
+  {:name        strings/trim-to-nil
+   :group       strings/trim-to-nil
+   :description strings/trim-to-nil})

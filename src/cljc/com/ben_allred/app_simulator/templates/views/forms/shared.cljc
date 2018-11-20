@@ -90,7 +90,8 @@
                                (forms/sync! form)
                                (-> event
                                    (handler)
-                                   (ch/peek* (partial forms/ready! form))))))))))
+                                   (ch/peek* (fn [[status value]]
+                                               (forms/ready! form status value)))))))))))
 
 (defn sync-button [{:keys [form on-event sync-text text] :as attrs}]
   (let [syncing? (forms/syncing? form)]

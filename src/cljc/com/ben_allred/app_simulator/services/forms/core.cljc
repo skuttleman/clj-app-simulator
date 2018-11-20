@@ -1,7 +1,7 @@
 (ns com.ben-allred.app-simulator.services.forms.core)
 
 (defprotocol ISync
-  (ready! [this result])
+  (ready! [this status result])
   (sync! [this])
   (syncing? [this]))
 

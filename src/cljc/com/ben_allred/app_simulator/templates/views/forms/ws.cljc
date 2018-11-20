@@ -86,11 +86,11 @@
       :type       :button
       :class-name "is-warning reset-button"
       :disabled   #?(:clj true :cljs false)
-      #?@(:cljs [:on-click (interactions/reset-simulator form id)
+      #?@(:cljs [:on-click (interactions/reset-simulator id)
                  :on-event :on-click])}]]])
 
 (defn sim-edit-form [{:keys [id] :as sim}]
-  (let [model (tr/sim->model sim)
+  (let [model (tr/source->model (:config sim))
         form #?(:clj  (form.no/create model)
                 :cljs (form.std/create model))]
     (fn [_simulator]

@@ -11,15 +11,15 @@
     (with-redefs [shared.interactions/update-simulator (spies/constantly ::handler)]
       (testing "updates the simulator"
         (let [handler (interactions/update-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source ::id))
+          (is (spies/called-with? shared.interactions/update-simulator ::form tr/model->source tr/source->model ::id))
           (is (= handler ::handler)))))))
 
 (deftest ^:unit reset-simulator
   (testing "(reset-simulator)"
     (with-redefs [shared.interactions/reset-config (spies/constantly ::handler)]
       (testing "resets the simulator"
-        (let [handler (interactions/reset-simulator ::form ::id)]
-          (is (spies/called-with? shared.interactions/reset-config ::form tr/sim->model ::id :http))
+        (let [handler (interactions/reset-simulator ::id)]
+          (is (spies/called-with? shared.interactions/reset-config tr/source->model ::id :http))
           (is (= handler ::handler)))))))
 
 (deftest ^:unit create-simulator

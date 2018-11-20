@@ -5,7 +5,8 @@
     [com.ben-allred.formation.core :as f]))
 
 (def source->model
-  (f/make-transformer shared.tr/source->model*))
+  (f/make-transformer (conj shared.tr/source->model*
+                            #(select-keys % #{:group :response :delay :name :description}))))
 
 (def model->view
   (merge-with merge
@@ -21,10 +22,3 @@
   (f/make-transformer
     [{:response shared.tr/headers->source}
      shared.tr/model->source]))
-
-(defn sim->model [sim]
-  (-> sim
-      (:config)
-      (select-keys #{:group :response :delay :name :description})
-      (source->model)))
-

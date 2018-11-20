@@ -36,7 +36,7 @@
                           (test.dom/query-one components/upload)
                           (test.dom/attrs))]
             (is (:single? attrs))
-            (is (spies/called-with? interactions/replace-resource ::form ::id))
+            (is (spies/called-with? interactions/replace-resource ::id))
             (is (= ::action (:on-change attrs)))
             (is ((:sync-fn attrs)))
             (is (= "Replace" (:static-content attrs)))
@@ -44,8 +44,7 @@
 
 (deftest ^:unit root-test
   (testing "(root)"
-    (with-redefs [interactions/upload-resources (spies/constantly ::action)
-                  interactions/show-delete-modal (spies/constantly ::on-click)
+    (with-redefs [interactions/show-delete-modal (spies/constantly ::on-click)
                   form.std/create (constantly ::form)
                   forms/syncing? (spies/constantly true)]
       (let [root (resources/root ::ignored)
@@ -60,8 +59,7 @@
           (let [attrs (-> upload-btn
                           (test.dom/query-one components/upload)
                           (test.dom/attrs))]
-            (is (= ::action (:on-change attrs)))
-            (is (spies/called-with? interactions/upload-resources ::form))
+            (is (= interactions/upload-resources (:on-change attrs)))
             (is ((:sync-fn attrs)))
             (is (= "Upload" (:static-content attrs)))
             (is (= "Uploading" (:persisting-content attrs)))))

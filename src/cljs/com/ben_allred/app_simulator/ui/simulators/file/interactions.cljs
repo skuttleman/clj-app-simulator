@@ -7,10 +7,10 @@
     [com.ben-allred.app-simulator.utils.chans :as ch :include-macros true]))
 
 (defn update-simulator [form id]
-  (shared.interactions/update-simulator form tr/model->source id))
+  (shared.interactions/update-simulator form tr/model->source tr/source->model id))
 
-(defn reset-simulator [form id]
-  (shared.interactions/reset-config form tr/sim->model id :file))
+(defn reset-simulator [id]
+  (shared.interactions/reset-config tr/source->model id :file))
 
 (defn create-simulator [form]
   (shared.interactions/create-simulator form tr/model->source))
@@ -36,27 +36,20 @@
         [:button.button.cancel-button
          "Cancel"]))))
 
-(defn replace-resource [form id]
+(defn replace-resource [id]
   (fn [files]
-    (let [current-model @form]
-      (-> (actions/upload-replace id files)
-          (store/dispatch)
-          (ch/peek (fn [body]
-                     (shared.interactions/toast body :success "The resource has been replaced")
-                     (reset! form current-model))
-                   #(shared.interactions/toast % :error "The resource could not be replaced"))))))
+    (-> (actions/upload-replace id files)
+        (store/dispatch)
+        (ch/peek #(shared.interactions/toast % :success "The resource has been replaced")
+                 #(shared.interactions/toast % :error "The resource could not be replaced")))))
 
-(defn upload-resources [form]
-  (fn [files]
-    (let [current-model @form]
-      (-> files
-          (actions/upload)
-          (store/dispatch)
-          (ch/peek (fn [body]
-                     (shared.interactions/toast body
-                                                :success
-                                                "The resources have been uploaded and are available for use in a file simulator")
-                     (reset! form current-model))
-                   #(shared.interactions/toast %
-                                               :error
-                                               "The resources could not be uploaded"))))))
+(defn upload-resources [files]
+  (-> files
+      (actions/upload)
+      (store/dispatch)
+      (ch/peek #(shared.interactions/toast %
+                                           :success
+                                           "The resources have been uploaded and are available for use in a file simulator")
+               #(shared.interactions/toast %
+                                           :error
+                                           "The resources could not be uploaded"))))

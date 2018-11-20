@@ -34,13 +34,5 @@
       {:group "a group "} {:group "a group"}
       {:description "   \n  description"} {:description "description"})))
 
-(deftest ^:unit sim->model-test
-  (testing "(sim->model)"
-    (is (= {:group ::group :name ::name :description ::description}
-           (tr/sim->model {:config {:group       ::group
-                                    :description ::description
-                                    :name        ::name
-                                    :other       ::values}})))))
-
 (defn run-tests []
   (t/run-tests))

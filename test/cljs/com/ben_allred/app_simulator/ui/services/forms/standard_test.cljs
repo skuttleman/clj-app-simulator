@@ -11,7 +11,7 @@
       (let [form (form.std/create ::model)]
         (forms/sync! form)
         (is (forms/syncing? form))
-        (forms/ready! form ::value)
+        (forms/ready! form ::status ::value)
         (is (not (forms/syncing? form)))))
 
     (testing "satisfies IChange"

@@ -166,12 +166,12 @@
 
 (deftest ^:unit sim-edit-form-test
   (testing "(sim-edit-form)"
-    (with-redefs [tr/sim->model (spies/constantly ::model)
+    (with-redefs [tr/source->model (spies/constantly ::model)
                   #?(:clj form.no/create :cljs form.std/create) (spies/constantly ::form)]
-      (let [component (ws.views/sim-edit-form {:id ::id ::other ::things})]
+      (let [component (ws.views/sim-edit-form {:config ::config :id ::id ::other ::things})]
         #?(:cljs
            (testing "creates a form"
-             (is (spies/called-with? tr/sim->model {:id ::id ::other ::things}))
+             (is (spies/called-with? tr/source->model ::config))
              (is (spies/called-with? #?(:clj form.no/create :cljs form.std/create) ::model))))
 
         (testing "returns a component"
