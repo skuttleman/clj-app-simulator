@@ -75,11 +75,10 @@
                          [state [http.views/sim-create-form] [views/spinner]]))))))
 
           (testing "when rendering a details component"
-            (with-redefs [utils.sims/config->section (spies/create)
-                          uuids/->uuid (spies/constantly ::uuid)]
+            (with-redefs [utils.sims/config->section (spies/create)]
               (let [simulator {:config ::config :data ::data}
                     state {:page       {:route-params {:id ::id}}
-                           :simulators {:data {::uuid simulator}}
+                           :simulators {:data {::id simulator}}
                            :resources  {:data ::resources}}]
                 (testing "and when the simulator is type :http"
                   (spies/respond-with! utils.sims/config->section (constantly "http"))
@@ -88,7 +87,6 @@
                                    (details)
                                    (test.dom/query-one views/details)
                                    (rest))]
-                      (is (spies/called-with? uuids/->uuid ::id))
                       (is (spies/called-with? utils.sims/config->section ::config))
                       (is (= args
                              [[http.views/sim simulator] [views/spinner]])))))
@@ -100,7 +98,6 @@
                                    (details)
                                    (test.dom/query-one views/details)
                                    (rest))]
-                      (is (spies/called-with? uuids/->uuid ::id))
                       (is (spies/called-with? utils.sims/config->section ::config))
                       (is (= args
                              [[ws.views/sim simulator] [views/spinner]])))))
@@ -112,13 +109,11 @@
                                    (details)
                                    (test.dom/query-one views/details)
                                    (rest))]
-                      (is (spies/called-with? uuids/->uuid ::id))
                       (is (spies/called-with? utils.sims/config->section ::config))
                       (is (= args
                              [[file.views/sim simulator ::resources] [views/spinner]]))))))
 
               (testing "and when the simulator is not found"
-                (spies/respond-with! uuids/->uuid ::missing-uuid)
                 (let [[msg spinner] (-> state
                                         (details)
                                         (test.dom/query-one views/details)

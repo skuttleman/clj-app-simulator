@@ -442,7 +442,7 @@
 
                       (let [{event-1 :event data-1 :data} (chans/<⏰!! chan)
                             {event-2 :event data-2 :data} (chans/<⏰!! chan)
-                            sockets #{(:socket-id data-1) (:socket-id data-2)}]
+                            sockets (into #{} (map :socket-id) [data-1 data-2])]
                         (testing "publishes an event for the first socket"
                           (is (= :simulators.ws/disconnect (keyword event-1)))
                           (is (contains? sockets socket-id-1)))
@@ -494,7 +494,7 @@
                     (testing "publishes an event for each socket that was disconnected"
                       (let [{event-1 :event data-1 :data} (chans/<⏰!! chan)
                             {event-2 :event data-2 :data} (chans/<⏰!! chan)
-                            sockets #{(:socket-id data-1) (:socket-id data-2)}]
+                            sockets (into #{} (map :socket-id) [data-1 data-2])]
                         (is (= :simulators.ws/disconnect (keyword event-1)))
                         (is (= :simulators.ws/disconnect (keyword event-2)))
                         (is (contains? sockets socket-id-1))

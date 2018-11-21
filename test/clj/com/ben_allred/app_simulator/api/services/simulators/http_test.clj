@@ -8,6 +8,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.app-simulator.api.utils.respond :as respond]
     [com.ben-allred.app-simulator.api.utils.specs :as specs]
+    [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [test.utils.spies :as spies]))
 
@@ -148,14 +149,21 @@
           (is (= ::details (:config result)))
           (is (= ::id (:id result))))))))
 
-(deftest ^:unit ->HttpSimulator.identifier-test
-  (testing "(->HttpSimulator.identifier)"
-    (testing "returns unique identifier"
+(deftest ^:unit ->HttpSimulator.method-test
+  (testing "(->HttpSimulator.method)"
+    (testing "returns unique method"
       (let [[sim] (simulator {:method   :http/get
                               :path     "/some/:param/url/:thing"
                               :response {:status 204}})]
-        (let [result (common/identifier sim)]
-          (is (= [:get "/some/*/url/*"] result)))))))
+        (is (= :get (common/method sim)))))))
+
+(deftest ^:unit ->HttpSimulator.path-test
+  (testing "(->HttpSimulator.path)"
+    (testing "returns unique path"
+      (let [[sim] (simulator {:method   :http/get
+                              :path     "/some/:param/url/:thing"
+                              :response {:status 204}})]
+        (is (= "/some/:param/url/:thing" (common/path sim)))))))
 
 (deftest ^:unit ->HttpSimulator.reset-test
   (testing "(->HttpSimulator.reset)"
@@ -206,3 +214,39 @@
               (common/reset! sim ::bad-config)
               (catch Throwable ex
                 (is (= ::reasons (:problems (ex-data ex))))))))))))
+
+(deftest ^:unit ->HttpSimulator.equals-test
+  (testing "(->HttpSimulator.equals"
+    (testing "when the path sections match"
+      (with-redefs [nav*/path-matcher (constantly (constantly true))]
+        (are [config-1 config-2 does?] (let [[sim-1] (-> config-1
+                                                         (assoc :response {:status 204})
+                                                         (simulator))
+                                             sim-2 (when (map? config-2)
+                                                     (reify common/IIdentify
+                                                       (method [_]
+                                                         (:method config-2))
+                                                       (path [_]
+                                                         (:path config-2))))]
+                                         (= does? (= sim-1 sim-2)))
+          {:method :http/get :path "/path"} {:method :get :path ::path} true
+          {:method :http/post :path "/path"} {:method :post :path ::path} true
+          {:method :http/patch :path "/path"} {:method :delete :path ::path} false
+          {:method :http/put :path "/path"} #{} false
+          {:method :http/put :path "/path"} "" false
+          {:method :http/put :path "/path"} nil false)))
+
+    (testing "when the path sections do not match"
+      (with-redefs [nav*/path-matcher (constantly (constantly false))]
+        (are [config-1 config-2] (let [[sim-1] (-> config-1
+                                                   (assoc :response {:status 204})
+                                                   (simulator))
+                                       sim-2 (when (map? config-2)
+                                               (reify common/IIdentify
+                                                 (method [_]
+                                                   (:method config-2))
+                                                 (path [_]
+                                                   (:path config-2))))]
+                                   (not= sim-1 sim-2))
+          {:method :http/get :path "/path"} {:method :get :path ::path}
+          {:method :http/post :path "/path"} {:method :post :path ::path})))))

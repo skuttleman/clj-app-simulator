@@ -1,10 +1,26 @@
 (ns com.ben-allred.app-simulator.services.navigation-test
   (:require
     [bidi.bidi :as bidi]
-    [clojure.test :as t :refer [deftest is testing]]
+    [clojure.test :as t :refer [are deftest is testing]]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.query-params :as qp]
     [test.utils.spies :as spies]))
+
+(deftest ^:unit path-matcher-test
+  (testing "(path-matcher)"
+    (are [path-1 path-2 matches?] (cond-> ((nav*/path-matcher path-1) path-2)
+                                    (not matches?) (not))
+      "/some/path" "/some/path" true
+      "/some/path" "/some/path/longer" false
+      "/some/path/longer" "/some/path" false
+      "/" "/" true
+      "/:thing" "/" false
+      "/" "/:thing" false
+      "/stuff/:thing/stuff" "/stuff/:thing/stuff" true
+      "/stuff/:thing/stuff" "/stuff/:more/stuff" true
+      "/stuff/:thing/stuff" "/stuff/thing/stuff" true
+      "/stuff/:thing/stuff" "/stuff/whatever/stuff" true
+      "/thing" "/:param" false)))
 
 (deftest ^:unit match-route*-test
   (testing "(match-route*)"

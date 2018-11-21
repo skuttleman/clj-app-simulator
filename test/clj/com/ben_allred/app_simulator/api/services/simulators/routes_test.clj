@@ -105,7 +105,6 @@
                    :requests ::requests}
           delete-spy (spies/create)]
       (with-redefs [common/details (spies/constantly details)
-                    common/identifier (spies/constantly ::identifier)
                     activity/publish (spies/create)]
         (testing "deletes the simulator"
           (let [handler (routes.sim/delete-sim ::env ::simulator delete-spy)
@@ -115,8 +114,7 @@
                                     :simulators/delete
                                     {:simulator details}))
 
-            (is (spies/called-with? common/identifier ::simulator))
-            (is (spies/called-with? delete-spy ::identifier))
+            (is (spies/called-with? delete-spy ::simulator))
             (is (= result [:http.status/no-content]))))))))
 
 (deftest ^:unit patch-test
@@ -191,8 +189,8 @@
               (testing "gets the details"
                 (is (spies/called-with? common/details ::simulator)))
 
-              (testing "publishes an event"
-                (is (spies/called-with? activity/publish ::env :simulators.ws/disconnect {:simulator {::some ::details}})))
+              (testing "does not publish an event"
+                (is (spies/never-called? activity/publish)))
 
               (testing "responds with the details"
                 (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))
@@ -207,8 +205,8 @@
               (testing "gets the details"
                 (is (spies/called-with? common/details ::simulator)))
 
-              (testing "publishes an event"
-                (is (spies/called-with? activity/publish ::env :simulators.ws/disconnect {:simulator {::some ::details} :socket-id socket-id})))
+              (testing "does not publish an event"
+                (is (spies/never-called? activity/publish)))
 
               (testing "responds with the details"
                 (is (= [:http.status/ok {:simulator {::some ::details}}] result)))))

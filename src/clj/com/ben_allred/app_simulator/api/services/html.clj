@@ -49,7 +49,7 @@
      [views/spinner]]))
 
 (defn ^:private details [{:keys [page simulators resources]}]
-  (let [id (uuids/->uuid (get-in page [:route-params :id]))
+  (let [id (get-in page [:route-params :id])
         data (:data simulators)]
     [views/details
      (if-let [{:keys [config] :as simulator} (get data id)]

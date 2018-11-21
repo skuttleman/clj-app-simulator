@@ -45,6 +45,7 @@
     [com.ben-allred.app-simulator.utils.keywords-test :as keywords-test]
     [com.ben-allred.app-simulator.utils.maps-test :as maps-test]
     [com.ben-allred.app-simulator.utils.query-params-test :as query-params-test]
+    [com.ben-allred.app-simulator.utils.sets-test :as sets-test]
     [com.ben-allred.app-simulator.utils.strings-test :as strings-test]))
 
 (enable-console-print!)
@@ -79,6 +80,7 @@
   (keywords-test/run-tests)
   (maps-test/run-tests)
   (query-params-test/run-tests)
+  (sets-test/run-tests)
   (strings-test/run-tests)
   (actions-test/run-tests)
   (forms.standard-test/run-tests)

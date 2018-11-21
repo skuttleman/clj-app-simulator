@@ -61,7 +61,7 @@
           state {:simulators {:status ::status
                               :data   {id {:config {:method :http/post :path "/path"}
                                            ::and   ::things}}}
-                 :page       {:route-params {:id (str id)}}}]
+                 :page       {:route-params {:id id}}}]
       (testing "when given an :http simulator"
         (let [root (-> state
                        (main/details)

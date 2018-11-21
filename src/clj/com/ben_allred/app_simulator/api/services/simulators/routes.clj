@@ -43,7 +43,7 @@
     (activity/publish env
                       :simulators/delete
                       {:simulator (common/details simulator)})
-    (delete-sim! (common/identifier simulator))
+    (delete-sim! simulator)
     [:http.status/no-content]))
 
 (defn patch [env simulator]
@@ -61,9 +61,8 @@
                                         (common/disconnect! simulator socket-id)
                                         (common/disconnect! simulator)))
           (let [details {:simulator (common/details simulator)}]
-            (activity/publish env action (cond-> details
-                                           (and (= :simulators.ws/disconnect action) socket-id)
-                                           (assoc :socket-id socket-id)))
+            (when (contains? #{:simulators/change :simulators/reset} action)
+              (activity/publish env action details))
             [:http.status/ok details]))
         (respond/abort! :simulators.change/failed-spec)))))
 

@@ -7,7 +7,8 @@
 
 (defprotocol IIdentify
   (details [this])
-  (identifier [this])
+  (method [this])
+  (path [this])
   (type [this]))
 
 (defprotocol IReceive
@@ -38,7 +39,9 @@
   IIdentify
   (details [this]
     nil)
-  (identifier [this]
+  (method [this]
+    nil)
+  (path [this]
     nil)
   (type [this]
     nil)

@@ -6,6 +6,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.app-simulator.api.utils.specs :as specs]
+    [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (defn ^:private sleep [ms]
@@ -17,7 +18,9 @@
 (defn ->FileSimulator [env id config]
   (when-let [{:keys [method path] :as config} (specs/conform :simulator.file/config config)]
     (let [{:keys [dispatch get-state]} (store/file-store)
-          id-path (string/replace path #":[^/]+" "*")]
+          method* (keyword (name method))
+          path-matches? (nav*/path-matcher path)
+          hash-code (.hashCode [method* (count (string/split path #"/"))])]
       (dispatch (actions/init config))
       (reify
         common/IReceive
@@ -36,8 +39,10 @@
           (-> (get-state)
               (store/details)
               (assoc :id id)))
-        (identifier [_]
-          [(keyword (name method)) id-path])
+        (method [_]
+          method*)
+        (path [_]
+          path)
         (type [_]
           :file)
 
@@ -59,4 +64,12 @@
           (case type
             :file/requests (dispatch actions/reset-requests)
             :file/response (dispatch actions/reset-response)
-            :file/config (dispatch actions/reset-config)))))))
+            :file/config (dispatch actions/reset-config)))
+
+        Object
+        (equals [_ other]
+          (and (satisfies? common/IIdentify other)
+               (= method* (common/method other))
+               (path-matches? (common/path other))))
+        (hashCode [_]
+          hash-code)))))

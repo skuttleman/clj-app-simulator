@@ -7,6 +7,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.app-simulator.api.utils.specs :as specs]
+    [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [test.utils.spies :as spies]))
@@ -148,15 +149,23 @@
           (is (= ::details (:config result)))
           (is (= ::id (:id result))))))))
 
-(deftest ^:unit ->FileSimulator.identifier-test
-  (testing "(->FileSimulator.identifier)"
-    (testing "returns unique identifier"
+(deftest ^:unit ->FileSimulator.method-test
+  (testing "(->FileSimulator.method)"
+    (testing "returns the simulator's method"
       (let [[sim] (simulator {:method   :file/post
                               :path     "/some/:param/url/:id/action"
                               :response {:status 204
                                          :file   (uuids/random)}})]
-        (let [result (common/identifier sim)]
-          (is (= [:post "/some/*/url/*/action"] result)))))))
+        (is (= :post (common/method sim)))))))
+
+(deftest ^:unit ->FileSimulator.path-test
+  (testing "(->FileSimulator.path)"
+    (testing "returns the simulator's path"
+      (let [[sim] (simulator {:method   :file/post
+                              :path     "/some/:param/url/:id/action"
+                              :response {:status 204
+                                         :file   (uuids/random)}})]
+        (is (= "/some/:param/url/:id/action" (common/path sim)))))))
 
 (deftest ^:unit ->FileSimulator.reset-test
   (testing "(->FileSimulator.reset)"
@@ -207,3 +216,41 @@
               (common/reset! sim ::bad-config)
               (catch Throwable ex
                 (is (= ::reasons (:problems (ex-data ex))))))))))))
+
+(deftest ^:unit ->FileSimulator.equals-test
+  (testing "(->FileSimulator.equals"
+    (testing "when the path sections match"
+      (with-redefs [nav*/path-matcher (constantly (constantly true))]
+        (are [config-1 config-2 does?] (let [[sim-1] (-> config-1
+                                                         (assoc :response {:status 200
+                                                                           :file   (uuids/random)})
+                                                         (simulator))
+                                             sim-2 (when (map? config-2)
+                                                     (reify common/IIdentify
+                                                       (method [_]
+                                                         (:method config-2))
+                                                       (path [_]
+                                                         (:path config-2))))]
+                                         (= does? (= sim-1 sim-2)))
+          {:method :file/get :path "/path"} {:method :get :path ::path} true
+          {:method :file/post :path "/path"} {:method :post :path ::path} true
+          {:method :file/patch :path "/path"} {:method :delete :path ::path} false
+          {:method :file/put :path "/path"} #{} false
+          {:method :file/put :path "/path"} "" false
+          {:method :file/put :path "/path"} nil false)))
+
+    (testing "when the path sections do not match"
+      (with-redefs [nav*/path-matcher (constantly (constantly false))]
+        (are [config-1 config-2] (let [[sim-1] (-> config-1
+                                                   (assoc :response {:status 200
+                                                                     :file   (uuids/random)})
+                                                   (simulator))
+                                       sim-2 (when (map? config-2)
+                                               (reify common/IIdentify
+                                                 (method [_]
+                                                   (:method config-2))
+                                                 (path [_]
+                                                   (:path config-2))))]
+                                   (not= sim-1 sim-2))
+          {:method :file/get :path "/path"} {:method :get :path ::path}
+          {:method :file/post :path "/path"} {:method :post :path ::path})))))

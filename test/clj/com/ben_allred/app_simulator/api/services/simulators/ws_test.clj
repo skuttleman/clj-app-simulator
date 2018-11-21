@@ -7,6 +7,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.app-simulator.api.services.simulators.ws :as ws.sim]
+    [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [immutant.web.async :as web.async]
     [test.utils.spies :as spies]))
@@ -197,13 +198,19 @@
           (is (spies/called-with? store/details ::state))
           (is (= {::some ::details :id ::id} result)))))))
 
-(deftest ^:unit ->WsSimulator.identifier-test
-  (testing "(->WsSimulator.identifier)"
-    (testing "returns unique identifier"
+(deftest ^:unit ->WsSimulator.method-test
+  (testing "(->WsSimulator.method)"
+    (testing "returns unique method"
       (let [[sim] (simulator {:method :ws/ws
                               :path   "/some/:param"})]
-        (let [result (common/identifier sim)]
-          (is (= [:ws/ws "/some/*"] result)))))))
+        (is (= :ws (common/method sim)))))))
+
+(deftest ^:unit ->WsSimulator.path-test
+  (testing "(->WsSimulator.path)"
+    (testing "returns unique path"
+      (let [[sim] (simulator {:method :ws/ws
+                              :path   "/some/:param"})]
+        (is (= "/some/:param" (common/path sim)))))))
 
 (deftest ^:unit ->WsSimulator.reset-test
   (testing "(->WsSimulator.reset)"
@@ -313,3 +320,31 @@
           (testing "sends a specific socket"
             (is (spies/called-with? actions/send-one ::socket-id ::message))
             (is (spies/called-with? dispatch ::action))))))))
+
+(deftest ^:unit ->WsSimulator.equals-test
+  (testing "(->WsSimulator.equals"
+    (testing "when the path sections match"
+      (with-redefs [nav*/path-matcher (constantly (constantly true))]
+        (are [config-1 config-2 does?] (let [[sim-1] (simulator config-1)
+                                             sim-2 (when (map? config-2)
+                                                     (reify common/IIdentify
+                                                       (method [_]
+                                                         (:method config-2))
+                                                       (path [_]
+                                                         (:path config-2))))]
+                                         (= does? (= sim-1 sim-2)))
+          {:method :ws/ws :path "/path"} {:method :ws :path ::path} true
+          {:method :ws/ws :path "/path"} {:method :delete :path ::path} false
+          {:method :ws/ws :path "/path"} #{} false
+          {:method :ws/ws :path "/path"} "" false
+          {:method :ws/ws :path "/path"} nil false)))
+
+    (testing "when the path sections do not match"
+      (with-redefs [nav*/path-matcher (constantly (constantly false))]
+        (let [[sim-1] (simulator {:method :ws/ws :path "/path"})
+              sim-2 (reify common/IIdentify
+                      (method [_]
+                        (:method :ws))
+                      (path [_]
+                        (:path ::path)))]
+          (is (not= sim-1 sim-2)))))))

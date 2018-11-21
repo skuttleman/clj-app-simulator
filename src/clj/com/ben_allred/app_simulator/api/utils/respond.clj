@@ -28,9 +28,9 @@
 
     :simulators.add/duplicate-sim
     [:http.status/bad-request
-     {:message "A simulator already exists for this path and method"
-      :errors {:method ["A simulator already exists for this path and method"]
-               :path ["A simulator already exists for this path and method"]}}]
+     {:message "An existing simulator conflicts with this path and method"
+      :errors {:method ["An existing simulator conflicts with this path and method"]
+               :path ["An existing simulator conflicts with this path and method"]}}]
 
     [:http.status/internal-server-error]))
 

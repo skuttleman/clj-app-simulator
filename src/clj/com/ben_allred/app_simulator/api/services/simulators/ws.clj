@@ -7,6 +7,7 @@
     [com.ben-allred.app-simulator.api.services.simulators.store.actions :as actions]
     [com.ben-allred.app-simulator.api.services.simulators.store.core :as store]
     [com.ben-allred.app-simulator.api.utils.specs :as specs]
+    [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [immutant.web.async :as web.async]))
@@ -39,9 +40,10 @@
                                                        :socket-id socket-id}))))
 
 (defn ->WsSimulator [env id config]
-  (when-let [{:keys [path method] :as config} (specs/conform :simulator.ws/config config)]
+  (when-let [{:keys [path] :as config} (specs/conform :simulator.ws/config config)]
     (let [{:keys [dispatch get-state] :as store} (store/ws-store)
-          id-path (string/replace path #":[^/]+" "*")]
+          path-matches? (nav*/path-matcher path)
+          hash-code (.hashCode [:ws (count (string/split path #"/"))])]
       (dispatch (actions/init config))
       (reify
         common/IRun
@@ -62,8 +64,10 @@
           (-> (get-state)
               (store/details)
               (assoc :id id)))
-        (identifier [_]
-          [method id-path])
+        (method [_]
+          :ws)
+        (path [_]
+          path)
         (type [_]
           :ws)
 
@@ -102,4 +106,12 @@
         (send! [_ message]
           (dispatch (actions/send-all message)))
         (send! [_ socket-id message]
-          (dispatch (actions/send-one socket-id message)))))))
+          (dispatch (actions/send-one socket-id message)))
+
+        Object
+        (equals [_ other]
+          (and (satisfies? common/IIdentify other)
+               (= :ws (common/method other))
+               (path-matches? (common/path other))))
+        (hashCode [_]
+          hash-code)))))
