@@ -5,7 +5,7 @@
 
 (defn resource [delete-attrs {:keys [filename timestamp]} replace-btn]
   [:li.resource
-   {:style {:display :flex :justify-content :space-between}}
+   {:style {:display :flex :justify-content :space-between :align-items :center}}
    [:div.resource-details
     [:div.resource-filename filename]
     [:div

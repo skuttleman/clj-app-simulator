@@ -43,6 +43,9 @@
     @media (min-width: 1400px) {
         padding: 10px 250px;
     }
+    @media (max-width: 800px) {
+        padding: 10px;
+    }
 }
 
 .scrollable {

@@ -10,10 +10,12 @@
   (set/map-invert key->code))
 
 (defn stop-propagation [event]
-  (.stopPropagation event))
+  (when (.-stopPropagation event)
+    (.stopPropagation event)))
 
 (defn prevent-default [event]
-  (.preventDefault event))
+  (when (.-preventDefault event)
+    (.preventDefault event)))
 
 (defn target-value [event]
   (some-> event

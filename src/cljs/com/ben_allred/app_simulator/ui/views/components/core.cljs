@@ -1,7 +1,9 @@
 (ns com.ben-allred.app-simulator.ui.views.components.core
   (:require
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.core :as templates]
     [com.ben-allred.app-simulator.templates.views.core :as views]
+    [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.utils.colls :as colls]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [reagent.core :as r]))
@@ -49,10 +51,9 @@
 
 (defn upload [_attrs]
   (let [key (name (gensym))]
-    (fn [{:keys [class-name on-change single? sync-fn static-content persisting-content]
-          :or   {sync-fn (constantly nil)}}]
-      (if (sync-fn)
-        [:button.is-disabled.label.button.file-cta
+    (fn [{:keys [class-name on-change single? form static-content persisting-content]}]
+      (if (forms/syncing? form)
+        [:button.is-disabled.button.file-cta
          {:class-name class-name
           :key        key
           :disabled   true}
@@ -72,14 +73,15 @@
           :key        key}
          [:label.label
           [:input.file-input
-           {:type      :file
-            :on-change #(let [target (.-target %)
-                              files (.-files target)]
-                          (on-change (for [i (range (.-length files))]
-                                       (aget files i)))
-                          (set! (.-files target) nil)
-                          (set! (.-value target) nil))
-            :multiple  (not single?)}]
+           (-> {:type      :file
+                :on-change #(let [target (.-target %)
+                                  files (.-files target)]
+                              (set! (.-files target) nil)
+                              (set! (.-value target) nil)
+                              (on-change (for [i (range (.-length files))]
+                                           (aget files i))))
+                :multiple  (not single?)}
+               (shared.views/with-sync-action form :on-change))]
           [:span.button.file-cta
            [:span.file-icon
             [:i.fa.fa-upload]]

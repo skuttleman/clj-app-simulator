@@ -70,21 +70,31 @@
   [views.res/resource
    {:disabled true}
    upload
-   [:button.button.is-warning.file-cta
+   [:button.is-disabled.button.is-warning.file-cta
     {:disabled true}
-    [:span.file-icon
-     [:i.fa.fa-upload]]
-    "Replace"]])
+    [:span
+     {:style {:display :flex :align-items :center}}
+     [:span.file-icon
+      [:i.fa.fa-upload]]
+     [:span.is-disabled
+      {:style    {:display :flex :align-items :center}
+       :disabled true}
+      "Replace"]]]])
 
 (defn ^:private resources [state]
   [views/resources
    [views.res/resources
     {:disabled true}
-    [:button.button.is-primary.file-cta
-     {:disabled true}
-     [:span.file-icon
-      [:i.fa.fa-upload]]
-     "Upload"]
+    [:button.is-disabled.button.is-primary.file-cta
+     {:disabled true :style {:padding "0 18px"}}
+     [:span
+      {:style {:display :flex :align-items :center}}
+      [:span.file-icon
+       [:i.fa.fa-upload]]
+      [:span.is-disabled
+       {:style    {:display :flex :align-items :center}
+        :disabled true}
+       "Upload"]]]
     resource
     (get-in state [:resources :data])
     [views/spinner]]])

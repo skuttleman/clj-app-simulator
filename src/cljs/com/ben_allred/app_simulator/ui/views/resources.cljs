@@ -18,7 +18,7 @@
         {:on-change          (interactions/replace-resource id)
          :class-name         "is-warning"
          :single?            true
-         :sync-fn            #(forms/syncing? form)
+         :form               form
          :static-content     "Replace"
          :persisting-content "Replacing"}]])))
 
@@ -31,7 +31,7 @@
        [components/upload
         {:on-change          interactions/upload-resources
          :class-name         "is-primary"
-         :sync-fn            #(forms/syncing? form)
+         :form               form
          :static-content     "Upload"
          :persisting-content "Uploading"}]
        resource

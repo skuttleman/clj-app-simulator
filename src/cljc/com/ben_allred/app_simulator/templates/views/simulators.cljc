@@ -75,5 +75,5 @@
        (for [[section simulators] sections]
          ^{:key section}
          [sim-section section simulators])]
-      [:p "There are no simulators. This is where you can create and manage
-           your application simulators for both manual or automated testing."])))
+      [:p "You have no simulators. This is where you can create and manage
+           your application simulators for both manual and automated testing."])))

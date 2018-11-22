@@ -17,7 +17,7 @@
                   interactions/replace-resource (spies/constantly ::action)
                   interactions/show-delete-modal (spies/constantly ::on-click)
                   form.std/create (constantly ::form)
-                  forms/syncing? (spies/constantly true)]
+                  forms/syncing? (constantly ::syncing)]
       (let [upload {:id ::id :other :stuff}
             [_ attrs arg upload-btn] (-> upload
                                          ((resources/resource ::ignored))
@@ -26,7 +26,7 @@
           (is (spies/called-with? actions/delete-upload ::id))
           (is (spies/called-with? interactions/show-delete-modal "Delete Resource" "this resource" ::delete))
           (is (= ::on-click (:on-click attrs)))
-          (is (:disabled attrs)))
+          (is (= ::syncing (:disabled attrs))))
 
         (testing "passes the upload value"
           (is (= arg upload)))
@@ -38,7 +38,7 @@
             (is (:single? attrs))
             (is (spies/called-with? interactions/replace-resource ::id))
             (is (= ::action (:on-change attrs)))
-            (is ((:sync-fn attrs)))
+            (is (= ::form (:form attrs)))
             (is (= "Replace" (:static-content attrs)))
             (is (= "Replacing" (:persisting-content attrs)))))))))
 
@@ -46,21 +46,21 @@
   (testing "(root)"
     (with-redefs [interactions/show-delete-modal (spies/constantly ::on-click)
                   form.std/create (constantly ::form)
-                  forms/syncing? (spies/constantly true)]
+                  forms/syncing? (constantly ::syncing)]
       (let [root (resources/root ::ignored)
             [_ attrs upload-btn res resources] (-> (root [::resource])
                                                    (test.dom/query-one views.res/resources))]
         (testing "has an :on-click attr"
           (is (spies/called-with? interactions/show-delete-modal "Delete All Resources" "all resources" actions/delete-uploads))
           (is (= ::on-click (:on-click attrs)))
-          (is (:disabled attrs)))
+          (is (= ::syncing (:disabled attrs))))
 
         (testing "has an upload control"
           (let [attrs (-> upload-btn
                           (test.dom/query-one components/upload)
                           (test.dom/attrs))]
             (is (= interactions/upload-resources (:on-change attrs)))
-            (is ((:sync-fn attrs)))
+            (is (= ::form (:form attrs)))
             (is (= "Upload" (:static-content attrs)))
             (is (= "Uploading" (:persisting-content attrs)))))
 

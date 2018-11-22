@@ -1,7 +1,9 @@
 (ns com.ben-allred.app-simulator.ui.views.components.core-test
   (:require
     [clojure.test :as t :refer-macros [are deftest is testing]]
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.views.core :as views]
+    [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.ui.views.components.core :as components]
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
@@ -129,55 +131,59 @@
 (deftest ^:unit upload-test
   (testing "(upload)"
     (let [upload (components/upload ::ignored)]
-      (testing "when rendering the hidden file input"
-        (testing "has a class name"
-          (is (-> (upload {:class-name ::class})
-                  (test.dom/query-one :.file)
-                  (test.dom/attrs)
-                  (:class-name)
-                  (= ::class))))
+      (with-redefs [forms/syncing? (constantly false)
+                    shared.views/with-sync-action (spies/create (fn [attrs _ _] attrs))]
+        (testing "when rendering the hidden file input"
+          (testing "has a class name"
+            (is (-> (upload {:class-name ::class})
+                    (test.dom/query-one :.file)
+                    (test.dom/attrs)
+                    (:class-name)
+                    (= ::class))))
 
-        (let [on-change-spy (spies/create)
-              root (upload {:on-change on-change-spy})
-              [_ attrs :as input] (test.dom/query-one root :.file-input)
-              event (js/Object.)
-              target (js/Object.)]
-          (set! (.-target event) target)
-          (set! (.-value target) ::value)
-          (set! (.-files target) (to-array [::file-1 ::file-2 ::file-3]))
+          (let [on-change-spy (spies/constantly ::change'd)
+                root (upload {:on-change on-change-spy :form ::form})
+                [_ attrs :as input] (test.dom/query-one root :.file-input)
+                event (js/Object.)
+                target (js/Object.)]
+            (set! (.-target event) target)
+            (set! (.-value target) ::value)
+            (set! (.-files target) (to-array [::file-1 ::file-2 ::file-3]))
 
-          (testing "has attrs"
-            (is (= :file (:type attrs)))
-            (is (:multiple attrs)))
+            (testing "has attrs"
+              (is (spies/called-with? shared.views/with-sync-action (spies/matcher map?) ::form :on-change))
+              (is (= :file (:type attrs)))
+              (is (:multiple attrs)))
 
-          (testing "handles :on-change"
-            (spies/reset! on-change-spy)
-            (test.dom/simulate-event input :change event)
+            (testing "handles :on-change"
+              (spies/reset! on-change-spy)
+              (let [result ((:on-change (test.dom/attrs input)) event)]
+                (is (spies/called-times? on-change-spy 1))
+                (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
+                (is (nil? (.-files target)))
+                (is (nil? (.-value target)))
+                (is (= ::change'd result))))))
 
-            (is (spies/called-times? on-change-spy 1))
-            (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
-            (is (nil? (.-files target)))
-            (is (nil? (.-value target))))))
+        (testing "defaults to multiple files"
+          (let [root (upload {})
+                [_ attrs] (test.dom/query-one root :.file-input)]
+            (is (true? (:multiple attrs)))))
 
-      (testing "defaults to multiple files"
-        (let [root (upload {})
-              [_ attrs] (test.dom/query-one root :.file-input)]
-          (is (true? (:multiple attrs)))))
-
-      (let [root (upload {:class-name ::class :static-content ::static-content})
-            [_ child] (test.dom/query-one root :.file-label)]
-        (testing "displays static-content"
-          (is (= child ::static-content))))
+        (let [root (upload {:class-name ::class :static-content ::static-content})
+              [_ child] (test.dom/query-one root :.file-label)]
+          (testing "displays static-content"
+            (is (= child ::static-content)))))
 
       (testing "and when the button is syncing"
-        (let [root (upload {:persisting-content ::persisting-content :sync-fn (constantly true)})]
-          (testing "has no input"
-            (is (-> root
-                    (test.dom/query-one :input.file-input)
-                    (not))))
+        (with-redefs [forms/syncing? (constantly true)]
+          (let [root (upload {:persisting-content ::persisting-content :form ::form})]
+            (testing "has no input"
+              (is (-> root
+                      (test.dom/query-one :input.file-input)
+                      (not))))
 
-          (testing "displays persisting-content"
-            (test.dom/contains? root ::persisting-content)))))))
+            (testing "displays persisting-content"
+              (test.dom/contains? root ::persisting-content))))))))
 
 (defn run-tests []
   (t/run-tests))
