@@ -20,16 +20,15 @@
                                      "adding"     adding?
                                      "removing"   removing?})
          (and removing? @height) (update :style assoc :margin-top (str "-" @height "px")))
-       [:div.message-header]
+       [:div.message-header
+        {:on-click #(store/dispatch (actions/remove-toast key))
+         :style {:cursor :pointer}}]
        [:div.message-body
-        [:div.body-text @ref]
-        [:button.delete
-         {:aria-label "delete"
-          :on-click   #(store/dispatch (actions/remove-toast key))}]]])))
+        [:div.body-text @ref]]])))
 
 (defn toast [messages]
   [:div.toast-container
    [:ul.toast-messages
-    (for [[key message] (take 4 (sort-by key messages))]
+    (for [[key message] (take 3 (sort-by key messages))]
       ^{:key key}
       [toast-message key message])]])

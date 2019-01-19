@@ -56,6 +56,25 @@
         textarea {
             height: 100px;
         }
+
+        .file-field {
+            display: flex;
+            width: 100%;
+            align-items: flex-end;
+
+            & > :first-child {
+                flex-grow: 1;
+            }
+
+            & > :not(:first-child) {
+                margin: 0 0 10px 10px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                height: 32px;
+                min-width: 140px;
+            }
+        }
     }
 }
 

@@ -31,7 +31,8 @@
         [:modals/confirm-delete msg]
         title
         [:button.button.is-danger.delete-button
-         {:on-click (delete-file action)}
+         {:id "modals/primary-action"
+          :on-click (delete-file action)}
          "Delete"]
         [:button.button.cancel-button
          "Cancel"]))))

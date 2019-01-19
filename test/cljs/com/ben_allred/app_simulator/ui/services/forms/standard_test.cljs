@@ -8,7 +8,7 @@
 (deftest ^:unit create-test
   (testing "(create)"
     (testing "satisfies ISync"
-      (let [form (form.std/create ::model)]
+      (let [form (form.std/create {::a ::model})]
         (forms/sync! form)
         (is (forms/syncing? form))
         (forms/ready! form ::status ::value)
@@ -25,12 +25,12 @@
         (is (forms/changed? form))))
 
     (testing "satisfies IValidate"
-      (is (nil? (forms/errors (form.std/create ::model))))
+      (is (nil? (forms/errors (form.std/create {::a ::model}))))
       (let [validator (spies/constantly ::errors)
-            form (form.std/create ::model validator)
+            form (form.std/create {::a ::model} validator)
             errors (forms/errors form)]
         (is (= ::errors errors))
-        (is (spies/called-with? validator ::model))))
+        (is (spies/called-with? validator {::a ::model}))))
 
     (testing "satisfies IReset"
       (let [form (form.std/create {:a :model})]

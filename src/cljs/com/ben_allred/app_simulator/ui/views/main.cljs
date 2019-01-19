@@ -9,18 +9,18 @@
     [com.ben-allred.app-simulator.ui.views.components.core :as components]
     [com.ben-allred.app-simulator.ui.views.resources :as resources]
     [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.utils.simulators :as utils.sims]
-    [com.ben-allred.app-simulator.utils.uuids :as uuids]))
+    [com.ben-allred.app-simulator.utils.simulators :as utils.sims]))
 
-(defn root [{:keys [simulators resources]}]
+(defn root [{:keys [simulators]}]
   [views/root
    [:div.button-row
     [components/menu
-     {:items (cond->> [[:http "HTTP Simulator"] [:ws "WS Simulator"]]
-               (seq (:data resources)) (cons [:file "File Server"])
-               :always (map (fn [[type label]]
-                              {:href  (nav/path-for :new {:query-params {:type type}})
-                               :label label})))}
+     {:items (->> [[:file "File Server"]
+                   [:http "HTTP Simulator"]
+                   [:ws "WS Simulator"]]
+                  (map (fn [[type label]]
+                         {:href  (nav/path-for :new {:query-params {:type type}})
+                          :label label})))}
      [:button.button "Create"]]]
    [views.sim/simulators (:data simulators)]])
 

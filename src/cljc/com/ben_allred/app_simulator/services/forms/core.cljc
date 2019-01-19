@@ -1,11 +1,12 @@
 (ns com.ben-allred.app-simulator.services.forms.core)
 
 (defprotocol ISync
-  (ready! [this status result])
+  (ready! [this] [this status result])
   (sync! [this])
   (syncing? [this]))
 
 (defprotocol IChange
+  (touch! [this path])
   (changed? [this] [this path])
   (touched? [this] [this path]))
 

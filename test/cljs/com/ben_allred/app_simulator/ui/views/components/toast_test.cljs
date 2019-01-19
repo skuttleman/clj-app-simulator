@@ -22,28 +22,27 @@
                     (toast/toast)
                     (update-in [1 1] (partial map (fn [[f & args]]
                                                     (apply (apply f args) args)))))]
-      (let [[toast-1 toast-2 toast-3 toast-4 :as toast-messages] (test.dom/query-all toast :.toast-message)]
+      (let [[toast-1 toast-2 toast-3 :as toast-messages] (test.dom/query-all toast :.toast-message)]
         (testing "limits display of toasts"
-          (is (= 4 (count toast-messages)))
+          (is (= 3 (count toast-messages)))
           (is (not (test.dom/contains? toast-messages "Toast 5"))))
 
         (testing "has sorted toast messages"
           (is (test.dom/contains? toast-1 "Toast 1"))
           (is (test.dom/contains? toast-2 "Toast 2"))
-          (is (test.dom/contains? toast-3 "Toast 3"))
-          (is (test.dom/contains? toast-4 "Toast 4"))))
+          (is (test.dom/contains? toast-3 "Toast 3"))))
 
       (testing "adds class for message level"
         (is (= 1 (count (test.dom/query-all toast :.toast-message.is-danger))))
-        (is (= 3 (count (test.dom/query-all toast :.toast-message.is-success)))))
+        (is (= 2 (count (test.dom/query-all toast :.toast-message.is-success)))))
 
-      (doseq [[idx key] (map-indexed vector [:key-1 :key-2 :key-3 :key-4])]
+      (doseq [[idx key] (map-indexed vector [:key-1 :key-2 :key-3])]
         (testing (str "has remove button for toast " key)
           (let [toast-message (nth (test.dom/query-all toast :.toast-message) idx)
-                button (test.dom/query-one toast-message :.delete)]
+                header (test.dom/query-one toast-message :.message-header)]
             (with-redefs [store/dispatch (spies/create)
                           actions/remove-toast (spies/constantly ::action)]
-              (test.dom/simulate-event button :click)
+              (test.dom/simulate-event header :click)
               (is (spies/called-with? actions/remove-toast key))
               (is (spies/called-with? store/dispatch ::action)))))))))
 

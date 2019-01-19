@@ -5,7 +5,8 @@
                [com.ben-allred.app-simulator.ui.services.store.core :as store]
                [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
                [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
-               [com.ben-allred.app-simulator.ui.utils.dom :as dom]])
+               [com.ben-allred.app-simulator.ui.utils.dom :as dom]
+               [com.ben-allred.app-simulator.ui.views.components.core :as components]])
     [clojure.test :as t :refer [deftest is testing]]
     [com.ben-allred.app-simulator.services.forms.noop :as form.no]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
@@ -16,7 +17,8 @@
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.templates.views.simulators :as views.sim]
     [test.utils.dom :as test.dom]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies]
+    [clojure.string :as string]))
 
 (deftest ^:unit path-field-test
   (testing "(path-field)"
@@ -84,25 +86,55 @@
 
 (deftest ^:unit file-field-test
   (testing "(file-field)"
-    (with-redefs [shared.views/with-attrs (spies/create (fn [v & _] (assoc v :more ::attrs)))]
-      (testing "renders the form field"
-        (let [uploads [{:id 111 :filename ::filename2}
-                       {:id 222 :filename ::filename}
-                       {:id 333 :filename ::filename1}]
-              [node attrs resource] (file.views/file-field ::form uploads)]
+    (with-redefs [shared.views/with-attrs (spies/create (fn [v & _] (assoc v :more ::attrs)))
+                  resources/upload-form (spies/constantly ::upload)]
+      (let [uploads [{:id 111 :filename ::filename2}
+                     {:id 222 :filename ::filename}
+                     {:id 333 :filename ::filename1}]
+            root (file.views/file-field ::form uploads)
+            [_ attrs resource] (-> root
+                                   (test.dom/query-one fields/select))]
+        (testing "renders the form field"
           (is (spies/called-with? shared.views/with-attrs
                                   (spies/matcher any?)
                                   ::form
                                   [:response :file]
                                   tr/model->view
                                   tr/view->model))
-          (is (= fields/select node))
           (is (= "File" (:label attrs)))
           (is (= ::attrs (:more attrs)))
           (is (= [[222 ::filename]
                   [333 ::filename1]
                   [111 ::filename2]]
-                 resource)))))))
+                 resource)))
+
+        (testing "renders an upload button"
+          #?(:clj
+             (let [button (-> root
+                              (test.dom/query-one :.button.is-disabled.file-cta))]
+               (is (-> button
+                       (test.dom/attrs)
+                       (:disabled)))
+               (is (-> button
+                       (test.dom/children)
+                       (test.dom/query-one :.is-disabled)
+                       (test.dom/attrs)
+                       (:disabled)))
+               (is (-> button
+                       (test.dom/contains? "Upload"))))
+             :cljs
+             (let [upload-attrs (-> root
+                                    (test.dom/query-one components/upload)
+                                    (test.dom/attrs))
+                   classes (set (string/split (:class-name upload-attrs) #"\s+"))]
+               (is (= (:on-change upload-attrs) interactions/upload-resources))
+               (is (contains? classes "is-info"))
+               (is (contains? classes "is-small"))
+               (is (spies/called-with? resources/upload-form ::form [:response :file]))
+               (is (= (:form upload-attrs) ::upload))
+               (is (:single? upload-attrs))
+               (is (= (:static-content upload-attrs) "Upload"))
+               (is (= (:persisting-content upload-attrs) "Uploading")))))))))
 
 (deftest ^:unit sim-edit-form*-test
   (testing "(sim-edit-form*)"

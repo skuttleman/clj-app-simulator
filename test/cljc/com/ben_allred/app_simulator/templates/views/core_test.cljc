@@ -5,7 +5,8 @@
     [com.ben-allred.app-simulator.templates.core :as templates]
     [com.ben-allred.app-simulator.templates.views.core :as views]
     [test.utils.dom :as test.dom]
-    [test.utils.spies :as spies]))
+    [test.utils.spies :as spies]
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (deftest ^:unit not-found-test
   (testing "(not-found)"
@@ -23,53 +24,37 @@
 
 (deftest ^:unit header-test
   (testing "(header)"
-    (with-redefs [nav*/path-for (spies/constantly "HREF")]
-      (let [header (views/header {:handler ::handler})]
+    (with-redefs [nav*/path-for name]
+      (let [header (views/header {:handler ::handler})
+            rendered (templates/render header)
+            [tab-1 tab-2 tab-3 :as tabs] (-> rendered
+                                             (test.dom/query-all :.tab))]
+        (is (= 3 (count tabs)))
+
         (testing "has a home link"
-          (is (-> header
-                  (test.dom/query-one :.home-link)
+          (is (test.dom/query-one tab-1 :.home-link))
+          (is (-> tab-1
+                  (test.dom/query-one :a)
                   (test.dom/attrs)
                   (:href)
-                  (= "HREF")))
-          (is (spies/called-with? nav*/path-for :home))))
+                  (= "home")))
+          (is (test.dom/query-one tab-1 :span.logo)))
 
-      (testing "when on the home page"
-        (let [header (views/header {:handler :home})]
-          (spies/reset! nav*/path-for)
-          (let [rendered (templates/render header)]
-            (testing "has a tab for simulators"
-              (is (-> rendered
-                      (test.dom/query-one :span.tab)
-                      (test.dom/contains? "simulators"))))
+        (testing "has a simulators link"
+          (is (-> tab-2
+                  (test.dom/query-one :a)
+                  (test.dom/attrs)
+                  (:href)
+                  (= "home")))
+          (is (test.dom/contains? tab-2 "Simulators")))
 
-            (testing "has a link for resources"
-              (let [link (-> rendered
-                             (test.dom/query-one :a.tab))]
-                (is (test.dom/contains? rendered "resources"))
-                (is (-> link
-                        (test.dom/attrs)
-                        (:href)
-                        (= "HREF")))
-                (is (spies/called-with? nav*/path-for :resources)))))))
-
-      (testing "when on the resources page"
-        (let [header (views/header {:handler :resources})]
-          (spies/reset! nav*/path-for)
-          (let [rendered (templates/render header)]
-            (testing "has a link for simulators"
-              (let [link (-> rendered
-                             (test.dom/query-one :a.tab))]
-                (is (test.dom/contains? rendered "simulators"))
-                (is (-> link
-                        (test.dom/attrs)
-                        (:href)
-                        (= "HREF")))
-                (is (spies/called-with? nav*/path-for :home))))
-
-            (testing "has a tab for resources"
-              (is (-> rendered
-                      (test.dom/query-one :span.tab)
-                      (test.dom/contains? "resources"))))))))))
+        (testing "has a resources link"
+          (is (-> tab-3
+                  (test.dom/query-one :a)
+                  (test.dom/attrs)
+                  (:href)
+                  (= "resources")))
+          (is (test.dom/contains? tab-3 "Resources")))))))
 
 (deftest ^:unit root-test
   (testing "(root)"

@@ -108,7 +108,7 @@
 (deftest ^:unit details-test
   (testing "(details)"
     (with-redefs [sims/simulators (spies/constantly [::sim-1 ::sim-2])
-                  common/details (spies/create (colls/onto [::details]))]
+                  common/details (spies/create (partial conj [::details]))]
       (let [result (simulators/details ::env)]
         (testing "returns the simulators' details"
           (is (= [[::details ::sim-1]
@@ -152,8 +152,8 @@
   (testing "(set!)"
     (with-redefs [simulators/valid? (spies/constantly true)
                   sims/clear! (spies/create)
-                  simulators/make-simulator! (spies/create (colls/onto [::simulator]))
-                  common/details (spies/create (maps/onto :details))
+                  simulators/make-simulator! (spies/create (partial conj [::simulator]))
+                  common/details (spies/create (partial assoc {} :details))
                   activity/publish (spies/create)]
       (testing "when all configs are valid"
         (spies/reset! simulators/valid? sims/clear! simulators/make-simulator! common/details activity/publish)
@@ -201,7 +201,7 @@
     (with-redefs [sims/simulators (spies/constantly [::sim-1 ::sim-2])
                   common/reset! (spies/create)
                   activity/publish (spies/create)
-                  common/details (spies/create (colls/onto [::details]))]
+                  common/details (spies/create (partial conj [::details]))]
       (let [result (simulators/reset-all! ::env)]
         (testing "resets every sim"
           (is (spies/called-with? sims/simulators ::env))

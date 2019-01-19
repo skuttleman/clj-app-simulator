@@ -2,6 +2,7 @@
   (:require
     [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.utils.logging :as log]
+    [com.ben-allred.app-simulator.utils.maps :as maps]
     [reagent.core :as r]))
 
 (defn ^:private diff-paths [paths path old-model new-model]
@@ -26,21 +27,44 @@
 (defn ^:private roll-up [errors sync-state]
   (reduce-kv assoc-in errors sync-state))
 
-(defn ^:private swap* [{:keys [current] :as state} validator f f-args]
-  (let [model (apply f current f-args)]
+(defn ^:private model->trackable [model]
+  (->> model
+       (nest {} [])
+       (maps/map-vals (fn [value]
+                        {:current  value
+                         :initial  value
+                         :touched? false}))))
+
+(defn ^:private trackable->model [trackable]
+  (reduce-kv (fn [model path {:keys [current]}]
+               (assoc-in model path current))
+             {}
+             trackable))
+
+(defn ^:private check-for [working pred]
+  (loop [[val :as working] (vals working)]
+    (if (empty? working)
+      false
+      (or (pred val) (recur (rest working))))))
+
+(defn ^:private swap* [{:keys [working] :as state} validator f f-args]
+  (let [current (trackable->model working)
+        next (apply f current f-args)
+        working (->> next
+                     (diff-paths #{} [] current)
+                     (reduce (fn [working path]
+                               (update working path assoc
+                                       :current (get-in next path)
+                                       :touched? true))
+                             working))]
     (-> state
-        (assoc :current model :errors (validator model))
-        (update :touched diff-paths [] current model))))
+        (assoc :working working :errors (validator next)))))
 
 (defn ^:private init [model validator]
-  {:current   model
+  {:working (model->trackable model)
    :errors    (validator model)
-   :initial   model
    :syncing?  false
-   :touched   #{}
-   :touched?  false
-   :tried?    false
-   :verified? false})
+   :tried?    false})
 
 (defn create
   ([model]
@@ -49,39 +73,38 @@
    (let [state (r/atom (init model validator))]
      (reify
        forms/ISync
-       (ready! [_ status result]
+       (ready! [_]
+         (swap! state assoc :syncing? false))
+       (ready! [this status result]
          (if (= :success status)
            (reset! state (init result validator))
            (swap! state assoc
                   :syncing? false
                   :server-errors (nest {} [] (:errors result))
-                  :sync-state (:current @state))))
+                  :sync-state @this)))
        (sync! [_]
          (swap! state assoc :syncing? true))
        (syncing? [_]
          (:syncing? @state))
 
        forms/IChange
+       (touch! [_ path]
+         (swap! state assoc-in [:working path :touched?] true))
        (changed? [_]
-         (let [{:keys [initial current]} @state]
-           (not= initial current)))
+         (check-for (:working @state) #(not= (:initial %) (:current %))))
        (changed? [_ path]
-         (let [{:keys [initial current]} @state]
-           (not= (get-in initial path)
-                 (get-in current path))))
+         (let [{:keys [current initial]} (get-in @state [:working path])]
+            (= current initial)))
        (touched? [_]
-         (let [{:keys [touched touched?]} @state]
-           (boolean (or touched? (seq touched)))))
+         (check-for (:working @state) :touched?))
        (touched? [_ path]
-         (let [{:keys [touched touched?]} @state]
-           (or touched?
-               (contains? touched path))))
+         (get-in @state [:working path :touched?]))
 
        forms/IValidate
-       (errors [_]
-         (let [{:keys [errors server-errors sync-state current]} @state]
+       (errors [this]
+         (let [{:keys [errors server-errors sync-state]} @state]
            (cond-> errors
-             (and server-errors (= sync-state current))
+             (and server-errors (= sync-state @this))
              (roll-up server-errors))))
        (valid? [this]
          (empty? (forms/errors this)))
@@ -108,4 +131,4 @@
 
        IDeref
        (-deref [_]
-         (:current @state))))))
+         (trackable->model (:working @state)))))))

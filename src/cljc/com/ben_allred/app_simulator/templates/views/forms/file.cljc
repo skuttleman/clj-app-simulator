@@ -2,7 +2,8 @@
   (:require
     #?@(:cljs [[com.ben-allred.app-simulator.ui.services.forms.standard :as form.std]
                [com.ben-allred.app-simulator.ui.simulators.file.interactions :as interactions]
-               [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]])
+               [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
+               [com.ben-allred.app-simulator.ui.views.components.core :as components]])
     [com.ben-allred.app-simulator.services.forms.noop :as form.no]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
     [com.ben-allred.app-simulator.templates.fields :as fields]
@@ -10,8 +11,7 @@
     [com.ben-allred.app-simulator.templates.transformations.file :as tr]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
     [com.ben-allred.app-simulator.templates.views.simulators :as views.sim]
-    [com.ben-allred.app-simulator.utils.logging :as log]
-    [com.ben-allred.app-simulator.services.forms.core :as forms]))
+    [com.ben-allred.app-simulator.utils.logging :as log]))
 
 (defn ^:private with-attrs [attrs form path]
   (shared.views/with-attrs attrs form path tr/model->view tr/view->model))
@@ -47,12 +47,32 @@
         (with-attrs form [:name]))]))
 
 (defn file-field [form resources]
-  [fields/select
-   (-> {:label "File"}
-       (with-attrs form [:response :file]))
-   (->> resources
-        (map (juxt :id :filename))
-        (sort-by second))])
+  [:div.file-field
+   [:div
+    [fields/select
+     (-> {:label "File"}
+         (with-attrs form [:response :file]))
+     (->> resources
+          (map (juxt :id :filename))
+          (sort-by second))]]
+   [:div
+    #?(:clj  [:button.is-disabled.button.is-info.file-cta.is-small
+              {:disabled true}
+              [:span
+               {:style {:display :flex :align-items :center}}
+               [:span.file-icon
+                [:i.fa.fa-upload]]
+               [:span.is-disabled
+                {:style    {:display :flex :align-items :center}
+                 :disabled true}
+                "Upload"]]]
+       :cljs [components/upload
+              {:on-change          interactions/upload-resources
+               :class-name         "is-info is-small"
+               :form               (resources/upload-form form [:response :file])
+               :single?            true
+               :static-content     "Upload"
+               :persisting-content "Uploading"}])]])
 
 (defn sim-edit-form* [id form resources]
   [:form.simulator-edit

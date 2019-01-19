@@ -72,4 +72,6 @@
     (store/dispatch
       (actions/show-modal
         [:modals/socket-modal message]
-        "Message Details"))))
+        "Message Details"
+        [:button.button.is-info
+         "Ok"]))))

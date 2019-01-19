@@ -21,7 +21,12 @@
              :errors (get-in (forms/errors form) path)
              :touched? (forms/touched? form path)
              :tried? (forms/tried? form))
-      (update :disabled fns/or (forms/syncing? form))))
+      (update :disabled fns/or (forms/syncing? form))
+      (update :on-blur (fn [on-blur]
+                         (fn [event]
+                           (forms/touch! form path)
+                           (when on-blur
+                             (on-blur event)))))))
 
 (defn create-disabled? [form]
   (and (not (forms/valid? form))

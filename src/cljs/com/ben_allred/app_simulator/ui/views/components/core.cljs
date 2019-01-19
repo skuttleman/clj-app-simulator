@@ -4,6 +4,8 @@
     [com.ben-allred.app-simulator.templates.core :as templates]
     [com.ben-allred.app-simulator.templates.views.core :as views]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.app-simulator.ui.utils.dom :as dom]
+    [com.ben-allred.app-simulator.utils.chans :as ch]
     [com.ben-allred.app-simulator.utils.colls :as colls]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [reagent.core :as r]))
@@ -27,27 +29,42 @@
     [views/spinner]))
 
 (defn menu* [{:keys [open? on-click items class-name]} [btn attrs? & content]]
-  (let [btn-attrs (cond-> {:aria-haspopup true :aria-controls "dropdown-menu"
-                           :on-click      on-click}
+  (let [btn-attrs (cond-> {:aria-haspopup true
+                           :aria-controls "dropdown-menu"
+                           :type          :button
+                           :on-click      on-click
+                           :on-mouse-up   dom/stop-propagation
+                           :style {:box-shadow :none}}
                     (map? attrs?) (merge attrs?))
+        icon (if open? :i.fa.fa-angle-up :i.fa.fa-angle-down)
         content (cond->> content
                   (not (map? attrs?)) (cons attrs?))]
     [:div.dropdown
      (-> {:class-name class-name}
          (templates/classes {:is-active open?}))
      [:div.dropdown-trigger
-      (into [btn btn-attrs] (concat content [" " [:i.fa.fa-angle-down {:aria-hidden true}]]))]
-     [:div#dropdown-menu.dropdown-menu {:role :menu}
+      (-> [btn btn-attrs]
+          (into content)
+          (conj [icon {:aria-hidden true :style {:padding-left "5px"}}]))]
+     [:div#dropdown-menu.dropdown-menu
+      {:role :menu}
       [:div.dropdown-content
        (for [{:keys [href label]} items]
          [:a.dropdown-item {:href href :key label} label])]]]))
 
 (defn menu [_attrs _button]
-  (let [open? (r/atom false)]
-    (fn [attrs button]
-      [menu*
-       (assoc attrs :on-click #(swap! open? not) :open? @open?)
-       button])))
+  (let [open? (r/atom false)
+        listener (atom nil)]
+    (reset! listener (dom/add-listener js/window "mouseup" #(reset! open? false)))
+    (r/create-class
+      {:component-will-unmount
+       (fn [_]
+         (dom/remove-listener @listener))
+       :reagent-render
+       (fn [attrs button]
+         [menu*
+          (assoc attrs :on-click #(swap! open? not) :open? @open?)
+          button])})))
 
 (defn upload [_attrs]
   (let [key (name (gensym))]
@@ -76,13 +93,16 @@
            (-> {:type      :file
                 :on-change #(let [target (.-target %)
                                   files (.-files target)]
-                              (set! (.-files target) nil)
-                              (set! (.-value target) nil)
-                              (on-change (for [i (range (.-length files))]
-                                           (aget files i))))
+                              (-> (for [i (range (.-length files))]
+                                    (aget files i))
+                                  (on-change)
+                                  (ch/peek* (fn [_]
+                                              (set! (.-files target) nil)
+                                              (set! (.-value target) nil)))))
                 :multiple  (not single?)}
                (shared.views/with-sync-action form :on-change))]
           [:span.button.file-cta
+           {:class-name class-name}
            [:span.file-icon
             [:i.fa.fa-upload]]
            [:span.file-label

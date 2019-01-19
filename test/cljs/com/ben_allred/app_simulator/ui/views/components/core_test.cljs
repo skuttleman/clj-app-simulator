@@ -4,7 +4,10 @@
     [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.views.core :as views]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
+    [com.ben-allred.app-simulator.ui.utils.dom :as dom]
     [com.ben-allred.app-simulator.ui.views.components.core :as components]
+    [com.ben-allred.app-simulator.utils.chans :as ch]
+    [reagent.core :as r]
     [test.utils.dom :as test.dom]
     [test.utils.spies :as spies]))
 
@@ -100,7 +103,7 @@
       (testing "when the menu is open"
         (testing "adds an icon to the button"
           (let [button (test.dom/query-one root :.my-button)]
-            (is (test.dom/query-one button :.fa.fa-angle-down)))))
+            (is (test.dom/query-one button :.fa.fa-angle-up)))))
 
       (testing "when the menu is closed"
         (let [root (components/menu* (dissoc attrs :open?) btn)]
@@ -110,29 +113,43 @@
 
 (deftest ^:unit menu-test
   (testing "(menu)"
-    (let [component (components/menu {::some ::attrs} ::button)]
+    (with-redefs [r/create-class (spies/create :reagent-render)
+                  dom/add-listener (spies/constantly ::listener)
+                  dom/remove-listener (spies/create)]
       (testing "renders menu* as closed"
-        (let [root (component {::some ::attrs} ::button)
-              [component* attrs button] root]
-          (is (= component* components/menu*))
-          (is (= ::attrs (::some attrs)))
-          (is (not (:open? attrs)))
-          (is (= ::button button))
+        (let [component (components/menu {::some ::attrs} ::button)]
+          (let [root (component {::some ::attrs} ::button)
+                [component* attrs button] root]
+            (is (= component* components/menu*))
+            (is (= ::attrs (::some attrs)))
+            (is (not (:open? attrs)))
+            (is (= ::button button))
 
-          (testing "when clicking on the menu"
-            (-> root
-                (test.dom/query-one components/menu*)
-                (test.dom/simulate-event :click))
-            (let [root (component {::some ::attrs} ::button)
-                  [_ {:keys [open?]}] root]
-              (testing "renders menu* as open"
-                (is open?)))))))))
+            (testing "when clicking on the menu"
+              (-> root
+                  (test.dom/query-one components/menu*)
+                  (test.dom/simulate-event :click))
+              (let [root (component {::some ::attrs} ::button)
+                    [_ {:keys [open?]}] root]
+                (testing "renders menu* as open"
+                  (is open?)))))))
+
+      (testing "manages a listener"
+        (spies/reset! r/create-class dom/add-listener dom/remove-listener)
+
+        (components/menu {::some ::attrs} ::button)
+        (is (spies/called-with? dom/add-listener js/window "mouseup" (spies/matcher fn?)))
+
+        (let [{:keys [component-will-unmount]} (ffirst (spies/calls r/create-class))]
+          (component-will-unmount ::ignored)
+          (is (spies/called-with? dom/remove-listener ::listener)))))))
 
 (deftest ^:unit upload-test
   (testing "(upload)"
     (let [upload (components/upload ::ignored)]
       (with-redefs [forms/syncing? (constantly false)
-                    shared.views/with-sync-action (spies/create (fn [attrs _ _] attrs))]
+                    shared.views/with-sync-action (spies/create (fn [attrs _ _] attrs))
+                    ch/peek* (spies/constantly ::peek'd)]
         (testing "when rendering the hidden file input"
           (testing "has a class name"
             (is (-> (upload {:class-name ::class})
@@ -157,12 +174,15 @@
 
             (testing "handles :on-change"
               (spies/reset! on-change-spy)
-              (let [result ((:on-change (test.dom/attrs input)) event)]
+              (let [result ((:on-change (test.dom/attrs input)) event)
+                    cb (second (first (spies/calls ch/peek*)))]
                 (is (spies/called-times? on-change-spy 1))
                 (is (spies/called-with? on-change-spy [::file-1 ::file-2 ::file-3]))
+                (is (spies/called-with? ch/peek* ::change'd (spies/matcher fn?)))
+                (cb ::ignored)
                 (is (nil? (.-files target)))
                 (is (nil? (.-value target)))
-                (is (= ::change'd result))))))
+                (is (= ::peek'd result))))))
 
         (testing "defaults to multiple files"
           (let [root (upload {})

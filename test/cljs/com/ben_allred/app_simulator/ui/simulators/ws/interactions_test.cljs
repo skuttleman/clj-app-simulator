@@ -1,7 +1,6 @@
 (ns com.ben-allred.app-simulator.ui.simulators.ws.interactions-test
   (:require
     [clojure.test :as t :refer [deftest is testing]]
-    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.templates.resources.ws :as resources]
     [com.ben-allred.app-simulator.templates.transformations.ws :as tr]
     [com.ben-allred.app-simulator.templates.views.forms.shared :as shared.views]
@@ -10,9 +9,10 @@
     [com.ben-allred.app-simulator.ui.services.store.core :as store]
     [com.ben-allred.app-simulator.ui.simulators.shared.interactions :as shared.interactions]
     [com.ben-allred.app-simulator.ui.simulators.ws.interactions :as interactions]
+    [com.ben-allred.app-simulator.utils.chans :as ch]
+    [com.ben-allred.app-simulator.utils.fns :refer-macros [=>]]
     [test.utils.dom :as test.dom]
-    [test.utils.spies :as spies]
-    [com.ben-allred.app-simulator.utils.chans :as ch]))
+    [test.utils.spies :as spies]))
 
 (deftest ^:unit update-simulator-test
   (testing "(update-simulator)"
@@ -184,7 +184,10 @@
       (testing "shows the socket modal"
         ((interactions/show-ws-modal ::message) ::ignored)
 
-        (is (spies/called-with? actions/show-modal [:modals/socket-modal ::message] (spies/matcher string?)))
+        (is (spies/called-with? actions/show-modal
+                                [:modals/socket-modal ::message]
+                                (spies/matcher string?)
+                                (spies/matcher (=> (test.dom/query-one :.button) (test.dom/contains? "Ok")))))
         (is (spies/called-with? store/dispatch ::action))))))
 
 (defn run-tests []

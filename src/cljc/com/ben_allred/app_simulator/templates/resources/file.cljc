@@ -1,6 +1,7 @@
 (ns com.ben-allred.app-simulator.templates.resources.file
   (:require
     [clojure.string :as string]
+    [com.ben-allred.app-simulator.services.forms.core :as forms]
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.numbers :as nums]
     [com.ben-allred.formation.core :as f]))
@@ -35,3 +36,33 @@
 (def validate-existing (validate-existing*))
 
 (def validate-new (validate-new*))
+
+(defn upload-form [form path]
+  (reify
+    forms/ISync
+    (ready! [_] (forms/ready! form))
+    (ready! [_ status result]
+      (forms/ready! form)
+      (when (= status :success)
+        (->> result
+             (:resources)
+             (first)
+             (:id)
+             (swap! form assoc-in path))))
+    (sync! [_] (forms/sync! form))
+    (syncing? [_] (forms/syncing? form))
+
+    forms/IChange
+    (touch! [_ _] nil)
+    (changed? [_] false)
+    (changed? [_ _] false)
+    (touched? [_] false)
+    (touched? [_ _] false)
+
+    forms/IValidate
+    (errors [_] nil)
+    (valid? [_] true)
+
+    forms/ITry
+    (try! [_] nil)
+    (tried? [_] false)))

@@ -8,32 +8,26 @@
 (defn create [model]
   (reify
     forms/ISync
+    (ready! [_])
     (ready! [_ _ _])
     (sync! [_])
-    (syncing? [_]
-      false)
+    (syncing? [_] false)
 
     forms/IChange
-    (changed? [_]
-      false)
-    (changed? [_ _]
-      false)
-    (touched? [_]
-      false)
-    (touched? [_ _]
-      false)
+    (touch! [_ _])
+    (changed? [_] false)
+    (changed? [_ _] false)
+    (touched? [_] false)
+    (touched? [_ _] false)
 
 
     forms/IValidate
-    (errors [_]
-      nil)
-    (valid? [_]
-      true)
+    (errors [_] nil)
+    (valid? [_] true)
 
     forms/ITry
     (try! [_])
-    (tried? [_]
-      false)
+    (tried? [_] false)
 
     #?@(:clj  [IAtom
                (reset [_ _])

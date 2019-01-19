@@ -35,18 +35,23 @@
         id (assoc :id id)))))
 
 (defn ^:private node-matches? [[tag attrs?] selector]
-  (let [tag-map (tag->map tag (when (map? attrs?) attrs?))
-        {:keys [tag id classes component]} (tag->map selector)]
-    (cond-> true
-      tag (and (#{"*" (:tag tag-map)} tag))
-      id (and (= id (:id tag-map)))
-      classes (and (set/superset? (:classes tag-map) classes))
-      component (and (= component (:component tag-map))))))
+  (when (or (keyword? tag) (fn? tag))
+    (let [tag-map (tag->map tag (when (map? attrs?) attrs?))
+          {:keys [tag id classes component]} (tag->map selector)]
+      (cond-> true
+        tag (and (#{"*" (:tag tag-map)} tag))
+        id (and (= id (:id tag-map)))
+        classes (and (set/superset? (:classes tag-map) classes))
+        component (and (= component (:component tag-map)))))))
 
 (defn attrs [tree]
   (let [attrs (second tree)]
     (when (map? attrs)
       attrs)))
+
+(defn children [[_ & more]]
+  (cond-> more
+    (map? (first more)) (rest)))
 
 (defn query-all [tree selector]
   (let [matches (->> tree

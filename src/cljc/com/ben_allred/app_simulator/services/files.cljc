@@ -13,7 +13,7 @@
                     :multipart (map #(cond-> {:part-name param :name (.getName %) :content %}
                                        mime-type (assoc :mime-type mime-type))
                                     files))
-       :cljs (assoc request :multipart-params (map (colls/onto [param]) files)))))
+       :cljs (assoc request :multipart-params (map (partial conj [param]) files)))))
 
 (defn ^:private request* [request method url]
   (let [do-request (if (= method :post) client/post client/put)]

@@ -22,7 +22,7 @@
    (nav*/path-for page params)))
 
 (defonce ^:private history
-  (let [history (pushy/pushy (comp store/dispatch (colls/onto [:router/navigate])) match-route)]
+  (let [history (pushy/pushy (comp store/dispatch (partial conj [:router/navigate])) match-route)]
     (pushy/start! history)
     history))
 

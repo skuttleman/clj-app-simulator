@@ -6,6 +6,8 @@
   {:key-codes/esc 27
    :key-codes/enter 13})
 
+(def ^:private listeners (atom {}))
+
 (def ^:private code->key
   (set/map-invert key->code))
 
@@ -38,3 +40,14 @@
   (-> e
       (.-keyCode)
       (code->key)))
+
+(defn add-listener [node event cb]
+  (let [key (gensym)
+        listener [node event (.addEventListener node event cb)]]
+    (swap! listeners assoc key listener)
+    key))
+
+(defn remove-listener [key]
+  (when-let [[node event id] (get @listeners key)]
+    (swap! listeners dissoc key)
+    (.removeEventListener node event id)))

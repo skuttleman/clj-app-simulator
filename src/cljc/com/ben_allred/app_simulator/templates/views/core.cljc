@@ -5,14 +5,19 @@
                [com.ben-allred.app-simulator.ui.utils.dom :as dom]])
     [clojure.string :as string]
     [com.ben-allred.app-simulator.services.navigation :as nav*]
+    [com.ben-allred.app-simulator.templates.core :as templates]
     [com.ben-allred.app-simulator.utils.logging :as log]))
 
-(defn ^:private header-tab [handler page display]
-  (let [tag (if (= handler page) :span :a)]
-    [tag
-     (cond-> {:class-name "tab"}
-       (= tag :a) (assoc :href (nav*/path-for page)))
-     display]))
+(defn ^:private header-tab
+  ([active? page display]
+   (header-tab nil active? page display))
+  ([attrs active? page display]
+   [:li.tab
+    (-> attrs
+        (templates/classes {:is-active active?}))
+    [:a
+     {:href (nav*/path-for page)}
+     display]]))
 
 (defn spinner []
   [:div.loader])
@@ -26,11 +31,11 @@
 
 (defn header [{:keys [handler]}]
   [:header.header
-   [:a.home-link
-    {:href (nav*/path-for :home)}
-    [:span.logo]]
-   [header-tab handler :home "simulators"]
-   [header-tab handler :resources "resources"]])
+   [:div.tabs.is-boxed
+    [:ul
+     [header-tab {:class-name "home-link"} false :home [:span.logo]]
+     [header-tab (= :home handler) :home "Simulators"]
+     [header-tab (= :resources handler) :resources "Resources"]]]])
 
 (defn root [& children]
   (into [:div [:h1.title.is-2 "Simulators"]] children))
