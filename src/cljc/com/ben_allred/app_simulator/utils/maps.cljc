@@ -50,9 +50,3 @@
                        (f k v'))))
               m)
         (with-meta (meta m)))))
-
-(defn onto
-  ([k]
-   (onto {} k))
-  ([m k]
-   (partial assoc m k)))

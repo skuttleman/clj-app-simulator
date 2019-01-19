@@ -60,7 +60,3 @@
    (if (vector? coll)
      (conj coll x)
      (concat coll [x]))))
-
-(defn onto [coll]
-  (fn [& vs]
-    (into coll vs)))

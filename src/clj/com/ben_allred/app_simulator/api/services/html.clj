@@ -16,7 +16,6 @@
     [com.ben-allred.app-simulator.utils.logging :as log]
     [com.ben-allred.app-simulator.utils.maps :as maps]
     [com.ben-allred.app-simulator.utils.simulators :as utils.sims]
-    [com.ben-allred.app-simulator.utils.uuids :as uuids]
     [com.ben-allred.collaj.core :as collaj]
     [hiccup.core :as hiccup]))
 
@@ -31,7 +30,8 @@
    [:div.button-row
     [:button.button.create-button
      {:disabled true}
-     "Create"]]
+     "Create"
+     [:i.fa.fa-angle-down {:style {:padding-left "5px"}}]]]
    [views.sim/simulators (get-in state [:simulators :data])]
    [views/spinner]])
 
